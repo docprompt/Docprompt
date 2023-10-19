@@ -1,0 +1,243 @@
+import pickle
+import tempfile
+from contextlib import contextmanager
+from datetime import datetime
+from io import BytesIO
+from os import PathLike
+from pathlib import Path
+from typing import Dict, List, Literal, Optional, Tuple, Union
+
+from attrs import define, field, frozen
+from PIL import ImageDraw
+
+from docprompt._exec.ghostscript import compress_pdf_to_bytes
+from docprompt.schema import TextBlock
+from docprompt.service_providers.base import BaseProvider
+from docprompt.service_providers.types import PageTextExtractionOutput
+from docprompt.utils import get_page_count
+
+try:
+    import pypdf
+
+    pypdf_available = True
+except ImportError:
+    print("pypdf not installed, PDF support will be limited")
+    pypdf_available = False
+
+
+DEFAULT_DPI = 100
+
+
+@define
+class Document:
+    """
+    Represents a PDF document
+    """
+
+    name: str
+    file_path: str
+
+    file_bytes: Optional[bytes] = field(default=None, repr=False)
+    num_pages: int = field(init=False)
+
+    def __attrs_post_init__(self):
+        file_bytes = self.get_bytes()
+
+        self.num_pages = get_page_count(file_bytes)
+
+    def __reduce__(self) -> Tuple[type, Tuple[str, str]]:
+        """
+        Return state information for pickling.
+        """
+        return (self.__class__, (self.name, self.file_path))
+
+    def __setstate__(self, state: dict):
+        """
+        Restore state from the unpickled state values.
+        """
+        self.name, self.file_path = state.get("name"), state.get("file_path")
+        self.open()  # Try to reload the file_bytes.
+
+    def get_bytes(self) -> bytes:
+        if self.file_bytes:
+            return self.file_bytes
+
+        self.open()
+
+        return self.file_bytes
+
+    def get_page_render_size(self, page_number: int, dpi: int = DEFAULT_DPI) -> Tuple[int, int]:
+        """
+        Returns the render size of a page in pixels
+        """
+        reader = pypdf.PdfReader(BytesIO(self.get_bytes()))
+
+        page = reader.pages[page_number]
+
+        width_pt, height_pt = page.mediabox.upper_right
+
+        width_in = width_pt / 72
+        height_in = height_pt / 72
+
+        width_px = int(width_in * dpi)
+        height_px = int(height_in * dpi)
+
+        return (width_px, height_px)
+
+    @property
+    def path(self):
+        return self.file_path
+
+    def _clone(self):
+        """
+        Lightweight alternative to deepcopy
+        """
+        raise NotImplementedError("Not implemented yet")
+
+    def compress(self, compression_kwargs: dict = {}) -> bytes:
+        """
+        Compresses the document using Ghostscript
+        """
+        if not self._state["_open"]:
+            raise ValueError("Document is not open")
+
+        with self.as_tempfile() as temp_path:
+            return compress_pdf_to_bytes(temp_path, **compression_kwargs)
+
+    @contextmanager
+    def as_tempfile(self, **kwargs) -> str:
+        """
+        Returns a tempfile of the document
+        """
+        if not self._state["_open"]:
+            raise ValueError("Document is not open")
+
+        tempfile_kwargs = {"mode": "wb", "delete": False, "suffix": ".pdf", **kwargs}
+
+        with tempfile.NamedTemporaryFile(**tempfile_kwargs) as f:
+            f.write(self._bytes)
+            f.flush()
+            yield f.name
+
+    def close(self):
+        """
+        Close the file and clear the bytes from memory
+        """
+        self.file_bytes = None
+
+    def open(self):
+        """
+        Reopens the file and reads the bytes into memory
+        """
+        if self.file_bytes is not None:
+            return
+
+        file_path = Path(self.file_path)
+
+        if file_path.is_file():
+            with open(file_path, "rb") as f:
+                self.file_bytes = f.read()
+
+    def __len__(self):
+        return len(self.pages)
+
+
+@frozen
+class TextExtractionSidecar:
+    """
+    Represents a sidecar file that contains the output of
+    text extraction / OCR for a document. Provides
+    utilities
+
+    A sidecar is unique to a document and a provider.
+    """
+
+    provider_name: str
+
+    words: List[TextBlock] = field(repr=False)
+    lines: List[TextBlock] = field(repr=False)
+    blocks: List[TextBlock] = field(repr=False)
+
+    when: datetime = field(factory=datetime.now)
+
+    @classmethod
+    def from_textextractionoutput(cls, provider_name: str, output: PageTextExtractionOutput):
+        blocks = output.blocks
+        return cls(
+            provider_name=provider_name,
+            words=blocks.get("word", []),
+            lines=blocks.get("line", []),
+            blocks=blocks.get("block", []),
+        )
+
+    def draw_bounding_boxes(self, image, level: Literal["word", "line", "block"] = "word", outline="red"):
+        """
+        Draws bounding boxes on an image
+        """
+        draw = ImageDraw.Draw(image)
+
+        for block in getattr(self, level + "s"):
+            draw.rectangle(block.bounding_box, outline=outline)
+
+        return image
+
+
+@define
+class DocumentContainer:
+    """
+    A document container encapsulates a document and all the operations
+    that can be performed on it.
+    """
+
+    document: Document
+    text_sidecars: Dict[str, Dict[int, TextExtractionSidecar]] = field(factory=dict, repr=False)
+
+    def dump(self, fp: Union[Path, PathLike], compress: bool = True):
+        if not isinstance(fp, Path):
+            fp = Path(fp)
+
+        if fp.is_dir():
+            fp = fp / f"{self.document.name}.pickle"
+
+        with fp.open("wb") as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def load(cls, fp: Union[Path, PathLike, str]):
+        if not isinstance(fp, Path):
+            fp = Path(fp)
+
+        with fp.open("rb") as f:
+            return pickle.load(f)
+
+    @property
+    def text_data(self):
+        try:
+            return next(iter(self.text_sidecars.values()))
+        except StopIteration:
+            return None
+
+    def perform_text_extraction(self, provider: BaseProvider, cache: bool = True) -> Dict[int, TextExtractionSidecar]:
+        """
+        Performs text extraction for a given provider
+        """
+
+        result = provider.process_document(self.document)
+
+        sidecars = {}
+
+        if not result or not result.page_results:
+            return sidecars
+
+        for page_result in result.page_results:
+            if not page_result.ocr_result:
+                continue
+
+            sidecars[page_result.page_number] = TextExtractionSidecar.from_textextractionoutput(
+                provider.name, page_result.ocr_result
+            )
+
+        if cache:
+            self.text_sidecars[provider.name] = sidecars
+
+        return sidecars
