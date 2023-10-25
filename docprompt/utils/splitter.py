@@ -3,9 +3,13 @@ from io import BytesIO
 from typing import Optional, Tuple
 
 import magic
-from pypdf import PdfReader, PdfWriter
 
-from docprompt.util import get_page_count
+from docprompt.utils import get_page_count
+
+try:
+    from pypdf import PdfReader, PdfWriter
+except ImportError:
+    print("pypdf not installed, PDF splitting will not work")
 
 logger = logging.getLogger(__name__)
 

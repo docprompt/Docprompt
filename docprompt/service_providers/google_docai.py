@@ -126,7 +126,9 @@ class GoogleDocumentAIProvider(BaseProvider):
 
             self.documentai = documentai
         except ImportError:
-            raise ImportError("Please install google-cloud-vision to use the GoogleCloudVisionTextExtractionProvider")
+            raise ImportError(
+                "Please install 'google-cloud-documentai' to use the GoogleCloudVisionTextExtractionProvider"
+            )
 
     def get_documentai_client(self, client_option_kwargs: dict = {}, **kwargs):
         from google.api_core.client_options import ClientOptions

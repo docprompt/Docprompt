@@ -9,7 +9,7 @@ try:
     import torch
     import transformers as trf
 except ImportError:
-    raise ImportError("Please install torch and transformers and numpy to use the LayoutLMv3EmbeddingProvider")
+    print("Please install torch and transformers and numpy to use the LayoutLMv3EmbeddingProvider")
 
 
 @lru_cache(maxsize=1)

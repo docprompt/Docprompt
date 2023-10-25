@@ -5,25 +5,21 @@ from datetime import datetime
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union
+from urllib.parse import unquote
 
 from attrs import define, field, frozen
 from PIL import ImageDraw
 
 from docprompt._exec.ghostscript import compress_pdf_to_bytes
-from docprompt.schema import TextBlock
-from docprompt.service_providers.base import BaseProvider
-from docprompt.service_providers.types import PageTextExtractionOutput
-from docprompt.utils import get_page_count
 
-try:
-    import pypdf
+from .layout import TextBlock
 
-    pypdf_available = True
-except ImportError:
-    print("pypdf not installed, PDF support will be limited")
-    pypdf_available = False
+if TYPE_CHECKING:
+    from docprompt.service_providers.types import PageTextExtractionOutput
+    from docprompt.service_providers.base import BaseProvider
 
+import pdfplumber
 
 DEFAULT_DPI = 100
 
@@ -43,7 +39,10 @@ class Document:
     def __attrs_post_init__(self):
         file_bytes = self.get_bytes()
 
-        self.num_pages = get_page_count(file_bytes)
+        if file_bytes:
+            from docprompt.utils import get_page_count
+
+            self.num_pages = get_page_count(file_bytes)
 
     def __reduce__(self) -> Tuple[type, Tuple[str, str]]:
         """
@@ -70,11 +69,10 @@ class Document:
         """
         Returns the render size of a page in pixels
         """
-        reader = pypdf.PdfReader(BytesIO(self.get_bytes()))
+        with pdfplumber.PDF.open(BytesIO(self.get_bytes())) as pdf:
+            page = pdf.pages[page_number]
 
-        page = reader.pages[page_number]
-
-        width_pt, height_pt = page.mediabox.upper_right
+            width_pt, height_pt = page.mediabox.upper_right
 
         width_in = width_pt / 72
         height_in = height_pt / 72
@@ -161,7 +159,7 @@ class TextExtractionSidecar:
     when: datetime = field(factory=datetime.now)
 
     @classmethod
-    def from_textextractionoutput(cls, provider_name: str, output: PageTextExtractionOutput):
+    def from_textextractionoutput(cls, provider_name: str, output: "PageTextExtractionOutput"):
         blocks = output.blocks
         return cls(
             provider_name=provider_name,
@@ -202,6 +200,9 @@ class DocumentContainer:
         with fp.open("wb") as f:
             pickle.dump(self, f)
 
+    def dumps(self, compress: bool = True):
+        return pickle.dumps(self)
+
     @classmethod
     def load(cls, fp: Union[Path, PathLike, str]):
         if not isinstance(fp, Path):
@@ -210,6 +211,10 @@ class DocumentContainer:
         with fp.open("rb") as f:
             return pickle.load(f)
 
+    @classmethod
+    def loads(cls, bytes_: bytes):
+        return pickle.loads(bytes_)
+
     @property
     def text_data(self):
         try:
@@ -217,7 +222,7 @@ class DocumentContainer:
         except StopIteration:
             return None
 
-    def perform_text_extraction(self, provider: BaseProvider, cache: bool = True) -> Dict[int, TextExtractionSidecar]:
+    def perform_text_extraction(self, provider: "BaseProvider", cache: bool = True) -> Dict[int, TextExtractionSidecar]:
         """
         Performs text extraction for a given provider
         """

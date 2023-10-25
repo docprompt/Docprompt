@@ -1,3 +1,4 @@
+from .rasterize import rasterize_container
 from .util import (
     get_page_count,
     is_pdf,

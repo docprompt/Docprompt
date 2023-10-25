@@ -4,10 +4,11 @@ from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from typing import Union
+from urllib.parse import unquote
 
 import fsspec
 import magic
-from pypdf import PdfReader
+from pdfplumber import PDF
 
 from docprompt._exec.ghostscript import compress_pdf_to_path
 from docprompt.schema import Document, DocumentContainer
@@ -28,7 +29,7 @@ def is_pdf(fd: Union[Path, PathLike, bytes]) -> bool:
     Determines if a file is a PDF
     """
     if not isinstance(fd, bytes):
-        with fsspec.open(fd, "rb") as f:
+        with open(fd, "rb") as f:
             fd: bytes = f.read(1024)
             # We only need the first 1024 bytes to determine if it's a PDF
 
@@ -42,26 +43,30 @@ def get_page_count(fd: Union[Path, PathLike, bytes]) -> int:
     Determines the number of pages in a PDF
     """
     if not isinstance(fd, bytes):
-        with fsspec.open(fd, "rb") as f:
+        with open(fd, "rb") as f:
             fd: bytes = f.read()
 
-    reader = PdfReader(BytesIO(fd))
+    with PDF.open(BytesIO(fd)) as pdf:
+        return len(pdf.pages)
 
-    return len(reader.pages)
 
-
-def load_document(fp: Union[Path, PathLike], do_compress: bool = False, do_clean: bool = False) -> DocumentContainer:
+def load_document(
+    fp: Union[Path, PathLike, bytes], do_compress: bool = False, do_clean: bool = False
+) -> DocumentContainer:
     """
     Loads a document from a file path
     """
-    if not isinstance(fp, Path):
-        fp = Path(fp)
+    if isinstance(fp, bytes):
+        file_bytes = fp
+    else:
+        if not isinstance(fp, Path):
+            fp = Path(fp)
 
-    if fp.is_symlink():
-        fp = fp.resolve()
+        if fp.is_symlink():
+            fp = fp.resolve()
 
-    with open(fp, "rb") as f:
-        file_bytes: bytes = f.read()
+        with open(fp, "rb") as f:
+            file_bytes: bytes = f.read()
 
     if not is_pdf(file_bytes):
         raise ValueError("File is not a PDF")
@@ -83,7 +88,7 @@ def load_document(fp: Union[Path, PathLike], do_compress: bool = False, do_clean
                 # compress_pdf_to_path(temp_file, temp_path / "cleaned.pdf", clean=True)
                 # file_bytes = (temp_path / "cleaned.pdf").read_bytes()
 
-    document = Document(name=fp.name, file_path=str(fp), file_bytes=file_bytes)
+    document = Document(name=unquote(fp.name), file_path=str(fp), file_bytes=file_bytes)
 
     return DocumentContainer(document)
 
@@ -92,7 +97,7 @@ def load_document_from_url(url: str, **kwargs):
     with fsspec.open(url, "rb") as f:
         file_bytes: bytes = f.read()
 
-    file_name = url.split("/")[-1]
+    file_name = unquote(url.split("/")[-1])
 
     if not is_pdf(file_bytes):
         raise ValueError("File is not a PDF")
@@ -113,6 +118,7 @@ def load_documents_from_urls(urls: list[str], max_workers: int = 5, **kwargs) ->
                 documents.append(future.result())
             except Exception as exc:
                 print(f"{url} generated an exception: {exc}")
+                raise
 
     return documents
 
