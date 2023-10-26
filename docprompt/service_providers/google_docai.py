@@ -1,3 +1,4 @@
+from threading import Lock
 from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
 
 from docprompt.schema.document import Document
@@ -21,6 +22,8 @@ orientation_rotation_mapping = {
     3: 180,
     4: -90,
 }
+
+service_account_file_read_lock = Lock()
 
 
 def bounding_poly_from_layout(layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"]):
@@ -151,10 +154,11 @@ class GoogleDocumentAIProvider(BaseProvider):
                 **base_service_client_kwargs,
             )
         elif self.service_account_file is not None:
-            return self.documentai.DocumentProcessorServiceClient.from_service_account_file(
-                filename=self.service_account_file,
-                **base_service_client_kwargs,
-            )
+            with service_account_file_read_lock:
+                return self.documentai.DocumentProcessorServiceClient.from_service_account_file(
+                    filename=self.service_account_file,
+                    **base_service_client_kwargs,
+                )
         else:
             raise ValueError("Missing account info and service file path.")
 
