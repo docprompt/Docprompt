@@ -1,5 +1,9 @@
+import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
+
+import tqdm
 
 from docprompt.schema.document import Document
 from docprompt.schema.layout import BoundingPoly, Geometry, NormBBox, Point, SegmentLevels, TextBlock
@@ -103,6 +107,9 @@ def text_blocks_from_page(
 class GoogleDocumentAIProvider(BaseProvider):
     name = "GoogleDocumentAIProvider"
 
+    max_bytes_per_request = 1024 * 1024 * 20  # 20MB is the max size for a single sync request
+    max_page_count = 15
+
     def __init__(
         self,
         project_id: str,
@@ -111,7 +118,10 @@ class GoogleDocumentAIProvider(BaseProvider):
         service_account_info: Optional[dict] = None,
         service_account_file: Optional[str] = None,
         location: str = "us",
+        max_workers: int = multiprocessing.cpu_count() * 2,
+        **kwargs,
     ):
+        super().__init__(**kwargs)
         if service_account_info is None and service_account_file is None:
             raise ValueError("You must provide either service_account_info or service_account_file")
         if service_account_info is not None and service_account_file is not None:
@@ -120,6 +130,8 @@ class GoogleDocumentAIProvider(BaseProvider):
         self.project_id = project_id
         self.processor_id = processor_id
         self.location = location
+
+        self.max_workers = max_workers
 
         self.service_account_info = service_account_info
         self.service_account_file = service_account_file
@@ -227,8 +239,6 @@ class GoogleDocumentAIProvider(BaseProvider):
         Split the document into chunks of 15 pages or less, and process each chunk
         synchronously.
         """
-        max_page_count = 15
-
         client = self.get_documentai_client()
         processor_name = client.processor_path(
             project=self.project_id,
@@ -238,9 +248,43 @@ class GoogleDocumentAIProvider(BaseProvider):
 
         documents = []
 
-        max_bytes = 1024 * 1024 * 20  # 20MB is the max size for a single sync request
+        with tqdm.tqdm(total=len(file_bytes), unit="B", unit_scale=True, desc="Processing document") as pbar:
+            for split_bytes in pdf_split_iter(
+                file_bytes, max_page_count=self.max_page_count, max_bytes=self.max_bytes_per_request
+            ):
+                raw_document = self.documentai.RawDocument(
+                    content=split_bytes,
+                    mime_type="application/pdf",
+                )
 
-        for split_bytes in pdf_split_iter(file_bytes, max_page_count=max_page_count, max_bytes=max_bytes):
+                request = self.documentai.ProcessRequest(name=processor_name, raw_document=raw_document)
+
+                with self.rate_limiter:
+                    result = client.process_document(request=request)
+
+                documents.append(result.document)
+
+                pbar.update(len(split_bytes))
+
+        return self._gcp_documents_to_result(documents)
+
+    def _process_document_concurrent(self, file_bytes: bytes):
+        # Process page chunks concurrently
+        client = self.get_documentai_client()
+        processor_name = client.processor_path(
+            project=self.project_id,
+            location=self.location,
+            processor=self.processor_id,
+        )
+
+        print("Splitting document into chunks...")
+        document_byte_splits = list(
+            pdf_split_iter(file_bytes, max_page_count=self.max_page_count, max_bytes=self.max_bytes_per_request)
+        )
+
+        max_workers = min(len(document_byte_splits), self.max_workers)
+
+        def process_byte_chunk(split_bytes: bytes):
             raw_document = self.documentai.RawDocument(
                 content=split_bytes,
                 mime_type="application/pdf",
@@ -248,10 +292,28 @@ class GoogleDocumentAIProvider(BaseProvider):
 
             request = self.documentai.ProcessRequest(name=processor_name, raw_document=raw_document)
 
-            result = client.process_document(request=request)
-            documents.append(result.document)
+            with self.rate_limiter:
+                result = client.process_document(request=request)
 
+            return result.document
+
+        print(f"Processing {len(document_byte_splits)} chunks...")
+        with tqdm.tqdm(total=len(document_byte_splits), desc="Processing document") as pbar:
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                future_to_index = {
+                    executor.submit(process_byte_chunk, split): index
+                    for index, split in enumerate(document_byte_splits)
+                }
+
+                documents = [None] * len(document_byte_splits)
+
+                for future in as_completed(future_to_index):
+                    index = future_to_index[future]
+                    documents[index] = future.result()
+                    pbar.update(1)
+
+        print("Recombining")
         return self._gcp_documents_to_result(documents)
 
     def _call(self, document: Document, pages=...) -> ProviderResult:
-        return self._process_document_sync(document.file_bytes)
+        return self._process_document_concurrent(document.file_bytes)
