@@ -1,3 +1,4 @@
+import hashlib
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
@@ -130,3 +131,16 @@ def load_containers(fp: Union[Path, PathLike]):
         return [DocumentContainer.load(p) for p in fp.iterdir()]
 
     return [DocumentContainer.load(fp)]
+
+
+def hash_from_bytes(byte_data: bytes) -> str:
+    stream = BytesIO(byte_data)
+
+    hash = hashlib.md5()
+    b = bytearray(128 * 1024)
+    mv = memoryview(b)
+
+    while n := stream.readinto(mv):
+        hash.update(mv[:n])
+
+    return hash.hexdigest()

@@ -65,6 +65,11 @@ class Document:
 
         return self.file_bytes
 
+    def document_hash(self):
+        from docprompt.utils.util import hash_from_bytes
+
+        return hash_from_bytes(self.get_bytes())
+
     def get_page_render_size(self, page_number: int, dpi: int = DEFAULT_DPI) -> Tuple[int, int]:
         """
         Returns the render size of a page in pixels
@@ -138,6 +143,9 @@ class Document:
 
     def __len__(self):
         return len(self.pages)
+
+    def __hash__(self):
+        return hash(self.document_hash())
 
 
 @frozen

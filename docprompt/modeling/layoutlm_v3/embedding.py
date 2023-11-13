@@ -6,7 +6,6 @@ from .schema import LayoutLMV3BaseInput
 
 try:
     import numpy as np
-    import torch
     import transformers as trf
 except ImportError:
     print("Please install torch and transformers and numpy to use the LayoutLMv3EmbeddingProvider")
@@ -37,6 +36,8 @@ def get_layoutlmv3_hidden_states(lm_inputs: list[LayoutLMV3BaseInput], device="c
             padding="max_length",
             return_tensors="pt",
         ).to(device)
+
+        import torch
 
         with torch.no_grad():
             outputs = model(**encoding)

@@ -9,8 +9,7 @@ start_pattern = r"(?:^|\s)"
 end_pattern = r"(?:[;,.]?\s|$)"
 
 
-DEFAULT_PATTERNS = [
-    # Numerical dates
+NUMERICAL_PATTERNS = [
     r"(?:^|\s)(\d{1,2}/\d{1,2}/\d{4})(?:[;,.]?\s|$)",
     r"(?:^|\s)(\d{1,2}/\d{1,2}/\d{2})(?:[;,.]?\s|$)",
     r"(?:^|\s)(\d{4}/\d{1,2}/\d{1,2})(?:[;,.]?\s|$)",
@@ -20,6 +19,9 @@ DEFAULT_PATTERNS = [
     r"(?:^|\s)(\d{4}\.\d{1,2}\.\d{1,2})(?:[;,.]?\s|$)",
     r"(?:^|\s)(\d{1,2}\.\d{1,2}\.\d{4})(?:[;,.]?\s|$)",
     r"(?:^|\s)(\d{1,2}\.\d{1,2}\.\d{2})(?:[;,.]?\s|$)",
+]
+
+TEXT_PATTERNS = [
     # Month name (full and abbreviated) followed by day and year
     r"(?:^|\s)((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4})(?:[;,.]?\s|$)",  # Added ordinal suffixes
     # Day followed by month name (full and abbreviated) and year
@@ -27,6 +29,9 @@ DEFAULT_PATTERNS = [
     # Year followed by month name (full and abbreviated) and day
     r"(?:^|\s)(\d{4}\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2})(?:[;,.]?\s|$)",
 ]
+
+
+DEFAULT_PATTERNS = NUMERICAL_PATTERNS + TEXT_PATTERNS
 
 
 def register_date_pattern(pattern: str):
