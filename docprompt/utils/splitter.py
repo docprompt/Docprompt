@@ -1,9 +1,11 @@
 import logging
+import tempfile
 from io import BytesIO
 from typing import Optional, Tuple
 
 import magic
 
+from docprompt._exec.ghostscript import compress_pdf_to_bytes
 from docprompt.utils import get_page_count
 
 try:
@@ -66,6 +68,18 @@ def pdf_split_iter(file_bytes: bytes, max_page_count: int, max_bytes: Optional[i
     `max_bytes` bytes.
     """
 
+    if len(file_bytes) > max_bytes:
+        # Let's attempt to compress the PDF first
+        print("File is too large. Compressing to reduce average page size.")
+        old_size = len(file_bytes)
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf") as f:
+            f.write(file_bytes)
+            f.flush()
+            file_bytes = compress_pdf_to_bytes(f.name)
+
+        print(f"Compressed PDF from {old_size} bytes to {len(file_bytes)} bytes")
+
     page_count = get_page_count(file_bytes)
 
     if page_count <= max_page_count and (max_bytes is None or len(file_bytes) <= max_bytes):
@@ -80,7 +94,7 @@ def pdf_split_iter(file_bytes: bytes, max_page_count: int, max_bytes: Optional[i
         split_bytes = DocumentSplitter.split_pdf(file_bytes, start_page, end_page)
 
         while max_bytes is not None and len(split_bytes) > max_bytes:
-            if end_page <= start_page:
+            if end_page - start_page == 1:
                 raise ValueError("Cannot shrink chunk size any further. This PDF is HUGE!")
             end_page -= 1
             print(f"Shrinking chunk size by 1 due to byte constraints")
