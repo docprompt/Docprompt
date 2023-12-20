@@ -1,13 +1,12 @@
 from math import atan, cos, degrees, radians, sin
 from typing import Generic, Literal, Optional, TypeVar
 
-from msgspec import Struct
+from pydantic import BaseModel, Field
 
 SegmentLevels = Literal["word", "line", "block", "paragraph"]
-TSegmentLevels = TypeVar("TSegmentLevels", bound=SegmentLevels)
 
 
-class TextBlock(Struct, Generic[TSegmentLevels]):
+class TextBlock(BaseModel):
     """
     Represents a single block of text, with its bounding box.
     The bounding box is a tuple of (x0, top, x1, bottom) and
@@ -15,7 +14,7 @@ class TextBlock(Struct, Generic[TSegmentLevels]):
     """
 
     text: str
-    type: TSegmentLevels
+    type: SegmentLevels
     geometry: "Geometry"
     direction: Optional[str] = None
     confidence: Optional[float] = None
@@ -32,7 +31,7 @@ class TextBlock(Struct, Generic[TSegmentLevels]):
         return self.geometry.bounding_poly is not None
 
 
-class NormBBox(Struct):
+class NormBBox(BaseModel):
     """
     Represents a normalized bounding box with each value in the range [0, 1]
     """
@@ -82,6 +81,18 @@ class NormBBox(Struct):
         )
 
     @property
+    def width(self):
+        return self.x1 - self.x0
+
+    @property
+    def height(self):
+        return self.bottom - self.top
+
+    @property
+    def area(self):
+        return self.width * self.height
+
+    @property
     def centroid(self):
         return (self.x0 + self.x1) / 2, (self.top + self.bottom) / 2
 
@@ -94,7 +105,7 @@ class NormBBox(Struct):
         return (self.x0 + self.x1) / 2
 
 
-class Point(Struct):
+class Point(BaseModel):
     """
     Represents a normalized bounding box with each value in the range [0, 1]
     """
@@ -103,7 +114,7 @@ class Point(Struct):
     y: float
 
 
-class BoundingPoly(Struct, array_like=True):
+class BoundingPoly(BaseModel):
     """
     Represents a normalized bounding poly with each value in the range [0, 1]
     """
@@ -220,13 +231,13 @@ class BoundingPoly(Struct, array_like=True):
         return BoundingPoly(normalized_vertices=rotated_vertices)
 
 
-class Geometry(Struct):
+class Geometry(BaseModel):
     """
     Represnts a "geometry" of an object
     """
 
     bounding_box: NormBBox
-    bounding_poly: Optional[BoundingPoly] = None
+    bounding_poly: Optional[BoundingPoly] = Field(default=None, repr=False)
 
     def to_deskewed_geometry(self):
         """
