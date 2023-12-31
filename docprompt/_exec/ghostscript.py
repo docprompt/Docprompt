@@ -2,7 +2,7 @@ import tempfile
 from os import PathLike
 from pathlib import Path
 from subprocess import PIPE, CompletedProcess, run
-from typing import Dict, List, Literal, Union
+from typing import Dict, List, Literal, Optional, Union
 
 GS = "gs"
 
@@ -61,9 +61,10 @@ def rasterize_pdf(
     *,
     dpi: int = 100,
     device="pnggray",
+    downscale_factor: Optional[int] = None,
 ):
     device = _validate_device(device)
-    args = [
+    base_args = [
         GS,
         "-q",
         "-dSAFER",
@@ -72,6 +73,12 @@ def rasterize_pdf(
         "-dTextAlphaBits=4",
         "-dGraphicsAlphaBits=4",
         "-dBufferSpace=250000000",  # 250 Mb of buffer space.
+    ]
+
+    if downscale_factor is not None:
+        base_args += [f"-dDownScaleFactor={downscale_factor}"]
+
+    args = base_args + [
         f"-sDEVICE={device}",
         f"-r{dpi}",
         f"-sOutputFile={output_path}",
@@ -91,7 +98,12 @@ def split_png_images(data: bytes) -> List[bytes]:
     # PNG signature
     png_signature = b'\x89PNG\r\n\x1a\n'
     images = []
-    start = 0
+
+    # Find the first PNG signature
+    start = data.find(png_signature)
+    if start == -1:
+        # No PNG images found in the data
+        return []
 
     while True:
         # Find the next PNG signature in the data
@@ -106,11 +118,13 @@ def split_png_images(data: bytes) -> List[bytes]:
     return images
 
 
-def rasterize_pdf_to_bytes(fp: Union[PathLike, str], *, dpi: int = 200, device="pnggray") -> Dict[int, bytes]:
+def rasterize_pdf_to_bytes(
+    fp: Union[PathLike, str], *, dpi: int = 100, device="pnggray", downscale_factor: Optional[int] = None
+) -> Dict[int, bytes]:
     if "png" not in device:
         raise ValueError("Device must be a PNG device for rasterize_pdf_to_bytes")
 
-    result = rasterize_pdf(fp, "%stdout", dpi=dpi, device=device)
+    result = rasterize_pdf(fp, "%stdout", dpi=dpi, device=device, downscale_factor=downscale_factor)
 
     images = split_png_images(result.stdout)
 

@@ -91,7 +91,7 @@ class Document:
         with self.as_tempfile() as temp_path:
             return compress_pdf_to_bytes(temp_path, **compression_kwargs)
 
-    def rasterize_page(self, page_number: int, dpi: int = DEFAULT_DPI) -> bytes:
+    def rasterize_page(self, page_number: int, dpi: int = DEFAULT_DPI, device="png16m") -> bytes:
         """
         Rasterizes a page of the document using Ghostscript
         """
@@ -99,14 +99,16 @@ class Document:
             raise ValueError(f"Page number must be between 0 and {self.num_pages}")
 
         with self.as_tempfile() as temp_path:
-            return rasterize_page_to_bytes(temp_path, page_number, dpi=dpi)
+            return rasterize_page_to_bytes(temp_path, page_number, dpi=dpi, device=device)
 
-    def rasterize_pdf(self, dpi: int = DEFAULT_DPI) -> Dict[int, bytes]:
+    def rasterize_pdf(
+        self, dpi: int = DEFAULT_DPI, device="pnggray", downscale_factor: Optional[int] = None
+    ) -> Dict[int, bytes]:
         """
         Rasterizes the entire document using Ghostscript
         """
         with self.as_tempfile() as temp_path:
-            return rasterize_pdf_to_bytes(temp_path, dpi=dpi)
+            return rasterize_pdf_to_bytes(temp_path, dpi=dpi, device=device, downscale_factor=downscale_factor)
 
     @contextmanager
     def as_tempfile(self, **kwargs) -> str:
