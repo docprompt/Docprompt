@@ -44,19 +44,6 @@ class Document:
 
             self.num_pages = get_page_count(file_bytes)
 
-    def __reduce__(self) -> Tuple[type, Tuple[str, str]]:
-        """
-        Return state information for pickling.
-        """
-        return (self.__class__, (self.name, self.file_path))
-
-    def __setstate__(self, state: dict):
-        """
-        Restore state from the unpickled state values.
-        """
-        self.name, self.file_path = state.get("name"), state.get("file_path")
-        self.open()  # Try to reload the file_bytes.
-
     def get_bytes(self) -> bytes:
         if self.file_bytes:
             return self.file_bytes
