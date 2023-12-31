@@ -1,11 +1,11 @@
 import warnings
+from io import BytesIO
 from typing import Dict, List, Literal, NamedTuple, Optional, TypedDict
 
 from PIL import Image
 
 from docprompt.schema import DocumentContainer
 from docprompt.schema.layout import TextBlock
-from docprompt.utils.rasterize import rasterize_single_page
 
 try:
     from transformers import pipeline
@@ -220,7 +220,7 @@ def extract_tables_from_container(
             continue
 
         word_blocks = container.text_data[page_number].words
-        rasterized_page = rasterize_single_page(container, page_number)
+        rasterized_page = Image.open(BytesIO(container.document.rasterize_page(page_number)))
 
         extracted_table = extract_tables_from_page(rasterized_page, word_blocks, table_detector, table_layout_detector)
 

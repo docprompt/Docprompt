@@ -2,7 +2,7 @@ import tempfile
 from os import PathLike
 from pathlib import Path
 from subprocess import PIPE, CompletedProcess, run
-from typing import Literal, Union
+from typing import Dict, List, Literal, Union
 
 GS = "gs"
 
@@ -53,6 +53,68 @@ def rasterize_page(
         raise GhostscriptError("Ghostscript failed to rasterize the document: ", result)
 
     return result
+
+
+def rasterize_pdf(
+    fp: Union[PathLike, str],
+    output_path: str,
+    *,
+    dpi: int = 100,
+    device="pnggray",
+):
+    device = _validate_device(device)
+    args = [
+        GS,
+        "-q",
+        "-dSAFER",
+        "-dBATCH",
+        "-dNOPAUSE",
+        "-dTextAlphaBits=4",
+        "-dGraphicsAlphaBits=4",
+        "-dBufferSpace=250000000",  # 250 Mb of buffer space.
+        f"-sDEVICE={device}",
+        f"-r{dpi}",
+        f"-sOutputFile={output_path}",
+        "-f",
+        str(fp),
+    ]
+
+    result = run(args, stdout=PIPE, stderr=PIPE, check=False)
+
+    if result.returncode != 0:
+        raise GhostscriptError("Ghostscript failed to rasterize the document: ", result)
+
+    return result
+
+
+def split_png_images(data: bytes) -> List[bytes]:
+    # PNG signature
+    png_signature = b'\x89PNG\r\n\x1a\n'
+    images = []
+    start = 0
+
+    while True:
+        # Find the next PNG signature in the data
+        next_start = data.find(png_signature, start + 1)
+        if next_start == -1:
+            # No more images
+            images.append(data[start:])
+            break
+        images.append(data[start:next_start])
+        start = next_start
+
+    return images
+
+
+def rasterize_pdf_to_bytes(fp: Union[PathLike, str], *, dpi: int = 200, device="pnggray") -> Dict[int, bytes]:
+    if "png" not in device:
+        raise ValueError("Device must be a PNG device for rasterize_pdf_to_bytes")
+
+    result = rasterize_pdf(fp, "%stdout", dpi=dpi, device=device)
+
+    images = split_png_images(result.stdout)
+
+    return {idx: image for idx, image in enumerate(images, start=1)}
 
 
 def rasterize_page_to_bytes(fp: Union[PathLike, str], idx: int, *, dpi: int = 200, device="pnggray") -> bytes:

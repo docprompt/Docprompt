@@ -11,7 +11,7 @@ from urllib.parse import unquote
 from attrs import define, field, frozen
 from PIL import ImageDraw
 
-from docprompt._exec.ghostscript import compress_pdf_to_bytes
+from docprompt._exec.ghostscript import compress_pdf_to_bytes, rasterize_page_to_bytes, rasterize_pdf_to_bytes
 
 from .layout import TextBlock
 
@@ -97,28 +97,39 @@ class Document:
         """
         raise NotImplementedError("Not implemented yet")
 
-    def compress(self, compression_kwargs: dict = {}) -> bytes:
+    def to_compressed_bytes(self, compression_kwargs: dict = {}) -> bytes:
         """
         Compresses the document using Ghostscript
         """
-        if not self._state["_open"]:
-            raise ValueError("Document is not open")
-
         with self.as_tempfile() as temp_path:
             return compress_pdf_to_bytes(temp_path, **compression_kwargs)
+
+    def rasterize_page(self, page_number: int, dpi: int = DEFAULT_DPI) -> bytes:
+        """
+        Rasterizes a page of the document using Ghostscript
+        """
+        if page_number < 0 or page_number > self.num_pages:
+            raise ValueError(f"Page number must be between 0 and {self.num_pages}")
+
+        with self.as_tempfile() as temp_path:
+            return rasterize_page_to_bytes(temp_path, page_number, dpi=dpi)
+
+    def rasterize_pdf(self, dpi: int = DEFAULT_DPI) -> Dict[int, bytes]:
+        """
+        Rasterizes the entire document using Ghostscript
+        """
+        with self.as_tempfile() as temp_path:
+            return rasterize_pdf_to_bytes(temp_path, dpi=dpi)
 
     @contextmanager
     def as_tempfile(self, **kwargs) -> str:
         """
         Returns a tempfile of the document
         """
-        if not self._state["_open"]:
-            raise ValueError("Document is not open")
-
-        tempfile_kwargs = {"mode": "wb", "delete": False, "suffix": ".pdf", **kwargs}
+        tempfile_kwargs = {"mode": "wb", "delete": True, "suffix": ".pdf", **kwargs}
 
         with tempfile.NamedTemporaryFile(**tempfile_kwargs) as f:
-            f.write(self._bytes)
+            f.write(self.get_bytes())
             f.flush()
             yield f.name
 
