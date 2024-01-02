@@ -58,6 +58,12 @@ class NormBBox(BaseModel):
         elif index == 3:
             return self.bottom
 
+    def __eq__(self, other):
+        if not isinstance(other, NormBBox):
+            return False
+
+        return self.as_tuple() == other.as_tuple()
+
     @classmethod
     def from_bounding_poly(cls, bounding_poly: "BoundingPoly"):
         """
