@@ -64,6 +64,34 @@ class NormBBox(BaseModel):
 
         return self.as_tuple() == other.as_tuple()
 
+    def __add__(self, other):
+        if not isinstance(other, NormBBox):
+            raise TypeError("Can only add NormBBox to NormBBox")
+
+        return NormBBox(
+            x0=min(self.x0, other.x0),
+            top=min(self.top, other.top),
+            x1=max(self.x1, other.x1),
+            bottom=max(self.bottom, other.bottom),
+        )
+
+    @classmethod
+    def combine(cls, *bboxes: "NormBBox"):
+        """
+        Combines multiple bounding boxes into a single bounding box
+        """
+        if len(bboxes) == 0:
+            raise ValueError("Must provide at least one bounding box")
+
+        if len(bboxes) == 1:
+            return bboxes[0]
+
+        working_bbox = bboxes[0]
+        for bbox in bboxes[1:]:
+            working_bbox = working_bbox + bbox
+
+        return working_bbox
+
     @classmethod
     def from_bounding_poly(cls, bounding_poly: "BoundingPoly"):
         """
