@@ -67,6 +67,30 @@ class NormBBox(BaseModel):
     def __hash__(self):
         return hash(self.as_tuple())
 
+    def __div__(self, other):
+        """
+        Computes the overlap (intersection) between two bounding boxes
+        """
+        if not isinstance(other, NormBBox):
+            raise TypeError("Can only compute overlap with NormBBox")
+
+        # Check if there is overlap in the horizontal direction
+        overlap_x0 = max(self.x0, other.x0)
+        overlap_x1 = min(self.x1, other.x1)
+        if overlap_x0 >= overlap_x1:
+            return 0.0  # No horizontal overlap
+
+        # Check if there is overlap in the vertical direction
+        overlap_top = max(self.top, other.top)
+        overlap_bottom = min(self.bottom, other.bottom)
+        if overlap_top >= overlap_bottom:
+            return 0.0  # No vertical overlap
+
+        # Calculate the area of overlap
+        overlap_width = overlap_x1 - overlap_x0
+        overlap_height = overlap_bottom - overlap_top
+        return overlap_width * overlap_height
+
     def __add__(self, other):
         if not isinstance(other, NormBBox):
             raise TypeError("Can only add NormBBox to NormBBox")
