@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, ContextManager, Optional
 
 from attrs import frozen
 
-from docprompt.service_providers.rate_limit import NoOpRateLimiter
 from docprompt.service_providers.types import (
     OPERATIONS,
     ImageProcessResult,
@@ -58,9 +57,6 @@ class ProviderResult:
 
 class BaseProvider(metaclass=ABCMeta):
     name: str
-
-    def __init__(self, rate_limiter: Optional[ContextManager] = None):
-        self.rate_limiter = rate_limiter or NoOpRateLimiter()
 
     @abstractmethod
     def _call(self, document: "Document", pages=list[int]) -> ProviderResult:

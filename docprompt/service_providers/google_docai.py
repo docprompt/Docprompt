@@ -121,7 +121,6 @@ class GoogleDocumentAIProvider(BaseProvider):
         max_workers: int = multiprocessing.cpu_count() * 2,
         **kwargs,
     ):
-        super().__init__(**kwargs)
         if service_account_info is None and service_account_file is None:
             raise ValueError("You must provide either service_account_info or service_account_file")
         if service_account_info is not None and service_account_file is not None:
@@ -259,8 +258,7 @@ class GoogleDocumentAIProvider(BaseProvider):
 
                 request = self.documentai.ProcessRequest(name=processor_name, raw_document=raw_document)
 
-                with self.rate_limiter:
-                    result = client.process_document(request=request)
+                result = client.process_document(request=request)
 
                 documents.append(result.document)
 
@@ -292,8 +290,7 @@ class GoogleDocumentAIProvider(BaseProvider):
 
             request = self.documentai.ProcessRequest(name=processor_name, raw_document=raw_document)
 
-            with self.rate_limiter:
-                result = client.process_document(request=request)
+            result = client.process_document(request=request)
 
             return result.document
 
@@ -316,4 +313,4 @@ class GoogleDocumentAIProvider(BaseProvider):
         return self._gcp_documents_to_result(documents)
 
     def _call(self, document: Document, pages=...) -> ProviderResult:
-        return self._process_document_concurrent(document.file_bytes)
+        return self._process_document_concurrent(document.get_bytes())

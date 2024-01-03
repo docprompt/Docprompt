@@ -64,6 +64,9 @@ class NormBBox(BaseModel):
 
         return self.as_tuple() == other.as_tuple()
 
+    def __hash__(self):
+        return hash(self.as_tuple())
+
     def __add__(self, other):
         if not isinstance(other, NormBBox):
             raise TypeError("Can only add NormBBox to NormBBox")
