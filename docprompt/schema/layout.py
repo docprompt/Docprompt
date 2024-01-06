@@ -36,6 +36,9 @@ class NormBBox(BaseModel):
     Represents a normalized bounding box with each value in the range [0, 1]
     """
 
+    class Config:
+        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
+
     x0: float
     top: float
     x1: float
