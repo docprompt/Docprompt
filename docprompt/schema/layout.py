@@ -1,9 +1,15 @@
 from math import atan, cos, degrees, radians, sin
-from typing import Generic, Literal, Optional, TypeVar
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
 SegmentLevels = Literal["word", "line", "block", "paragraph"]
+
+
+class TextSpan(BaseModel):
+    start_index: int
+    end_index: int
+    level: Literal["page", "document"] = Field(default="page", description="The level of the span")
 
 
 class TextBlock(BaseModel):
@@ -13,11 +19,15 @@ class TextBlock(BaseModel):
     is normalized to the page size.
     """
 
+    class Config:
+        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
+
     text: str
     type: SegmentLevels
     geometry: "Geometry"
     direction: Optional[str] = None
     confidence: Optional[float] = None
+    text_spans: Optional[list[TextSpan]] = Field(default=None, repr=False)
 
     def __getitem__(self, index):
         return getattr(self, index)
@@ -173,6 +183,9 @@ class Point(BaseModel):
     """
     Represents a normalized bounding box with each value in the range [0, 1]
     """
+
+    class Config:
+        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
 
     x: float
     y: float

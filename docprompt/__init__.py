@@ -6,5 +6,8 @@ __version__ = '0.1.0'
 
 
 import docprompt.silenceable_tqdm  # noqa
-from docprompt.schema.document import Document, DocumentContainer
-from docprompt.utils import load_containers, load_document
+from docprompt.schema.document import Document
+from docprompt.schema.layout import Geometry, NormBBox, TextBlock
+from docprompt.utils import load_document
+
+Document.model_rebuild()

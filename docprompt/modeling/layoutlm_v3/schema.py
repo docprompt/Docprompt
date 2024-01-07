@@ -1,19 +1,18 @@
 from io import BytesIO
 from typing import List, Optional, Tuple
 
-from attrs import field, frozen
 from PIL import Image, ImageDraw
+from pydantic import BaseModel, Field
 
 from docprompt._exec.ghostscript import rasterize_page_to_bytes
-from docprompt.schema.document import DocumentContainer
+from docprompt.schema.document import Document
 from docprompt.schema.layout import NormBBox, TextBlock
 
 
-@frozen
-class LayoutLMV3BaseInput:
+class LayoutLMV3BaseInput(BaseModel):
     image: Image.Image
-    tokens: List[str] = field(factory=list)
-    bboxes: List[Tuple[int, int, int, int]] = field(factory=list)
+    tokens: List[str] = Field(default_factory=list)
+    bboxes: List[Tuple[int, int, int, int]] = Field(default_factory=list)
 
     def show_image_with_bboxes(self):
         image_copy = self.image.copy()
@@ -70,24 +69,26 @@ def merge_adjacent_tokens_and_bboxes(tokens: list[str], bboxes: list[Tuple[int, 
     return tokens, bboxes
 
 
-def layoutlmv3_inputs_from_container_page(
-    container: DocumentContainer,
+def layoutlmv3_inputs_from_document_page(
+    document: Document,
     page_number: int,
     image: Optional[Image.Image] = None,
     merge_adjacent_tokens: bool = True,
 ):
     """
-    Returns a list of LayoutLMv3 input objects for a given container
+    Returns a list of LayoutLMv3 input objects for a given document
     """
 
-    if page_number > container.document.num_pages:
-        raise ValueError(f"Page number {page_number} is out of range for container {container}")
+    if page_number > document.num_pages:
+        raise ValueError(f"Page number {page_number} is out of range for document {document}")
 
-    if container.text_data is None:
-        raise ValueError(f"Container {container} does not have text data. Try running `perform_text_extraction` first")
+    if document.text_data is None:
+        raise ValueError(f"Document {document} does not have text data. Try running `perform_text_extraction` first")
+
+    text_data = document.text_data
 
     if image is None:
-        image_bytes = rasterize_page_to_bytes(container.document.file_path, page_number)
+        image_bytes = rasterize_page_to_bytes(document.file_path, page_number)
 
         image = Image.open(BytesIO(image_bytes))
 
@@ -95,7 +96,7 @@ def layoutlmv3_inputs_from_container_page(
 
     assert image.size[0] > 0 and image.size[1] > 0, "Image must have non-zero dimensions"
 
-    word_blocks = container.text_data[page_number].words
+    word_blocks = text_data[page_number].words
 
     tokens = []
     bboxes = []

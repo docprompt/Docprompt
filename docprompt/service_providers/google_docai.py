@@ -6,12 +6,13 @@ from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
 import tqdm
 
 from docprompt.schema.document import Document
-from docprompt.schema.layout import BoundingPoly, Geometry, NormBBox, Point, SegmentLevels, TextBlock
+from docprompt.schema.layout import BoundingPoly, Geometry, NormBBox, Point, SegmentLevels, TextBlock, TextSpan
+from docprompt.schema.operations import PageResult, PageTextExtractionOutput
 from docprompt.service_providers.base import ProviderResult
-from docprompt.service_providers.types import OPERATIONS, ImageProcessResult, PageTextExtractionOutput
+from docprompt.service_providers.types import OPERATIONS
 from docprompt.utils.splitter import pdf_split_iter
 
-from .base import BaseProvider, PageResult, ProviderResult
+from .base import BaseProvider, ProviderResult
 
 if TYPE_CHECKING:
     from google.cloud import documentai
@@ -56,10 +57,37 @@ def text_from_layout(
     Offset is used to account for the fact that text references
     are relative to the entire document.
     """
-    start = getattr(layout.text_anchor.text_segments[0], "start_index", 0)
-    end = layout.text_anchor.text_segments[0].end_index
+    working_text = ""
 
-    return document_text[start - offset : end - offset]
+    for segment in sorted(layout.text_anchor.text_segments, key=lambda x: x.end_index):
+        start = getattr(segment, "start_index", 0)
+        end = segment.end_index
+
+        working_text += document_text[start - offset : end - offset]
+
+    return working_text
+
+
+def text_spans_from_layout(
+    layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"],
+    level: Literal["page", "document"],
+    offset: int = 0,
+) -> list[TextSpan]:
+    text_spans = []
+
+    for segment in sorted(layout.text_anchor.text_segments, key=lambda x: x.end_index):
+        start = getattr(segment, "start_index", 0)
+        end = segment.end_index
+
+        text_spans.append(
+            TextSpan(
+                start_index=start - offset,
+                end_index=end - offset,
+                level=level,
+            )
+        )
+
+    return text_spans
 
 
 def text_blocks_from_page(
@@ -83,12 +111,18 @@ def text_blocks_from_page(
         4: "LEFT",
     }
 
+    # Offset is used to account for the fact that text references are relative to the entire document.
+    # while we need to compute spans relative to the page.
+    offset_low = page.layout.text_anchor.text_segments[0].start_index or 0
+
     for item in getattr(page, f"{type}s"):
         layout = item.layout
         block_text = text_from_layout(layout, document_text)
         geometry = geometry_from_layout(layout)
         confidence = layout.confidence
         orientation = orientation_mapping.get(layout.orientation, "UP")
+
+        text_spans = text_spans_from_layout(layout, level="page", offset=offset_low)
 
         block_type = type_mapping[type]
         text_blocks.append(
@@ -98,6 +132,7 @@ def text_blocks_from_page(
                 geometry=geometry,
                 confidence=confidence,
                 direction=orientation,
+                text_spans=text_spans,
             )
         )
 
@@ -200,28 +235,15 @@ class GoogleDocumentAIProvider(BaseProvider):
 
                 ocr_result = PageTextExtractionOutput(
                     text=page_text,
-                    blocks={
-                        "word": word_boxes,
-                        "line": line_boxes,
-                        "block": block_boxes,
-                    },
+                    words=word_boxes,
+                    lines=line_boxes,
+                    blocks=block_boxes,
                 )
-
-                if get_images:
-                    image_process_result = ImageProcessResult(
-                        type="regularize",
-                        image_data=page.image.content,
-                        width=page.image.width,
-                        height=page.image.height,
-                    )
-                else:
-                    image_process_result = None
 
                 page_result = PageResult(
                     provider_name=self.name,
                     page_number=page_offset + doc_page_num,
                     ocr_result=ocr_result,
-                    image_process_result=image_process_result,
                 )
 
                 page_results.append(page_result)

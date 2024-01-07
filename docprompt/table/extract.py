@@ -4,7 +4,7 @@ from typing import Dict, List, Literal, NamedTuple, Optional, TypedDict
 
 from PIL import Image
 
-from docprompt.schema import DocumentContainer
+from docprompt.schema.document import Document
 from docprompt.schema.layout import TextBlock
 
 try:
@@ -204,23 +204,23 @@ def extract_tables_from_page(
 
 
 def extract_tables_from_container(
-    container: DocumentContainer,
+    document: Document,
     pages: Optional[List[int]] = None,
     table_detector=None,
     table_layout_detector=None,
 ):
-    pages = pages or list(range(1, container.document.num_pages))
+    pages = pages or list(range(1, document.page_count))
 
     detected_tables = {}
 
     for page_number in pages:
-        if container.text_data[page_number] is None:
+        if document.text_data[page_number] is None:
             warnings.warn(f"No text data found for page {page_number}, skipping...")
             detected_tables[page_number] = []
             continue
 
-        word_blocks = container.text_data[page_number].words
-        rasterized_page = Image.open(BytesIO(container.document.rasterize_page(page_number)))
+        word_blocks = document.text_data[page_number].words
+        rasterized_page = Image.open(BytesIO(document.rasterize_page(page_number)))
 
         extracted_table = extract_tables_from_page(rasterized_page, word_blocks, table_detector, table_layout_detector)
 

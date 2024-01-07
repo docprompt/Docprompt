@@ -12,7 +12,7 @@ import magic
 from pdfplumber import PDF
 
 from docprompt._exec.ghostscript import compress_pdf_to_path
-from docprompt.schema import Document, DocumentContainer
+from docprompt.schema.document import Document
 
 
 def ensure_path(fp: Union[Path, PathLike]) -> Path:
@@ -51,9 +51,7 @@ def get_page_count(fd: Union[Path, PathLike, bytes]) -> int:
         return len(pdf.pages)
 
 
-def load_document(
-    fp: Union[Path, PathLike, bytes], do_compress: bool = False, do_clean: bool = False
-) -> DocumentContainer:
+def load_document(fp: Union[Path, PathLike, bytes], do_compress: bool = False, do_clean: bool = False) -> Document:
     """
     Loads a document from a file path
     """
@@ -89,9 +87,7 @@ def load_document(
                 # compress_pdf_to_path(temp_file, temp_path / "cleaned.pdf", clean=True)
                 # file_bytes = (temp_path / "cleaned.pdf").read_bytes()
 
-    document = Document(name=unquote(fp.name), file_path=str(fp), file_bytes=file_bytes)
-
-    return DocumentContainer(document)
+    return Document(name=unquote(fp.name), file_path=str(fp), file_bytes=file_bytes)
 
 
 def load_document_from_url(url: str, **kwargs):
@@ -103,12 +99,10 @@ def load_document_from_url(url: str, **kwargs):
     if not is_pdf(file_bytes):
         raise ValueError("File is not a PDF")
 
-    document = Document(name=file_name, file_path=url, file_bytes=file_bytes)
-
-    return DocumentContainer(document)
+    return Document(name=file_name, file_path=url, file_bytes=file_bytes)
 
 
-def load_documents_from_urls(urls: list[str], max_workers: int = 5, **kwargs) -> list[DocumentContainer]:
+def load_documents_from_urls(urls: list[str], max_workers: int = 5, **kwargs) -> list[Document]:
     documents = []
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -122,15 +116,6 @@ def load_documents_from_urls(urls: list[str], max_workers: int = 5, **kwargs) ->
                 raise
 
     return documents
-
-
-def load_containers(fp: Union[Path, PathLike]):
-    fp = ensure_path(fp)
-
-    if fp.is_dir():
-        return [DocumentContainer.load(p) for p in fp.iterdir()]
-
-    return [DocumentContainer.load(fp)]
 
 
 def hash_from_bytes(byte_data: bytes) -> str:
