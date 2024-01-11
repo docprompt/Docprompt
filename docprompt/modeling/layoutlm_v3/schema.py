@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from io import BytesIO
 from typing import List, Optional, Tuple
 
@@ -9,10 +11,11 @@ from docprompt.schema.document import Document
 from docprompt.schema.layout import NormBBox, TextBlock
 
 
-class LayoutLMV3BaseInput(BaseModel):
+@dataclass
+class LayoutLMV3BaseInput:
     image: Image.Image
-    tokens: List[str] = Field(default_factory=list)
-    bboxes: List[Tuple[int, int, int, int]] = Field(default_factory=list)
+    tokens: List[str] = dataclass_field(default_factory=list)
+    bboxes: List[Tuple[int, int, int, int]] = dataclass_field(default_factory=list)
 
     def show_image_with_bboxes(self):
         image_copy = self.image.copy()

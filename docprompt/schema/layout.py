@@ -80,29 +80,35 @@ class NormBBox(BaseModel):
     def __hash__(self):
         return hash(self.as_tuple())
 
-    def __div__(self, other):
-        """
-        Computes the overlap (intersection) between two bounding boxes
-        """
+    def __and__(self, other):
         if not isinstance(other, NormBBox):
-            raise TypeError("Can only compute overlap with NormBBox")
+            raise TypeError("Can only compute intersection with NormBBox")
+        # Compute the intersection of two bounding boxes
+        new_x0 = max(self.x0, other.x0)
+        new_top = max(self.top, other.top)
+        new_x1 = min(self.x1, other.x1)
+        new_bottom = min(self.bottom, other.bottom)
 
-        # Check if there is overlap in the horizontal direction
-        overlap_x0 = max(self.x0, other.x0)
-        overlap_x1 = min(self.x1, other.x1)
-        if overlap_x0 >= overlap_x1:
-            return 0.0  # No horizontal overlap
+        # Check if there is an actual intersection and if the resulting bounding box is valid
+        if new_x0 <= new_x1 and new_top <= new_bottom:
+            return NormBBox(x0=new_x0, top=new_top, x1=new_x1, bottom=new_bottom)
+        else:
+            # Return an empty or non-existent bounding box representation
+            return None
 
-        # Check if there is overlap in the vertical direction
-        overlap_top = max(self.top, other.top)
-        overlap_bottom = min(self.bottom, other.bottom)
-        if overlap_top >= overlap_bottom:
-            return 0.0  # No vertical overlap
+    def intersection_over_union(self, other):
+        if not isinstance(other, NormBBox):
+            raise TypeError("Can only compute IOU with NormBBox")
 
-        # Calculate the area of overlap
-        overlap_width = overlap_x1 - overlap_x0
-        overlap_height = overlap_bottom - overlap_top
-        return overlap_width * overlap_height
+        # Compute the intersection
+        intersection_bbox = self & other
+
+        if intersection_bbox:
+            intersection_area = intersection_bbox.area
+            union_area = self.area + other.area - intersection_area
+            return intersection_area / union_area
+
+        return 0  # No intersection
 
     def __add__(self, other):
         if not isinstance(other, NormBBox):
