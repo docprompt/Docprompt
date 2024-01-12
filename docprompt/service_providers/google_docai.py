@@ -278,7 +278,11 @@ class GoogleDocumentAIProvider(BaseProvider):
                     mime_type="application/pdf",
                 )
 
-                request = self.documentai.ProcessRequest(name=processor_name, raw_document=raw_document)
+                field_mask = "text,pages.layout,pages.words,pages.lines,pages.tokens"
+
+                request = self.documentai.ProcessRequest(
+                    name=processor_name, raw_document=raw_document, field_mask=field_mask
+                )
 
                 result = client.process_document(request=request)
 
@@ -310,7 +314,11 @@ class GoogleDocumentAIProvider(BaseProvider):
                 mime_type="application/pdf",
             )
 
-            request = self.documentai.ProcessRequest(name=processor_name, raw_document=raw_document)
+            field_mask = "text,pages.layout,pages.words,pages.lines,pages.tokens"
+
+            request = self.documentai.ProcessRequest(
+                name=processor_name, raw_document=raw_document, field_mask=field_mask
+            )
 
             result = client.process_document(request=request)
 
