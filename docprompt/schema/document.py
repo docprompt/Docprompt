@@ -52,7 +52,7 @@ class Document(BaseModel):
 
     name: str = Field(description="The name of the document")
     file_bytes: bytes = Field(description="The bytes of the document", repr=False)
-    file_path: Optional[str]
+    file_path: Optional[str] = None
     text_sidecars: Dict[str, Dict[int, PageTextExtractionOutput]] = Field(default_factory=dict, repr=False)
 
     def __len__(self):
@@ -159,6 +159,23 @@ class Document(BaseModel):
         """
         with self.as_tempfile() as temp_path:
             return rasterize_pdf_to_bytes(temp_path, dpi=dpi, device=device, downscale_factor=downscale_factor)
+
+    def split(self, start: Optional[int] = None, stop: Optional[int] = None):
+        """
+        Splits a document into multiple documents
+        """
+        if start is None and stop is None:
+            raise ValueError("Must specify either start or stop")
+
+        start = start or 0
+
+        from docprompt.utils.splitter import DocumentSplitter
+
+        splitter = DocumentSplitter()
+
+        split_bytes = splitter.split_pdf(self.file_bytes, start=start, stop=stop)
+
+        return Document.from_bytes(split_bytes, name=self.name)
 
     @contextmanager
     def as_tempfile(self, **kwargs) -> str:

@@ -278,7 +278,7 @@ class GoogleDocumentAIProvider(BaseProvider):
                     mime_type="application/pdf",
                 )
 
-                field_mask = "text,pages.layout,pages.words,pages.lines,pages.tokens"
+                field_mask = "text,pages.layout,pages.words,pages.lines,pages.tokens,pages.blocks"
 
                 request = self.documentai.ProcessRequest(
                     name=processor_name, raw_document=raw_document, field_mask=field_mask
@@ -314,7 +314,7 @@ class GoogleDocumentAIProvider(BaseProvider):
                 mime_type="application/pdf",
             )
 
-            field_mask = "text,pages.layout,pages.words,pages.lines,pages.tokens"
+            field_mask = "text,pages.layout,pages.words,pages.lines,pages.tokens,pages.blocks"
 
             request = self.documentai.ProcessRequest(
                 name=processor_name, raw_document=raw_document, field_mask=field_mask
