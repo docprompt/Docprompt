@@ -2485,6 +2485,20 @@ files = [
 mpmath = ">=0.19"
 
 [[package]]
+name = "tenacity"
+version = "8.2.3"
+description = "Retry code until it succeeds"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tenacity-8.2.3-py3-none-any.whl", hash = "sha256:ce510e327a630c9e1beaf17d42e6ffacc88185044ad85cf74c0a8887c6a0f88c"},
+    {file = "tenacity-8.2.3.tar.gz", hash = "sha256:5398ef0d78e63f40007c1fb4c0bff96e1911394d2fa8d194f77619c05ff6cc8a"},
+]
+
+[package.extras]
+doc = ["reno", "sphinx", "tornado (>=4.5)"]
+
+[[package]]
 name = "tokenizers"
 version = "0.15.0"
 description = ""
@@ -2945,4 +2959,4 @@ test = ["black", "flake8", "flake8-docstrings", "isort", "mypy", "pytest", "pyte
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "e158569ec93df9c3c825ebe576f2a3a7693c291ebda5ccd47d3d1d764909eca0"
+content-hash = "4629d01c369cb7b1dac59273d7ec42c4ed57a1cd4cca9d020cee450c51509122"

@@ -1,9 +1,11 @@
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import partial
 from threading import Lock
 from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
 
 import tqdm
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 from docprompt.schema.document import Document
 from docprompt.schema.layout import BoundingPoly, Geometry, NormBBox, Point, SegmentLevels, TextBlock, TextSpan
@@ -29,6 +31,10 @@ orientation_rotation_mapping = {
 }
 
 service_account_file_read_lock = Lock()
+
+# This will wait up to ~8 minutes before giving up, which covers almost all high-contention cases
+# TODO: Scope this to only retry on 429 and 5xx
+default_retry_decorator = partial(retry, wait=wait_exponential(multiplier=1, max=60), stop=stop_after_attempt(10))
 
 
 def bounding_poly_from_layout(layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"]):
@@ -269,24 +275,30 @@ class GoogleDocumentAIProvider(BaseProvider):
 
         documents = []
 
+        @default_retry_decorator
+        def process_byte_chunk(split_bytes: bytes):
+            raw_document = self.documentai.RawDocument(
+                content=split_bytes,
+                mime_type="application/pdf",
+            )
+
+            field_mask = "text,pages.layout,pages.words,pages.lines,pages.tokens,pages.blocks"
+
+            request = self.documentai.ProcessRequest(
+                name=processor_name, raw_document=raw_document, field_mask=field_mask
+            )
+
+            result = client.process_document(request=request)
+
+            return result.document
+
         with tqdm.tqdm(total=len(file_bytes), unit="B", unit_scale=True, desc="Processing document") as pbar:
             for split_bytes in pdf_split_iter(
                 file_bytes, max_page_count=self.max_page_count, max_bytes=self.max_bytes_per_request
             ):
-                raw_document = self.documentai.RawDocument(
-                    content=split_bytes,
-                    mime_type="application/pdf",
-                )
+                document = process_byte_chunk(split_bytes)
 
-                field_mask = "text,pages.layout,pages.words,pages.lines,pages.tokens,pages.blocks"
-
-                request = self.documentai.ProcessRequest(
-                    name=processor_name, raw_document=raw_document, field_mask=field_mask
-                )
-
-                result = client.process_document(request=request)
-
-                documents.append(result.document)
+                documents.append(document)
 
                 pbar.update(len(split_bytes))
 
@@ -308,6 +320,7 @@ class GoogleDocumentAIProvider(BaseProvider):
 
         max_workers = min(len(document_byte_splits), self.max_workers)
 
+        @default_retry_decorator
         def process_byte_chunk(split_bytes: bytes):
             raw_document = self.documentai.RawDocument(
                 content=split_bytes,
