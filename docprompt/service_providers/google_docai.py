@@ -12,7 +12,7 @@ from docprompt.schema.layout import BoundingPoly, Geometry, NormBBox, Point, Seg
 from docprompt.schema.operations import PageResult, PageTextExtractionOutput
 from docprompt.service_providers.base import ProviderResult
 from docprompt.service_providers.types import OPERATIONS
-from docprompt.utils.splitter import pdf_split_iter
+from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
 
 from .base import BaseProvider, ProviderResult
 
@@ -145,6 +145,46 @@ def text_blocks_from_page(
     return text_blocks
 
 
+def process_page(document_text: str, page, doc_page_num: int, provider_name: str) -> PageResult:
+    layout = page.layout
+
+    page_text = text_from_layout(layout, document_text)
+
+    word_boxes = text_blocks_from_page(page, document_text, "token")
+    line_boxes = text_blocks_from_page(page, document_text, "line")
+    block_boxes = text_blocks_from_page(page, document_text, "block")
+
+    ocr_result = PageTextExtractionOutput(
+        text=page_text,
+        words=word_boxes,
+        lines=line_boxes,
+        blocks=block_boxes,
+    )
+
+    return PageResult(
+        provider_name=provider_name,
+        page_number=doc_page_num,
+        ocr_result=ocr_result,
+    )
+
+
+def gcp_documents_to_result(documents: list["documentai.Document"], provider_name: str) -> ProviderResult:
+    page_offset = 1  # We want pages to be 1-indexed
+
+    page_results = []
+
+    for document in documents:
+        for doc_page_num, page in enumerate(document.pages):
+            page_results.append(process_page(document.text, page, page_offset + doc_page_num, provider_name))
+
+        page_offset += doc_page_num + 1
+
+    return ProviderResult(
+        provider_name="GoogleDocumentAIProvider",
+        page_results=page_results,
+    )
+
+
 class GoogleDocumentAIProvider(BaseProvider):
     name = "GoogleDocumentAIProvider"
 
@@ -222,45 +262,6 @@ class GoogleDocumentAIProvider(BaseProvider):
             OPERATIONS.IMAGE_PROCESSING,
         ]
 
-    def _gcp_documents_to_result(
-        self, documents: list["documentai.Document"], get_images: bool = False
-    ) -> ProviderResult:
-        page_offset = 1  # We want pages to be 1-indexed
-
-        page_results = []
-
-        for document in documents:
-            for doc_page_num, page in enumerate(document.pages):
-                layout = page.layout
-
-                page_text = text_from_layout(layout, document.text)
-
-                word_boxes = text_blocks_from_page(page, document.text, "token")
-                line_boxes = text_blocks_from_page(page, document.text, "line")
-                block_boxes = text_blocks_from_page(page, document.text, "block")
-
-                ocr_result = PageTextExtractionOutput(
-                    text=page_text,
-                    words=word_boxes,
-                    lines=line_boxes,
-                    blocks=block_boxes,
-                )
-
-                page_result = PageResult(
-                    provider_name=self.name,
-                    page_number=page_offset + doc_page_num,
-                    ocr_result=ocr_result,
-                )
-
-                page_results.append(page_result)
-
-            page_offset += doc_page_num + 1
-
-        return ProviderResult(
-            provider_name="GoogleDocumentAIProvider",
-            page_results=page_results,
-        )
-
     def _process_document_sync(self, file_bytes: bytes):
         """
         Split the document into chunks of 15 pages or less, and process each chunk
@@ -293,7 +294,7 @@ class GoogleDocumentAIProvider(BaseProvider):
             return result.document
 
         with tqdm.tqdm(total=len(file_bytes), unit="B", unit_scale=True, desc="Processing document") as pbar:
-            for split_bytes in pdf_split_iter(
+            for split_bytes in pdf_split_iter_with_max_bytes(
                 file_bytes, max_page_count=self.max_page_count, max_bytes=self.max_bytes_per_request
             ):
                 document = process_byte_chunk(split_bytes)
@@ -302,7 +303,7 @@ class GoogleDocumentAIProvider(BaseProvider):
 
                 pbar.update(len(split_bytes))
 
-        return self._gcp_documents_to_result(documents)
+        return gcp_documents_to_result(documents, self.name)
 
     def _process_document_concurrent(self, file_bytes: bytes):
         # Process page chunks concurrently
@@ -315,7 +316,9 @@ class GoogleDocumentAIProvider(BaseProvider):
 
         print("Splitting document into chunks...")
         document_byte_splits = list(
-            pdf_split_iter(file_bytes, max_page_count=self.max_page_count, max_bytes=self.max_bytes_per_request)
+            pdf_split_iter_with_max_bytes(
+                file_bytes, max_page_count=self.max_page_count, max_bytes=self.max_bytes_per_request
+            )
         )
 
         max_workers = min(len(document_byte_splits), self.max_workers)
@@ -335,7 +338,9 @@ class GoogleDocumentAIProvider(BaseProvider):
 
             result = client.process_document(request=request)
 
-            return result.document
+            document = result.document
+
+            return document
 
         print(f"Processing {len(document_byte_splits)} chunks...")
         with tqdm.tqdm(total=len(document_byte_splits), desc="Processing document") as pbar:
@@ -353,7 +358,7 @@ class GoogleDocumentAIProvider(BaseProvider):
                     pbar.update(1)
 
         print("Recombining")
-        return self._gcp_documents_to_result(documents)
+        return gcp_documents_to_result(documents, self.name)
 
     def _call(self, document: Document, pages=...) -> ProviderResult:
         return self._process_document_concurrent(document.get_bytes())

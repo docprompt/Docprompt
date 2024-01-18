@@ -169,11 +169,9 @@ class Document(BaseModel):
 
         start = start or 0
 
-        from docprompt.utils.splitter import DocumentSplitter
+        from docprompt.utils.splitter import split_pdf_to_bytes
 
-        splitter = DocumentSplitter()
-
-        split_bytes = splitter.split_pdf(self.file_bytes, start=start, stop=stop)
+        split_bytes = split_pdf_to_bytes(self.file_bytes, start_page=start, stop_page=stop)
 
         return Document.from_bytes(split_bytes, name=self.name)
 
