@@ -173,7 +173,7 @@ def gcp_documents_to_result(documents: list["documentai.Document"], provider_nam
 
     page_results = []
 
-    for document in documents:
+    for document in tqdm.tqdm(documents):
         for doc_page_num, page in enumerate(document.pages):
             page_results.append(process_page(document.text, page, page_offset + doc_page_num, provider_name))
 
