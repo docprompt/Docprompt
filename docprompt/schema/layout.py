@@ -12,35 +12,6 @@ class TextSpan(BaseModel):
     level: Literal["page", "document"] = Field(default="page", description="The level of the span")
 
 
-class TextBlock(BaseModel):
-    """
-    Represents a single block of text, with its bounding box.
-    The bounding box is a tuple of (x0, top, x1, bottom) and
-    is normalized to the page size.
-    """
-
-    class Config:
-        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
-
-    text: str
-    type: SegmentLevels
-    geometry: "Geometry"
-    direction: Optional[str] = None
-    confidence: Optional[float] = None
-    text_spans: Optional[list[TextSpan]] = Field(default=None, repr=False)
-
-    def __getitem__(self, index):
-        return getattr(self, index)
-
-    @property
-    def bounding_box(self):
-        return self.geometry.bounding_box
-
-    @property
-    def has_vertices(self):
-        return self.geometry.bounding_poly is not None
-
-
 class NormBBox(BaseModel):
     """
     Represents a normalized bounding box with each value in the range [0, 1]
@@ -314,30 +285,33 @@ class BoundingPoly(BaseModel):
         return BoundingPoly(normalized_vertices=rotated_vertices)
 
 
-class Geometry(BaseModel):
+class TextBlock(BaseModel):
     """
-    Represnts a "geometry" of an object
+    Represents a single block of text, with its bounding box.
+    The bounding box is a tuple of (x0, top, x1, bottom) and
+    is normalized to the page size.
     """
 
-    bounding_box: NormBBox
+    class Config:
+        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
+
+    text: str
+    type: SegmentLevels
+    bounding_box: NormBBox = Field(default=None, repr=False)
     bounding_poly: Optional[BoundingPoly] = Field(default=None, repr=False)
+    direction: Optional[str] = None
+    confidence: Optional[float] = None
+    text_spans: Optional[list[TextSpan]] = Field(default=None, repr=False)
 
-    def to_deskewed_geometry(self):
-        """
-        Returns a new geometry object with both bounding box and bounding poly
-        rotated to have zero skew angle
-        """
-        if not self.bounding_poly:
-            raise ValueError("Bounding poly must be present to deskew geometry")
+    def __getitem__(self, index):
+        return getattr(self, index)
 
-        skew_angle = self.bounding_poly.get_skew_angle()
 
-        rotate_point = self.bounding_poly.get_rotation_point()
+def deskew_bounding_poly(bounding_poly: BoundingPoly):
+    skew_angle = bounding_poly.get_skew_angle()
 
-        rotated_bounding_poly = self.bounding_poly.get_rotated_around_point(skew_angle, rotate_point)
-        bounding_box = NormBBox.from_bounding_poly(rotated_bounding_poly)
+    rotate_point = bounding_poly.get_rotation_point()
 
-        return Geometry(
-            bounding_box=bounding_box,
-            bounding_poly=rotated_bounding_poly,
-        )
+    rotated_bounding_poly = bounding_poly.get_rotated_around_point(skew_angle, rotate_point)
+
+    return rotated_bounding_poly

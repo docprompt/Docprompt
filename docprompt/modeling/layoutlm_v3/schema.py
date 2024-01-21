@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from docprompt._exec.ghostscript import rasterize_page_to_bytes
 from docprompt.schema.document import Document
-from docprompt.schema.layout import NormBBox, TextBlock
+from docprompt.schema.layout import NormBBox, TextBlock, deskew_bounding_poly
 
 
 @dataclass
@@ -60,10 +60,8 @@ def text_block_to_norm_input(
     Converts a text block to a LayoutLMv3 input object
     """
 
-    geometry = text_block.geometry.to_deskewed_geometry()
-
     text = text_block["text"].replace("\n", " ")
-    scaled_bbox = convert_bbox(geometry.bounding_box)
+    scaled_bbox = convert_bbox(text_block.bounding_box)
 
     return text, scaled_bbox
 
@@ -111,7 +109,7 @@ def layoutlmv3_inputs_from_document_page(
         if block.direction is not None and block.direction != "UP":
             continue
 
-        if block.geometry.bounding_box.top >= block.geometry.bounding_box.bottom:
+        if block.bounding_box.top >= block.bounding_box.bottom:
             print("Skipping block due to top >= bottom", block)
             continue
 

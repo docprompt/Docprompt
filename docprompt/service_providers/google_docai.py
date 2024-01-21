@@ -8,7 +8,7 @@ import tqdm
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from docprompt.schema.document import Document
-from docprompt.schema.layout import BoundingPoly, Geometry, NormBBox, Point, SegmentLevels, TextBlock, TextSpan
+from docprompt.schema.layout import BoundingPoly, NormBBox, Point, SegmentLevels, TextBlock, TextSpan
 from docprompt.schema.operations import PageResult, PageTextExtractionOutput
 from docprompt.service_providers.base import ProviderResult
 from docprompt.service_providers.types import OPERATIONS
@@ -39,19 +39,37 @@ default_retry_decorator = partial(retry, wait=wait_exponential(multiplier=1, max
 
 def bounding_poly_from_layout(layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"]):
     return BoundingPoly(
-        normalized_vertices=[Point(x=vertex.x, y=vertex.y) for vertex in layout.bounding_poly.normalized_vertices]
+        normalized_vertices=[
+            Point(x=round(vertex.x, 5), y=round(vertex.y, 5)) for vertex in layout.bounding_poly.normalized_vertices
+        ]
     )
 
 
-def geometry_from_layout(layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"]):
-    bounding_poly = bounding_poly_from_layout(layout)
+def bounding_box_from_layout(layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"]):
+    sorted_vertices = sorted(layout.bounding_poly.normalized_vertices, key=lambda x: (x.x, x.y))
+    upper_left = sorted_vertices[0]
+    lower_right = sorted_vertices[-1]
 
-    bounding_box = NormBBox.from_bounding_poly(bounding_poly)
-
-    return Geometry(
-        bounding_box=bounding_box,
-        bounding_poly=bounding_poly,
+    return NormBBox(
+        x0=round(upper_left.x, 5),
+        top=round(upper_left.y, 5),
+        x1=round(lower_right.x, 5),
+        bottom=round(lower_right.y, 5),
     )
+
+
+def geometry_from_layout(
+    layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"],
+    exclude_bounding_poly: bool = False,
+):
+    bounding_poly = None if exclude_bounding_poly else bounding_poly_from_layout(layout)
+
+    bounding_box = bounding_box_from_layout(layout)
+
+    return {
+        "bounding_poly": bounding_poly,
+        "bounding_box": bounding_box,
+    }
 
 
 def text_from_layout(
@@ -100,6 +118,8 @@ def text_blocks_from_page(
     page: "documentai.Document.Page",
     document_text: str,
     type: Literal["line", "block", "token", "paragraph"],
+    *,
+    exclude_bounding_poly: bool = False,
 ) -> list[TextBlock]:
     text_blocks = []
 
@@ -124,7 +144,7 @@ def text_blocks_from_page(
     for item in getattr(page, f"{type}s"):
         layout = item.layout
         block_text = text_from_layout(layout, document_text)
-        geometry = geometry_from_layout(layout)
+        geometry_kwargs = geometry_from_layout(layout, exclude_bounding_poly=exclude_bounding_poly)
         confidence = layout.confidence
         orientation = orientation_mapping.get(layout.orientation, "UP")
 
@@ -135,8 +155,9 @@ def text_blocks_from_page(
             TextBlock(
                 text=block_text,
                 type=block_type,
-                geometry=geometry,
-                confidence=confidence,
+                bounding_box=geometry_kwargs["bounding_box"],
+                bounding_poly=geometry_kwargs["bounding_poly"],
+                confidence=round(confidence, 5),
                 direction=orientation,
                 text_spans=text_spans,
             )
@@ -145,14 +166,16 @@ def text_blocks_from_page(
     return text_blocks
 
 
-def process_page(document_text: str, page, doc_page_num: int, provider_name: str) -> PageResult:
+def process_page(
+    document_text: str, page, doc_page_num: int, provider_name: str, exclude_bounding_poly: bool = False
+) -> PageResult:
     layout = page.layout
 
     page_text = text_from_layout(layout, document_text)
 
-    word_boxes = text_blocks_from_page(page, document_text, "token")
-    line_boxes = text_blocks_from_page(page, document_text, "line")
-    block_boxes = text_blocks_from_page(page, document_text, "block")
+    word_boxes = text_blocks_from_page(page, document_text, "token", exclude_bounding_poly=exclude_bounding_poly)
+    line_boxes = text_blocks_from_page(page, document_text, "line", exclude_bounding_poly=exclude_bounding_poly)
+    block_boxes = text_blocks_from_page(page, document_text, "block", exclude_bounding_poly=exclude_bounding_poly)
 
     ocr_result = PageTextExtractionOutput(
         text=page_text,
@@ -168,14 +191,24 @@ def process_page(document_text: str, page, doc_page_num: int, provider_name: str
     )
 
 
-def gcp_documents_to_result(documents: list["documentai.Document"], provider_name: str) -> ProviderResult:
+def gcp_documents_to_result(
+    documents: list["documentai.Document"], provider_name: str, *, exclude_bounding_poly: bool = False
+) -> ProviderResult:
     page_offset = 1  # We want pages to be 1-indexed
 
     page_results = []
 
     for document in tqdm.tqdm(documents):
         for doc_page_num, page in enumerate(document.pages):
-            page_results.append(process_page(document.text, page, page_offset + doc_page_num, provider_name))
+            page_results.append(
+                process_page(
+                    document.text,
+                    page,
+                    page_offset + doc_page_num,
+                    provider_name,
+                    exclude_bounding_poly=exclude_bounding_poly,
+                )
+            )
 
         page_offset += doc_page_num + 1
 
@@ -200,7 +233,7 @@ class GoogleDocumentAIProvider(BaseProvider):
         service_account_file: Optional[str] = None,
         location: str = "us",
         max_workers: int = multiprocessing.cpu_count() * 2,
-        **kwargs,
+        exclude_bounding_poly: bool = False,
     ):
         if service_account_info is None and service_account_file is None:
             raise ValueError("You must provide either service_account_info or service_account_file")
@@ -215,6 +248,8 @@ class GoogleDocumentAIProvider(BaseProvider):
 
         self.service_account_info = service_account_info
         self.service_account_file = service_account_file
+
+        self.exclude_bounding_poly = exclude_bounding_poly
 
         try:
             from google.cloud import documentai
@@ -303,7 +338,7 @@ class GoogleDocumentAIProvider(BaseProvider):
 
                 pbar.update(len(split_bytes))
 
-        return gcp_documents_to_result(documents, self.name)
+        return gcp_documents_to_result(documents, self.name, exclude_bounding_poly=self.exclude_bounding_poly)
 
     def _process_document_concurrent(self, file_bytes: bytes):
         # Process page chunks concurrently
@@ -358,7 +393,7 @@ class GoogleDocumentAIProvider(BaseProvider):
                     pbar.update(1)
 
         print("Recombining")
-        return gcp_documents_to_result(documents, self.name)
+        return gcp_documents_to_result(documents, self.name, exclude_bounding_poly=self.exclude_bounding_poly)
 
     def _call(self, document: Document, pages=...) -> ProviderResult:
         return self._process_document_concurrent(document.get_bytes())
