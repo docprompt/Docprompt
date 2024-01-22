@@ -34,7 +34,7 @@ service_account_file_read_lock = Lock()
 
 # This will wait up to ~8 minutes before giving up, which covers almost all high-contention cases
 # TODO: Scope this to only retry on 429 and 5xx
-default_retry_decorator = partial(retry, wait=wait_exponential(multiplier=1, max=60), stop=stop_after_attempt(10))
+default_retry_decorator = retry(wait=wait_exponential(multiplier=1, max=60), stop=stop_after_attempt(10))
 
 
 def bounding_poly_from_layout(layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"]):
