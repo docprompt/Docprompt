@@ -1,6 +1,5 @@
 import multiprocessing
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from functools import partial
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from threading import Lock
 from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
 
@@ -191,9 +190,9 @@ def process_page(
     )
 
 
-def gcp_documents_to_result(
+def gcp_documents_to_result_single(
     documents: list["documentai.Document"], provider_name: str, *, exclude_bounding_poly: bool = False
-) -> ProviderResult:
+):
     page_offset = 1  # We want pages to be 1-indexed
 
     page_results = []
@@ -216,6 +215,80 @@ def gcp_documents_to_result(
         provider_name="GoogleDocumentAIProvider",
         page_results=page_results,
     )
+
+
+def multi_process_page(args):
+    idx, document, provider_name, page_offset, exclude_bounding_poly = args
+
+    page_results = []
+
+    for doc_page_num, page in enumerate(document.pages):
+        page_results.append(
+            process_page(
+                document.text,
+                page,
+                page_offset + doc_page_num,
+                provider_name,
+                exclude_bounding_poly=exclude_bounding_poly,
+            )
+        )
+
+    return idx, page_results
+
+
+def gcp_documents_to_result_multi(
+    documents: list["documentai.Document"], provider_name: str, *, exclude_bounding_poly: bool = False
+):
+    tasks = []
+    page_offset = 1  # Pages are 1-indexed
+
+    # Prepare tasks for processing, each with a document index
+    for idx, document in enumerate(documents):
+        args = (
+            idx,
+            document,
+            provider_name,
+            page_offset,
+            exclude_bounding_poly,
+        )
+        tasks.append(args)
+        page_offset += len(document.pages)
+
+    document_results = [None] * len(documents)
+
+    worker_count = min(len(documents), max(multiprocessing.cpu_count(), 1))
+
+    with ProcessPoolExecutor(max_workers=worker_count) as executor:
+        future_to_idx = {executor.submit(multi_process_page, task): task[0] for task in tasks}
+
+        for future in tqdm.tqdm(as_completed(future_to_idx), total=len(documents)):
+            idx = future_to_idx[future]
+            _, page_results = future.result()
+            document_results[idx] = page_results
+
+    return ProviderResult(
+        provider_name="GoogleDocumentAIProvider",
+        page_results=[page for doc_pages in document_results for page in doc_pages],
+    )
+
+
+def gcp_documents_to_result(
+    documents: list["documentai.Document"], provider_name: str, *, exclude_bounding_poly: bool = False
+) -> ProviderResult:
+    if len(documents) == 1 or multiprocessing.cpu_count() == 1:
+        print("Using single process")
+        return gcp_documents_to_result_single(
+            documents[0],
+            provider_name,
+            exclude_bounding_poly=exclude_bounding_poly,
+        )
+    else:
+        print("Using multiprocessing")
+        return gcp_documents_to_result_multi(
+            documents,
+            provider_name,
+            exclude_bounding_poly=exclude_bounding_poly,
+        )
 
 
 class GoogleDocumentAIProvider(BaseProvider):
