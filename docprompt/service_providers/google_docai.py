@@ -283,7 +283,7 @@ def gcp_documents_to_result(
     if True or len(documents) == 1 or multiprocessing.cpu_count() == 1:
         print("Using single process")
         return gcp_documents_to_result_single(
-            documents[0],
+            documents,
             provider_name,
             exclude_bounding_poly=exclude_bounding_poly,
         )
