@@ -256,15 +256,20 @@ def gcp_documents_to_result_multi(
 
     document_results = [None] * len(documents)
 
-    worker_count = min(len(documents), max(multiprocessing.cpu_count(), 1))
+    worker_count = min(len(documents), min(4, max(multiprocessing.cpu_count(), 1)))
 
-    with ProcessPoolExecutor(max_workers=worker_count) as executor:
-        future_to_idx = {executor.submit(multi_process_page, task): task[0] for task in tasks}
+    futures = []
 
-        for future in tqdm.tqdm(as_completed(future_to_idx), total=len(documents)):
-            idx = future_to_idx[future]
-            _, page_results = future.result()
-            document_results[idx] = page_results
+    with tqdm.tqdm(total=len(documents), desc="Processing documents") as pbar:
+        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+            for task in tasks:
+                future = executor.submit(multi_process_page, task)
+                future.add_done_callback(lambda x: pbar.update(1))
+                futures.append(future)
+
+            for future in as_completed(futures):
+                idx, page_results = future.result()
+                document_results[idx] = page_results
 
     return ProviderResult(
         provider_name="GoogleDocumentAIProvider",
