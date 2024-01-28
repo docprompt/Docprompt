@@ -280,7 +280,7 @@ def gcp_documents_to_result_multi(
 def gcp_documents_to_result(
     documents: list["documentai.Document"], provider_name: str, *, exclude_bounding_poly: bool = False
 ) -> ProviderResult:
-    if len(documents) == 1 or multiprocessing.cpu_count() == 1:
+    if True or len(documents) == 1 or multiprocessing.cpu_count() == 1:
         print("Using single process")
         return gcp_documents_to_result_single(
             documents[0],
