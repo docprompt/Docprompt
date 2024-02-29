@@ -15,15 +15,17 @@ class TextSpan(BaseModel):
 class NormBBox(BaseModel):
     """
     Represents a normalized bounding box with each value in the range [0, 1]
-    """
 
-    class Config:
-        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
+    Where x1 > x0 and bottom > top
+    """
 
     x0: float
     top: float
     x1: float
     bottom: float
+
+    class Config:
+        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
 
     def as_tuple(self):
         return (self.x0, self.top, self.x1, self.bottom)
@@ -171,118 +173,14 @@ class Point(BaseModel):
 class BoundingPoly(BaseModel):
     """
     Represents a normalized bounding poly with each value in the range [0, 1]
+
+    Used for higher order shapes like polygons on a page
     """
 
     normalized_vertices: list[Point]
 
     def __getitem__(self, index):
         return self.normalized_vertices[index]
-
-    def get_skew_angle(self):
-        """
-        Determines the skew angle (in degrees) of the bounding poly from
-        perfectly horizontal
-        """
-        if len(self.normalized_vertices) != 4:
-            raise ValueError("BoundingPoly must have 4 vertices for skew angle calculation")
-
-        top_left, top_right, bottom_right, bottom_left = self.normalized_vertices
-
-        top_line_vertical_difference = top_left.y - top_right.y
-        top_line_horizontal_difference = top_right.x - top_left.x
-
-        if top_line_horizontal_difference == 0:
-            return 90 if top_line_vertical_difference > 0 else -90
-
-        skew_angle_radians = atan(top_line_vertical_difference / top_line_horizontal_difference)
-        skew_angle_degrees = degrees(skew_angle_radians)
-
-        return skew_angle_degrees
-
-    def get_centroid(self):
-        """
-        Returns the centroid of the bounding poly
-        """
-        if len(self.normalized_vertices) != 4:
-            raise ValueError("BoundingPoly must have 4 vertices for centroid calculation")
-
-        total_x = sum(vertex.x for vertex in self.normalized_vertices)
-        total_y = sum(vertex.y for vertex in self.normalized_vertices)
-
-        centroid_x = total_x / len(self.normalized_vertices)
-        centroid_y = total_y / len(self.normalized_vertices)
-
-        return Point(x=centroid_x, y=centroid_y)
-
-    def get_rotation_point(self) -> Point:
-        """
-        Determines the ideal point to rotate around based on the skew
-        """
-        if len(self.normalized_vertices) != 4:
-            raise ValueError("BoundingPoly must have 4 vertices to determine rotation point")
-        top_left, top_right, _, bottom_left = self.normalized_vertices
-
-        # If top right is higher than top left
-        if top_right.y > top_left.y:
-            return bottom_left
-        # If top left is higher or they are the same
-        return top_right
-
-    def get_centroid_rotated(self, angle_degrees: float) -> "BoundingPoly":
-        """
-        Return a new bounding poly that has been rotated by the given angle
-        """
-
-        if len(self.normalized_vertices) != 4:
-            raise ValueError("BoundingPoly must have 4 vertices for skew angle rotation")
-
-        centroid = self.get_centroid()
-        angle_rad = radians(angle_degrees)
-        rotated_vertices: list[Point] = []
-
-        for vertex in self.normalized_vertices:
-            # Translate to the origin
-            translated_x = vertex.x - centroid.x
-            translated_y = vertex.y - centroid.y
-
-            # Rotate around the origin
-            rotated_x = translated_x * cos(angle_rad) - translated_y * sin(angle_rad)
-            rotated_y = translated_x * sin(angle_rad) + translated_y * cos(angle_rad)
-
-            # Translate back
-            final_x = rotated_x + centroid.x
-            final_y = rotated_y + centroid.y
-
-            rotated_vertices.append(Point(x=final_x, y=final_y))
-
-        return BoundingPoly(normalized_vertices=rotated_vertices)
-
-    def get_rotated_around_point(self, angle_degrees: float, rotation_point: Point) -> "BoundingPoly":
-        """
-        Return a new bounding poly that has been rotated by the given angle around the given point
-        """
-        if len(self.normalized_vertices) != 4:
-            raise ValueError("BoundingPoly must have 4 vertices for rotation")
-
-        angle_rad = radians(angle_degrees)
-        rotated_vertices: list[Point] = []
-
-        for vertex in self.normalized_vertices:
-            # Translate to the rotation point
-            translated_x = vertex.x - rotation_point.x
-            translated_y = vertex.y - rotation_point.y
-
-            # Rotate around the rotation point
-            rotated_x = translated_x * cos(angle_rad) - translated_y * sin(angle_rad)
-            rotated_y = translated_x * sin(angle_rad) + translated_y * cos(angle_rad)
-
-            # Translate back
-            final_x = rotated_x + rotation_point.x
-            final_y = rotated_y + rotation_point.y
-
-            rotated_vertices.append(Point(x=final_x, y=final_y))
-
-        return BoundingPoly(normalized_vertices=rotated_vertices)
 
 
 class TextBlock(BaseModel):
@@ -305,13 +203,3 @@ class TextBlock(BaseModel):
 
     def __getitem__(self, index):
         return getattr(self, index)
-
-
-def deskew_bounding_poly(bounding_poly: BoundingPoly):
-    skew_angle = bounding_poly.get_skew_angle()
-
-    rotate_point = bounding_poly.get_rotation_point()
-
-    rotated_bounding_poly = bounding_poly.get_rotated_around_point(skew_angle, rotate_point)
-
-    return rotated_bounding_poly

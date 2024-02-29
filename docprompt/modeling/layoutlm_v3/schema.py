@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from docprompt._exec.ghostscript import rasterize_page_to_bytes
 from docprompt.schema.document import Document
-from docprompt.schema.layout import NormBBox, TextBlock, deskew_bounding_poly
+from docprompt.schema.layout import NormBBox, TextBlock
 
 
 @dataclass
