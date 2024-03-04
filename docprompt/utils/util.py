@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 from urllib.parse import unquote
 
 import fsspec
@@ -51,18 +51,28 @@ def get_page_count(fd: Union[Path, PathLike, bytes]) -> int:
         return len(pdf.pages)
 
 
-def load_document(fp: Union[Path, PathLike, bytes], do_compress: bool = False, do_clean: bool = False) -> Document:
+def load_document(
+    fp: Union[Path, PathLike, bytes],
+    *,
+    file_name: Optional[str] = None,
+    do_compress: bool = False,
+    do_clean: bool = False,
+) -> Document:
     """
     Loads a document from a file path
     """
     if isinstance(fp, bytes):
         file_bytes = fp
+        if file_name is None:
+            file_name = "document.pdf"
     else:
         if not isinstance(fp, Path):
             fp = Path(fp)
 
         if fp.is_symlink():
             fp = fp.resolve()
+
+        file_name = fp.name
 
         with open(fp, "rb") as f:
             file_bytes: bytes = f.read()
@@ -71,9 +81,9 @@ def load_document(fp: Union[Path, PathLike, bytes], do_compress: bool = False, d
         raise ValueError("File is not a PDF")
 
     if do_compress or do_clean:
-        with tempfile.TemporaryDirectory(f"_process_{fp.name}") as temp_dir:
+        with tempfile.TemporaryDirectory(f"_process_{file_name}") as temp_dir:
             temp_path = Path(temp_dir)
-            temp_file = temp_path / fp.name
+            temp_file = temp_path / file_name
 
             with temp_file.open("wb") as f:
                 f.write(file_bytes)
@@ -87,7 +97,7 @@ def load_document(fp: Union[Path, PathLike, bytes], do_compress: bool = False, d
                 # compress_pdf_to_path(temp_file, temp_path / "cleaned.pdf", clean=True)
                 # file_bytes = (temp_path / "cleaned.pdf").read_bytes()
 
-    return Document(name=unquote(fp.name), file_path=str(fp), file_bytes=file_bytes)
+    return Document(name=unquote(file_name), file_path=str(fp), file_bytes=file_bytes)
 
 
 def load_document_from_url(url: str, **kwargs):

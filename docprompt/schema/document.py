@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union
 
 import magic
+from pikepdf import Pdf
 from PIL import ImageDraw
 from pydantic import BaseModel, Field, PositiveInt, computed_field, field_serializer, field_validator
 
@@ -64,7 +65,7 @@ class Document(BaseModel):
     @computed_field
     @cached_property
     def page_count(self) -> PositiveInt:
-        with pdfplumber.PDF.open(BytesIO(self.file_bytes)) as pdf:
+        with Pdf.open(BytesIO(self.file_bytes)) as pdf:
             return len(pdf.pages)
 
     @property
