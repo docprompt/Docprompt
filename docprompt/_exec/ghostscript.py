@@ -1,3 +1,4 @@
+import multiprocessing
 import tempfile
 from os import PathLike
 from pathlib import Path
@@ -5,6 +6,8 @@ from subprocess import PIPE, CompletedProcess, run
 from typing import Dict, List, Literal, Optional, Union
 
 GS = "gs"
+
+_RENDER_THREAD_COUNT = max(min(multiprocessing.cpu_count() - 2, 8), 1)
 
 
 class GhostscriptError(Exception):
@@ -73,6 +76,7 @@ def rasterize_pdf(
         "-dTextAlphaBits=4",
         "-dGraphicsAlphaBits=4",
         "-dBufferSpace=250000000",  # 250 Mb of buffer space.
+        f"-dNumRenderingThreads={_RENDER_THREAD_COUNT}",
     ]
 
     if downscale_factor is not None:

@@ -12,8 +12,8 @@ from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union
 
 import magic
 from pikepdf import Pdf
-from PIL import ImageDraw
-from pydantic import BaseModel, Field, PositiveInt, computed_field, field_serializer, field_validator
+from PIL import Image, ImageDraw
+from pydantic import BaseModel, Field, PositiveInt, PrivateAttr, computed_field, field_serializer, field_validator
 
 from docprompt._exec.ghostscript import compress_pdf_to_bytes, rasterize_page_to_bytes, rasterize_pdf_to_bytes
 from docprompt.schema.operations import PageTextExtractionOutput
@@ -55,6 +55,8 @@ class Document(BaseModel):
     file_bytes: bytes = Field(description="The bytes of the document", repr=False)
     file_path: Optional[str] = None
     text_sidecars: Dict[str, Dict[int, PageTextExtractionOutput]] = Field(default_factory=dict, repr=False)
+
+    _raster_cache: Dict[int, Dict[int, bytes]] = PrivateAttr(default_factory=dict)
 
     def __len__(self):
         return len(self.pages)
@@ -142,24 +144,76 @@ class Document(BaseModel):
         with self.as_tempfile() as temp_path:
             return compress_pdf_to_bytes(temp_path, **compression_kwargs)
 
-    def rasterize_page(self, page_number: int, dpi: int = DEFAULT_DPI, device="png16m") -> bytes:
+    def rasterize_page(
+        self,
+        page_number: int,
+        *,
+        dpi: int = DEFAULT_DPI,
+        downscale_size: Optional[Tuple[int, int]] = None,
+        device="png16m",
+        use_cache: bool = True,
+    ) -> bytes:
         """
         Rasterizes a page of the document using Ghostscript
         """
+        if use_cache and self._raster_cache.get(dpi, {}).get(page_number):
+            return self._raster_cache[dpi][page_number]
+
         if page_number < 0 or page_number > self.num_pages:
             raise ValueError(f"Page number must be between 0 and {self.num_pages}")
 
         with self.as_tempfile() as temp_path:
-            return rasterize_page_to_bytes(temp_path, page_number, dpi=dpi, device=device)
+            rastered = rasterize_page_to_bytes(temp_path, page_number, dpi=dpi, device=device)
+
+        if downscale_size:
+            with Image.open(BytesIO(rastered)) as img:
+                width, height = img.size
+                if not (width < downscale_size[0] or height < downscale_size[1]):
+                    img = img.resize(downscale_size)
+                    img_bytes = BytesIO()
+                    img.save(img_bytes, format="PNG")
+                    rastered = img_bytes.getvalue()
+
+        if use_cache:
+            self._raster_cache.setdefault(dpi, {})
+            self._raster_cache[dpi][page_number] = rastered
+
+        return rastered
+
+    def rasterize_page_to_data_uri(
+        self,
+        page_number: int,
+        *,
+        dpi: int = DEFAULT_DPI,
+        downscale_size: Optional[Tuple[int, int]] = None,
+        device="png16m",
+        use_cache: bool = True,
+    ) -> str:
+        """
+        Rasterizes a page of the document using Ghostscript and returns a data URI, which can
+        be embedded into HTML or passed to large language models
+        """
+        image_bytes = self.rasterize_page(
+            page_number, dpi=dpi, downscale_size=downscale_size, device=device, use_cache=use_cache
+        )
+        return f"data:image/png;base64,{base64.b64encode(image_bytes).decode('utf-8')}"
 
     def rasterize_pdf(
-        self, dpi: int = DEFAULT_DPI, device="pnggray", downscale_factor: Optional[int] = None
+        self, dpi: int = DEFAULT_DPI, device="pnggray", downscale_factor: Optional[int] = None, use_cache: bool = True
     ) -> Dict[int, bytes]:
         """
         Rasterizes the entire document using Ghostscript
         """
+        if use_cache and self._raster_cache.get(dpi) and len(self._raster_cache[dpi]) == self.num_pages:
+            return self._raster_cache[dpi]
+
         with self.as_tempfile() as temp_path:
-            return rasterize_pdf_to_bytes(temp_path, dpi=dpi, device=device, downscale_factor=downscale_factor)
+            result = rasterize_pdf_to_bytes(temp_path, dpi=dpi, device=device, downscale_factor=downscale_factor)
+
+        if use_cache:
+            self._raster_cache[dpi] = result.copy()  # Shallow copy should be OK
+
+        return result
 
     def split(self, start: Optional[int] = None, stop: Optional[int] = None):
         """
@@ -176,17 +230,21 @@ class Document(BaseModel):
 
         return Document.from_bytes(split_bytes, name=self.name)
 
-    @contextmanager
-    def as_tempfile(self, **kwargs) -> str:
+    def as_tempfile(self, **kwargs):
         """
         Returns a tempfile of the document
         """
-        tempfile_kwargs = {"mode": "wb", "delete": True, "suffix": ".pdf", **kwargs}
 
-        with tempfile.NamedTemporaryFile(**tempfile_kwargs) as f:
-            f.write(self.file_bytes)
-            f.flush()
-            yield f.name
+        @contextmanager
+        def tempfile_context() -> str:
+            tempfile_kwargs = {"mode": "wb", "delete": True, "suffix": ".pdf", **kwargs}
+
+            with tempfile.NamedTemporaryFile(**tempfile_kwargs) as f:
+                f.write(self.file_bytes)
+                f.flush()
+                yield f.name
+
+        return tempfile_context()
 
     def write_to_path(self, path: Union[PathLike, str], **kwargs):
         """
