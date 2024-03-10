@@ -9,7 +9,7 @@ from urllib.parse import unquote
 
 import fsspec
 import magic
-from pdfplumber import PDF
+from pikepdf import Pdf
 
 from docprompt._exec.ghostscript import compress_pdf_to_path
 from docprompt.schema.document import Document
@@ -45,9 +45,9 @@ def get_page_count(fd: Union[Path, PathLike, bytes]) -> int:
     """
     if not isinstance(fd, bytes):
         with open(fd, "rb") as f:
-            fd: bytes = f.read()
+            fd = f.read()
 
-    with PDF.open(BytesIO(fd)) as pdf:
+    with Pdf.open(BytesIO(fd)) as pdf:
         return len(pdf.pages)
 
 

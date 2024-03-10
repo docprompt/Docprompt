@@ -23,8 +23,6 @@ from .layout import TextBlock
 if TYPE_CHECKING:
     from docprompt.service_providers.base import BaseProvider
 
-import pdfplumber
-
 DEFAULT_DPI = 100
 
 
@@ -32,6 +30,8 @@ def get_page_render_size_from_bytes(file_bytes: bytes, page_number: int, dpi: in
     """
     Returns the render size of a page in pixels
     """
+    import pdfplumber
+
     with pdfplumber.PDF.open(BytesIO(file_bytes)) as pdf:
         page = pdf.pages[page_number]
 
@@ -67,8 +67,9 @@ class Document(BaseModel):
     @computed_field
     @cached_property
     def page_count(self) -> PositiveInt:
-        with Pdf.open(BytesIO(self.file_bytes)) as pdf:
-            return len(pdf.pages)
+        from docprompt.utils.util import get_page_count
+
+        return get_page_count(self.file_bytes)
 
     @property
     def num_pages(self):
