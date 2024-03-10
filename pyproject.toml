@@ -1,8 +1,8 @@
 [tool]
 [tool.poetry]
 name = "docprompt"
-version = "0.1.0"
-homepage = "https://github.com/psu3d0/docprompt"
+version = "0.1.1"
+homepage = "https://github.com/Page-Leaf/docprompt"
 description = "Documents and large language models."
 authors = ["Frankie Colson <frank@pageleaf.io>"]
 readme = "README.md"
