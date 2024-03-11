@@ -157,14 +157,21 @@ class Document(BaseModel):
         """
         Rasterizes a page of the document using Ghostscript
         """
-        if use_cache and self._raster_cache.get(dpi, {}).get(page_number):
-            return self._raster_cache[dpi][page_number]
+        generated_image = False
 
         if page_number < 0 or page_number > self.num_pages:
             raise ValueError(f"Page number must be between 0 and {self.num_pages}")
 
-        with self.as_tempfile() as temp_path:
-            rastered = rasterize_page_to_bytes(temp_path, page_number, dpi=dpi, device=device)
+        if use_cache and self._raster_cache.get(dpi, {}).get(page_number):
+            rastered = self._raster_cache[dpi][page_number]
+        else:
+            with self.as_tempfile() as temp_path:
+                rastered = rasterize_page_to_bytes(temp_path, page_number, dpi=dpi, device=device)
+                generated_image = True
+
+        if use_cache and generated_image:
+            self._raster_cache.setdefault(dpi, {})
+            self._raster_cache[dpi][page_number] = rastered
 
         if downscale_size:
             with Image.open(BytesIO(rastered)) as img:
@@ -174,10 +181,6 @@ class Document(BaseModel):
                     img_bytes = BytesIO()
                     img.save(img_bytes, format="PNG")
                     rastered = img_bytes.getvalue()
-
-        if use_cache:
-            self._raster_cache.setdefault(dpi, {})
-            self._raster_cache[dpi][page_number] = rastered
 
         return rastered
 
