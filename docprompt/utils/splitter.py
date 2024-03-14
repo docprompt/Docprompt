@@ -1,17 +1,15 @@
 import io
 import logging
 import tempfile
-from io import BytesIO
-from typing import Iterator, Optional, Tuple
+from typing import Iterator, Optional
 
-import magic
 from pikepdf import Pdf
 
 from docprompt._exec.ghostscript import compress_pdf_to_bytes
 from docprompt.utils import get_page_count
 
 try:
-    from pypdf import PdfReader, PdfWriter
+    from pypdf import PdfReader, PdfWriter  # noqa
 except ImportError:
     print("pypdf not installed, PDF splitting will not work")
 
@@ -89,7 +87,9 @@ def pdf_split_iter_fast(file_bytes: bytes, max_page_count: int) -> Iterator[byte
             current_page += max_page_count
 
 
-def pdf_split_iter_with_max_bytes(file_bytes: bytes, max_page_count: int, max_bytes: int) -> Iterator[bytes]:
+def pdf_split_iter_with_max_bytes(
+    file_bytes: bytes, max_page_count: int, max_bytes: int
+) -> Iterator[bytes]:
     """
     Splits a PDF into batches of pages up to `max_page_count` pages and `max_bytes` bytes.
     """

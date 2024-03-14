@@ -1,6 +1,5 @@
 import base64
 import gzip
-import pickle
 import tempfile
 from contextlib import contextmanager
 from datetime import datetime
@@ -8,18 +7,27 @@ from functools import cached_property
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Dict, Optional, Tuple, Union
 
 import magic
 import pikepdf
-from pikepdf import Pdf
-from PIL import Image, ImageDraw
-from pydantic import BaseModel, Field, PositiveInt, PrivateAttr, computed_field, field_serializer, field_validator
+from PIL import Image
+from pydantic import (
+    BaseModel,
+    Field,
+    PositiveInt,
+    PrivateAttr,
+    computed_field,
+    field_serializer,
+    field_validator,
+)
 
-from docprompt._exec.ghostscript import compress_pdf_to_bytes, rasterize_page_to_bytes, rasterize_pdf_to_bytes
+from docprompt._exec.ghostscript import (
+    compress_pdf_to_bytes,
+    rasterize_page_to_bytes,
+    rasterize_pdf_to_bytes,
+)
 from docprompt.schema.operations import PageTextExtractionOutput
-
-from .layout import TextBlock
 
 if TYPE_CHECKING:
     from docprompt.service_providers.base import BaseProvider
@@ -27,7 +35,9 @@ if TYPE_CHECKING:
 DEFAULT_DPI = 100
 
 
-def get_page_render_size_from_bytes(file_bytes: bytes, page_number: int, dpi: int = DEFAULT_DPI):
+def get_page_render_size_from_bytes(
+    file_bytes: bytes, page_number: int, dpi: int = DEFAULT_DPI
+):
     """
     Returns the render size of a page in pixels
     """
@@ -54,7 +64,9 @@ class Document(BaseModel):
     name: str = Field(description="The name of the document")
     file_bytes: bytes = Field(description="The bytes of the document", repr=False)
     file_path: Optional[str] = None
-    text_sidecars: Dict[str, Dict[int, PageTextExtractionOutput]] = Field(default_factory=dict, repr=False)
+    text_sidecars: Dict[str, Dict[int, PageTextExtractionOutput]] = Field(
+        default_factory=dict, repr=False
+    )
 
     _raster_cache: Dict[int, Dict[int, bytes]] = PrivateAttr(default_factory=dict)
 
@@ -132,7 +144,9 @@ class Document(BaseModel):
     def path(self):
         return self.file_path
 
-    def get_page_render_size(self, page_number: int, dpi: int = DEFAULT_DPI) -> Tuple[int, int]:
+    def get_page_render_size(
+        self, page_number: int, dpi: int = DEFAULT_DPI
+    ) -> Tuple[int, int]:
         """
         Returns the render size of a page in pixels
         """
@@ -166,7 +180,9 @@ class Document(BaseModel):
             rastered = self._raster_cache[dpi][page_number]
         else:
             with self.as_tempfile() as temp_path:
-                rastered = rasterize_page_to_bytes(temp_path, page_number, dpi=dpi, device=device)
+                rastered = rasterize_page_to_bytes(
+                    temp_path, page_number, dpi=dpi, device=device
+                )
                 generated_image = True
 
         if use_cache and generated_image:
@@ -198,21 +214,35 @@ class Document(BaseModel):
         be embedded into HTML or passed to large language models
         """
         image_bytes = self.rasterize_page(
-            page_number, dpi=dpi, downscale_size=downscale_size, device=device, use_cache=use_cache
+            page_number,
+            dpi=dpi,
+            downscale_size=downscale_size,
+            device=device,
+            use_cache=use_cache,
         )
         return f"data:image/png;base64,{base64.b64encode(image_bytes).decode('utf-8')}"
 
     def rasterize_pdf(
-        self, dpi: int = DEFAULT_DPI, device="pnggray", downscale_factor: Optional[int] = None, use_cache: bool = True
+        self,
+        dpi: int = DEFAULT_DPI,
+        device="pnggray",
+        downscale_factor: Optional[int] = None,
+        use_cache: bool = True,
     ) -> Dict[int, bytes]:
         """
         Rasterizes the entire document using Ghostscript
         """
-        if use_cache and self._raster_cache.get(dpi) and len(self._raster_cache[dpi]) == self.num_pages:
+        if (
+            use_cache
+            and self._raster_cache.get(dpi)
+            and len(self._raster_cache[dpi]) == self.num_pages
+        ):
             return self._raster_cache[dpi]
 
         with self.as_tempfile() as temp_path:
-            result = rasterize_pdf_to_bytes(temp_path, dpi=dpi, device=device, downscale_factor=downscale_factor)
+            result = rasterize_pdf_to_bytes(
+                temp_path, dpi=dpi, device=device, downscale_factor=downscale_factor
+            )
 
         if use_cache:
             self._raster_cache[dpi] = result.copy()  # Shallow copy should be OK
@@ -230,7 +260,9 @@ class Document(BaseModel):
 
         from docprompt.utils.splitter import split_pdf_to_bytes
 
-        split_bytes = split_pdf_to_bytes(self.file_bytes, start_page=start, stop_page=stop)
+        split_bytes = split_pdf_to_bytes(
+            self.file_bytes, start_page=start, stop_page=stop
+        )
 
         return Document.from_bytes(split_bytes, name=self.name)
 

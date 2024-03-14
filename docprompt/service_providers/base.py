@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, ContextManager, Optional
+from typing import TYPE_CHECKING, Optional
 
 from docprompt.schema.operations import ProviderResult
 from docprompt.service_providers.types import OPERATIONS
@@ -20,7 +20,9 @@ class BaseProvider(metaclass=ABCMeta):
     def capabilities(self) -> list[OPERATIONS]:
         raise NotImplementedError
 
-    def process_document(self, document: "Document", pages: Optional[list[int]] = None) -> ProviderResult:
+    def process_document(
+        self, document: "Document", pages: Optional[list[int]] = None
+    ) -> ProviderResult:
         """
         Should return a ProviderResult object
         """
