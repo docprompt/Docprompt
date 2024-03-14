@@ -53,8 +53,8 @@ transformers = {version = "^4.34.1", optional = true}
 torch = {version = "^2.1.0", optional = true}
 pillow = ">=9.0.1"
 python-magic = ">=0.4.24"
-pdfplumber = "^0.10.2"
-google-cloud-documentai = "^2.20.1"
+google-cloud-documentai = {version = ">=2.20.0", optional = true}
+azure-ai-formrecognizer = {version = ">=3.3.0", optional = true}
 pypdf = "^3.16.4"
 tqdm = ">=4.61.0"
 fsspec = "^2023.10.0"
@@ -83,6 +83,14 @@ doc = [
     "mkdocs-material-extension",
     "mkdocs-autorefs"
     ]
+
+google = [
+    "google-cloud-documentai"
+]
+
+azure = [
+    "azure-ai-formrecognizer"
+]
 
 modeling = [
     "numpy",

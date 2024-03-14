@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Tuple, Union
 
 import magic
+import pikepdf
 from pikepdf import Pdf
 from PIL import Image, ImageDraw
 from pydantic import BaseModel, Field, PositiveInt, PrivateAttr, computed_field, field_serializer, field_validator
@@ -30,20 +31,19 @@ def get_page_render_size_from_bytes(file_bytes: bytes, page_number: int, dpi: in
     """
     Returns the render size of a page in pixels
     """
-    import pdfplumber
 
-    with pdfplumber.PDF.open(BytesIO(file_bytes)) as pdf:
+    with pikepdf.Pdf.open(BytesIO(file_bytes)) as pdf:
         page = pdf.pages[page_number]
 
-        width_pt, height_pt = page.mediabox.upper_right
+    mediabox: list[int] = list(page.mediabox.as_list())  # type: ignore
 
-    width_in = width_pt / 72
-    height_in = height_pt / 72
+    base_width = int(mediabox[2] - mediabox[0])
+    base_height = int(mediabox[3] - mediabox[1])
 
-    width_px = int(width_in * dpi)
-    height_px = int(height_in * dpi)
+    width = int(base_width * dpi / 72)
+    height = int(base_height * dpi / 72)
 
-    return (width_px, height_px)
+    return width, height
 
 
 class Document(BaseModel):

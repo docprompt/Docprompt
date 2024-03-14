@@ -12,6 +12,53 @@ files = [
 ]
 
 [[package]]
+name = "azure-ai-formrecognizer"
+version = "3.3.2"
+description = "Microsoft Azure Form Recognizer Client Library for Python"
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "azure-ai-formrecognizer-3.3.2.tar.gz", hash = "sha256:064803e0885bbe0429d1d282fc400123a5fc7f3baebb7f6ce30456450c08085e"},
+    {file = "azure_ai_formrecognizer-3.3.2-py3-none-any.whl", hash = "sha256:3ea6ab27536e05f7a52953c8884f9488b4015bfe8904c87a4b5a8961b0a73792"},
+]
+
+[package.dependencies]
+azure-common = ">=1.1,<2.0"
+azure-core = ">=1.23.0,<2.0.0"
+msrest = ">=0.6.21"
+typing-extensions = ">=4.0.1"
+
+[[package]]
+name = "azure-common"
+version = "1.1.28"
+description = "Microsoft Azure Client Library for Python (Common)"
+optional = true
+python-versions = "*"
+files = [
+    {file = "azure-common-1.1.28.zip", hash = "sha256:4ac0cd3214e36b6a1b6a442686722a5d8cc449603aa833f3f0f40bda836704a3"},
+    {file = "azure_common-1.1.28-py2.py3-none-any.whl", hash = "sha256:5c12d3dcf4ec20599ca6b0d3e09e86e146353d443e7fcc050c9a19c1f9df20ad"},
+]
+
+[[package]]
+name = "azure-core"
+version = "1.30.1"
+description = "Microsoft Azure Core Library for Python"
+optional = true
+python-versions = ">=3.7"
+files = [
+    {file = "azure-core-1.30.1.tar.gz", hash = "sha256:26273a254131f84269e8ea4464f3560c731f29c0c1f69ac99010845f239c1a8f"},
+    {file = "azure_core-1.30.1-py3-none-any.whl", hash = "sha256:7c5ee397e48f281ec4dd773d67a0a47a0962ed6fa833036057f9ea067f688e74"},
+]
+
+[package.dependencies]
+requests = ">=2.21.0"
+six = ">=1.11.0"
+typing-extensions = ">=4.6.0"
+
+[package.extras]
+aio = ["aiohttp (>=3.0)"]
+
+[[package]]
 name = "black"
 version = "23.12.0"
 description = "The uncompromising code formatter."
@@ -72,7 +119,7 @@ files = [
 name = "cachetools"
 version = "5.3.2"
 description = "Extensible memoizing collections and decorators"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "cachetools-5.3.2-py3-none-any.whl", hash = "sha256:861f35a13a451f94e301ce2bec7cac63e881232ccce7ed67fab9b5df4d3beaa1"},
@@ -83,7 +130,7 @@ files = [
 name = "certifi"
 version = "2023.11.17"
 description = "Python package for providing Mozilla's CA Bundle."
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "certifi-2023.11.17-py3-none-any.whl", hash = "sha256:e036ab49d5b79556f99cfc2d9320b34cfbe5be05c5871b51de9329f0603b0474"},
@@ -94,7 +141,7 @@ files = [
 name = "cffi"
 version = "1.16.0"
 description = "Foreign Function Interface for Python calling C code."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "cffi-1.16.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:6b3d6606d369fc1da4fd8c357d026317fbb9c9b75d36dc16e90e84c26854b088"},
@@ -169,7 +216,7 @@ files = [
 name = "charset-normalizer"
 version = "3.3.2"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
-optional = false
+optional = true
 python-versions = ">=3.7.0"
 files = [
     {file = "charset-normalizer-3.3.2.tar.gz", hash = "sha256:f30c3cb33b24454a82faecaf01b19c18562b1e89558fb6c56de4d9118a032fd5"},
@@ -360,7 +407,7 @@ toml = ["tomli"]
 name = "cryptography"
 version = "41.0.7"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "cryptography-41.0.7-cp37-abi3-macosx_10_12_universal2.whl", hash = "sha256:3c78451b78313fa81607fa1b3f1ae0a5ddd8014c38a02d9db0616133987b9cdf"},
@@ -557,7 +604,7 @@ dev = ["flake8", "markdown", "twine", "wheel"]
 name = "google-api-core"
 version = "2.15.0"
 description = "Google API client core library"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "google-api-core-2.15.0.tar.gz", hash = "sha256:abc978a72658f14a2df1e5e12532effe40f94f868f6e23d95133bd6abcca35ca"},
@@ -587,7 +634,7 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0.dev0)"]
 name = "google-auth"
 version = "2.25.2"
 description = "Google Authentication Library"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "google-auth-2.25.2.tar.gz", hash = "sha256:42f707937feb4f5e5a39e6c4f343a17300a459aaf03141457ba505812841cc40"},
@@ -610,7 +657,7 @@ requests = ["requests (>=2.20.0,<3.0.0.dev0)"]
 name = "google-cloud-documentai"
 version = "2.21.1"
 description = "Google Cloud Documentai API client library"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "google-cloud-documentai-2.21.1.tar.gz", hash = "sha256:e21128ff873e8ae023d129f8890f76a2b5a6c16be923a77b2459b9c6c0a871e4"},
@@ -626,7 +673,7 @@ protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4
 name = "googleapis-common-protos"
 version = "1.62.0"
 description = "Common protobufs used in Google APIs"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "googleapis-common-protos-1.62.0.tar.gz", hash = "sha256:83f0ece9f94e5672cced82f592d2a5edf527a96ed1794f0bab36d5735c996277"},
@@ -643,7 +690,7 @@ grpc = ["grpcio (>=1.44.0,<2.0.0.dev0)"]
 name = "grpcio"
 version = "1.60.0"
 description = "HTTP/2-based RPC framework"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "grpcio-1.60.0-cp310-cp310-linux_armv7l.whl", hash = "sha256:d020cfa595d1f8f5c6b343530cd3ca16ae5aefdd1e832b777f9f0eb105f5b139"},
@@ -709,7 +756,7 @@ protobuf = ["grpcio-tools (>=1.60.0)"]
 name = "grpcio-status"
 version = "1.60.0"
 description = "Status proto mapping for gRPC"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "grpcio-status-1.60.0.tar.gz", hash = "sha256:f10e0b6db3adc0fdc244b71962814ee982996ef06186446b5695b9fa635aa1ab"},
@@ -772,7 +819,7 @@ license = ["ukkonen"]
 name = "idna"
 version = "3.6"
 description = "Internationalized Domain Names in Applications (IDNA)"
-optional = false
+optional = true
 python-versions = ">=3.5"
 files = [
     {file = "idna-3.6-py3-none-any.whl", hash = "sha256:c05567e9c24a6b9faaa835c4821bad0590fbb9d5779e7caa6e1cc4978e7eb24f"},
@@ -808,6 +855,20 @@ files = [
     {file = "iniconfig-2.0.0-py3-none-any.whl", hash = "sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374"},
     {file = "iniconfig-2.0.0.tar.gz", hash = "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3"},
 ]
+
+[[package]]
+name = "isodate"
+version = "0.6.1"
+description = "An ISO 8601 date/time/duration parser and formatter"
+optional = true
+python-versions = "*"
+files = [
+    {file = "isodate-0.6.1-py2.py3-none-any.whl", hash = "sha256:0751eece944162659049d35f4f549ed815792b38793f07cf73381c1c87cbed96"},
+    {file = "isodate-0.6.1.tar.gz", hash = "sha256:48c5881de7e8b0a0d648cb024c8062dc84e7b840ed81e864c7614fd3c127bde9"},
+]
+
+[package.dependencies]
+six = "*"
 
 [[package]]
 name = "isort"
@@ -1345,6 +1406,27 @@ gmpy = ["gmpy2 (>=2.1.0a4)"]
 tests = ["pytest (>=4.6)"]
 
 [[package]]
+name = "msrest"
+version = "0.7.1"
+description = "AutoRest swagger generator Python client runtime."
+optional = true
+python-versions = ">=3.6"
+files = [
+    {file = "msrest-0.7.1-py3-none-any.whl", hash = "sha256:21120a810e1233e5e6cc7fe40b474eeb4ec6f757a15d7cf86702c369f9567c32"},
+    {file = "msrest-0.7.1.zip", hash = "sha256:6e7661f46f3afd88b75667b7187a92829924446c7ea1d169be8c4bb7eeb788b9"},
+]
+
+[package.dependencies]
+azure-core = ">=1.24.0"
+certifi = ">=2017.4.17"
+isodate = ">=0.6.0"
+requests = ">=2.16,<3.0"
+requests-oauthlib = ">=0.5.0"
+
+[package.extras]
+async = ["aiodns", "aiohttp (>=3.0)"]
+
+[[package]]
 name = "mypy"
 version = "1.7.1"
 description = "Optional static typing for Python"
@@ -1646,6 +1728,22 @@ files = [
 ]
 
 [[package]]
+name = "oauthlib"
+version = "3.2.2"
+description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
+optional = true
+python-versions = ">=3.6"
+files = [
+    {file = "oauthlib-3.2.2-py3-none-any.whl", hash = "sha256:8139f29aac13e25d502680e9e19963e83f16838d48a0d71c287fe40e7067fbca"},
+    {file = "oauthlib-3.2.2.tar.gz", hash = "sha256:9859c40929662bec5d64f34d01c99e093149682a3f38915dc0655d5a633dd918"},
+]
+
+[package.extras]
+rsa = ["cryptography (>=3.0.0)"]
+signals = ["blinker (>=1.4.0)"]
+signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
+
+[[package]]
 name = "packaging"
 version = "23.2"
 description = "Core utilities for Python packages"
@@ -1666,42 +1764,6 @@ files = [
     {file = "pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"},
     {file = "pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"},
 ]
-
-[[package]]
-name = "pdfminer-six"
-version = "20221105"
-description = "PDF parser and analyzer"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "pdfminer.six-20221105-py3-none-any.whl", hash = "sha256:1eaddd712d5b2732f8ac8486824533514f8ba12a0787b3d5fe1e686cd826532d"},
-    {file = "pdfminer.six-20221105.tar.gz", hash = "sha256:8448ab7b939d18b64820478ecac5394f482d7a79f5f7eaa7703c6c959c175e1d"},
-]
-
-[package.dependencies]
-charset-normalizer = ">=2.0.0"
-cryptography = ">=36.0.0"
-
-[package.extras]
-dev = ["black", "mypy (==0.931)", "nox", "pytest"]
-docs = ["sphinx", "sphinx-argparse"]
-image = ["Pillow"]
-
-[[package]]
-name = "pdfplumber"
-version = "0.10.3"
-description = "Plumb a PDF for detailed information about each char, rectangle, and line."
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "pdfplumber-0.10.3-py3-none-any.whl", hash = "sha256:7cb73f382278967db8d0e681f67aca82b41c32861df1d85f9f6a2cf18a175fa8"},
-    {file = "pdfplumber-0.10.3.tar.gz", hash = "sha256:4dd78ff1c62b99da8139daf5b62747613f6f0e970f225a3e911862e296599375"},
-]
-
-[package.dependencies]
-"pdfminer.six" = "20221105"
-Pillow = ">=9.1"
-pypdfium2 = ">=4.18.0"
 
 [[package]]
 name = "pikepdf"
@@ -1903,7 +1965,7 @@ virtualenv = ">=20.10.0"
 name = "proto-plus"
 version = "1.23.0"
 description = "Beautiful, Pythonic protocol buffers."
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "proto-plus-1.23.0.tar.gz", hash = "sha256:89075171ef11988b3fa157f5dbd8b9cf09d65fffee97e29ce403cd8defba19d2"},
@@ -1920,7 +1982,7 @@ testing = ["google-api-core[grpc] (>=1.31.5)"]
 name = "protobuf"
 version = "4.25.1"
 description = ""
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "protobuf-4.25.1-cp310-abi3-win32.whl", hash = "sha256:193f50a6ab78a970c9b4f148e7c750cfde64f59815e86f686c22e26b4fe01ce7"},
@@ -1951,7 +2013,7 @@ files = [
 name = "pyasn1"
 version = "0.5.1"
 description = "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)"
-optional = false
+optional = true
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
 files = [
     {file = "pyasn1-0.5.1-py2.py3-none-any.whl", hash = "sha256:4439847c58d40b1d0a573d07e3856e95333f1976294494c325775aeca506eb58"},
@@ -1962,7 +2024,7 @@ files = [
 name = "pyasn1-modules"
 version = "0.3.0"
 description = "A collection of ASN.1-based protocols modules"
-optional = false
+optional = true
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
 files = [
     {file = "pyasn1_modules-0.3.0-py2.py3-none-any.whl", hash = "sha256:d3ccd6ed470d9ffbc716be08bd90efbd44d0734bc9303818f7336070984a162d"},
@@ -1987,7 +2049,7 @@ files = [
 name = "pycparser"
 version = "2.21"
 description = "C parser in Python"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 files = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
@@ -2207,28 +2269,6 @@ dev = ["black", "flit", "pip-tools", "pre-commit (<2.18.0)", "pytest-cov", "pyte
 docs = ["myst_parser", "sphinx", "sphinx_rtd_theme"]
 full = ["Pillow (>=8.0.0)", "PyCryptodome", "cryptography"]
 image = ["Pillow (>=8.0.0)"]
-
-[[package]]
-name = "pypdfium2"
-version = "4.25.0"
-description = "Python bindings to PDFium"
-optional = false
-python-versions = ">= 3.6"
-files = [
-    {file = "pypdfium2-4.25.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:25075d85834bf70a2244ce564063ee9aa2c738a019c09aeffa61920163892110"},
-    {file = "pypdfium2-4.25.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:ab46ac5e257b0610ca2bed7b5baf588b1417abe5bc36339ffdc651620dfe02f8"},
-    {file = "pypdfium2-4.25.0-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:7b5131374574d4f602346d1ef489362cc7fbd7a1920214e14efd5114c1915bf5"},
-    {file = "pypdfium2-4.25.0-py3-none-manylinux_2_17_armv7l.whl", hash = "sha256:20cb1d9fbd78595f0d0750a232f8204caa2f2aec34a1dde80ec5184f1efcf90d"},
-    {file = "pypdfium2-4.25.0-py3-none-manylinux_2_17_i686.whl", hash = "sha256:48ab21bed55bcb2cbce5c61363fc0f5481b26f5eb34b484fbea126c0d86f3697"},
-    {file = "pypdfium2-4.25.0-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:766730b0422347770189de5d3c7ff0c85620be12678d813fcce1122900b31c40"},
-    {file = "pypdfium2-4.25.0-py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:485b404bd059a80a1bb0646647e2f0493f9240ca2c2672059d876b91c2e7e9f9"},
-    {file = "pypdfium2-4.25.0-py3-none-musllinux_1_1_i686.whl", hash = "sha256:f49234b882c5c3fd1936fa20db665d6667d45bcbefc8120565c600aa7287bda0"},
-    {file = "pypdfium2-4.25.0-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:b43a0206c2ac5dc812b6bdff2e74023a080f06ca847dd7905063f33ca385c655"},
-    {file = "pypdfium2-4.25.0-py3-none-win32.whl", hash = "sha256:23e693cceb0154a609838bf827a139a475eb532297d2c2b6cd4033b9bac73dad"},
-    {file = "pypdfium2-4.25.0-py3-none-win_amd64.whl", hash = "sha256:43f7612bc802518d67dacec11d1d0fb447c7371ce70cb2328f70ef71e9fe0582"},
-    {file = "pypdfium2-4.25.0-py3-none-win_arm64.whl", hash = "sha256:d05155f6a50b8025c0fe0a11a527d4f1716c09f06fa4e4d46f3798fd040e8b95"},
-    {file = "pypdfium2-4.25.0.tar.gz", hash = "sha256:1691bfa3e65bc84fd8b1d26a6d68af90f9662771a647dd6c4e031d81c4a72037"},
-]
 
 [[package]]
 name = "pytest"
@@ -2513,7 +2553,7 @@ files = [
 name = "requests"
 version = "2.31.0"
 description = "Python HTTP for Humans."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "requests-2.31.0-py3-none-any.whl", hash = "sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f"},
@@ -2529,6 +2569,24 @@ urllib3 = ">=1.21.1,<3"
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
+
+[[package]]
+name = "requests-oauthlib"
+version = "1.4.0"
+description = "OAuthlib authentication support for Requests."
+optional = true
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+files = [
+    {file = "requests-oauthlib-1.4.0.tar.gz", hash = "sha256:acee623221e4a39abcbb919312c8ff04bd44e7e417087fb4bd5e2a2f53d5e79a"},
+    {file = "requests_oauthlib-1.4.0-py2.py3-none-any.whl", hash = "sha256:7a3130d94a17520169e38db6c8d75f2c974643788465ecc2e4b36d288bf13033"},
+]
+
+[package.dependencies]
+oauthlib = ">=3.0.0"
+requests = ">=2.0.0"
+
+[package.extras]
+rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
 
 [[package]]
 name = "requests-toolbelt"
@@ -2562,7 +2620,7 @@ idna2008 = ["idna"]
 name = "rsa"
 version = "4.9"
 description = "Pure-Python RSA implementation"
-optional = false
+optional = true
 python-versions = ">=3.6,<4"
 files = [
     {file = "rsa-4.9-py3-none-any.whl", hash = "sha256:90260d9058e514786967344d0ef75fa8727eed8a7d2e43ce9f4bcf1b536174f7"},
@@ -3138,7 +3196,7 @@ files = [
 name = "urllib3"
 version = "2.1.0"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "urllib3-2.1.0-py3-none-any.whl", hash = "sha256:55901e917a5896a349ff771be919f8bd99aff50b79fe58fec595eb37bbc56bb3"},
@@ -3304,12 +3362,14 @@ docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.link
 testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
 
 [extras]
+azure = ["azure-ai-formrecognizer"]
 dev = ["bump2version", "pip", "pre-commit", "toml", "tox", "twine", "virtualenv"]
 doc = ["mkdocs", "mkdocs-autorefs", "mkdocs-include-markdown-plugin", "mkdocs-material", "mkdocstrings"]
+google = ["google-cloud-documentai"]
 modeling = ["numpy", "torch", "transformers"]
 test = ["black", "flake8", "flake8-docstrings", "isort", "mypy", "pytest", "pytest-cov"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "220969fa135b8dab479a8207a9486bff82fca4004b0fa6f2fa35232794a32b71"
+content-hash = "f12e7a246085902a826946450d5671d5be6117a3a4394c038319ddd76b435ab2"
