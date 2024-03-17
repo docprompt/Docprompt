@@ -1,11 +1,19 @@
 # Docprompt
 
-Docprompt is a lightweight library for working with text-rich multimodal inputs to support Large Language Model Workloads
+Docprompt is a library for Document AI. It aims to make enterprise-level document analysis easy thanks to the zero-shot capability of large language models while also providing a toolset for working with various document formats.
 
-This library has several goals
+## Supercharged Document Analysis
 
-* Provide abstractions for working with and processing PDF's and images
-* Abstractions for document operations with third party providers
+* Common utilities for interacting with PDFs
+  * PDF loading and serialization
+  * PDF byte compression using Ghostscript :ghost:
+  * Fast rasterization :fire: :rocket:
+  * Page splitting, re-export with PikePDF
+* Support for most OCR providers with batched inference
+  * Google :white_check_mark:
+  * Azure Document Intelligence :red_circle:
+  * Amazon Textract :red_circle:
+  * Tesseract :red_circle:
 
 
 
@@ -19,7 +27,7 @@ This library has several goals
 Documents and large language models
 
 
-* Documentation: <https://psu3d0.github.io/docprompt>
+* Documentation: <https://docprompt.dev>
 * GitHub: <https://github.com/Page-Leaf/docprompt>
 * PyPI: <https://pypi.org/project/docprompt/>
 * Free software: Apache-2.0
@@ -36,4 +44,50 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install Docprom
 
 ```bash
 pip install docprompt
+```
+
+With an OCR provider
+
+```bash
+pip install "docprompt[google]
+```
+
+
+## Usage
+
+
+### Simple Operations
+```python
+from docprompt import load_document
+
+# Load a document
+document = load_document("path/to/my.pdf")
+
+# Rasterize a single page using Ghostscript
+page_number = 5
+rastered = document.rasterize_page(page_number, dpi=120)
+
+# Split a pdf based on a page range
+document_2 = document.split(start=125, stop=130)
+```
+
+### Performing OCR
+```python
+from docprompt import load_document, DocumentNode
+from docprompt.tasks.ocr.gcp import GoogleOcrProvider
+
+provider = GoogleOcrProvider.from_service_account_file(
+  project_id=my_project_id,
+  processor_id=my_processor_id,
+  service_account_file=path_to_service_file
+)
+
+document = load_document("path/to/my.pdf")
+
+# A container holds derived data for a document, like OCR or classification results
+document_node = DocumentNode.from_document(document)
+
+provider.process_document_node(document_node) # Caches results on the document_node
+
+document_node[0].ocr_result # Access OCR results
 ```

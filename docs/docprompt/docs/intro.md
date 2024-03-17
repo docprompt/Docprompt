@@ -6,7 +6,7 @@ sidebar_position: 1
 
 https://github.com/Page-Leaf/Docprompt
 
-## Supercharge PDF Document Analysis
+## Supercharged Document Analysis
 
 * Common utilities for interacting with PDFs
   * PDF loading and serialization
