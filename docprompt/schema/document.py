@@ -7,7 +7,7 @@ from functools import cached_property
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple, Union
 
 import magic
 import pikepdf
@@ -27,10 +27,6 @@ from docprompt._exec.ghostscript import (
     rasterize_page_to_bytes,
     rasterize_pdf_to_bytes,
 )
-from docprompt.schema.operations import PageTextExtractionOutput
-
-if TYPE_CHECKING:
-    from docprompt.service_providers.base import BaseProvider
 
 DEFAULT_DPI = 100
 
@@ -56,7 +52,7 @@ def get_page_render_size_from_bytes(
     return width, height
 
 
-class Document(BaseModel):
+class PdfDocument(BaseModel):
     """
     Represents a PDF document
     """
@@ -64,14 +60,11 @@ class Document(BaseModel):
     name: str = Field(description="The name of the document")
     file_bytes: bytes = Field(description="The bytes of the document", repr=False)
     file_path: Optional[str] = None
-    text_sidecars: Dict[str, Dict[int, PageTextExtractionOutput]] = Field(
-        default_factory=dict, repr=False
-    )
 
     _raster_cache: Dict[int, Dict[int, bytes]] = PrivateAttr(default_factory=dict)
 
     def __len__(self):
-        return len(self.pages)
+        return self.num_pages
 
     def __hash__(self):
         return hash(self.document_hash)
@@ -294,34 +287,5 @@ class Document(BaseModel):
         with path.open("wb") as f:
             f.write(self.file_bytes)
 
-    @property
-    def text_data(self):
-        try:
-            return next(iter(self.text_sidecars.values()))
-        except StopIteration:
-            return None
 
-    def perform_text_extraction(
-        self, provider: "BaseProvider", cache: bool = True
-    ) -> Dict[int, PageTextExtractionOutput]:
-        """
-        Performs text extraction for a given provider
-        """
-
-        result = provider.process_document(self)
-
-        sidecars = {}
-
-        if not result or not result.page_results:
-            return sidecars
-
-        for page_result in result.page_results:
-            if not page_result.ocr_result:
-                continue
-
-            sidecars[page_result.page_number] = page_result.ocr_result
-
-        if cache:
-            self.text_sidecars[provider.name] = sidecars
-
-        return sidecars
+Document = PdfDocument  # Alias

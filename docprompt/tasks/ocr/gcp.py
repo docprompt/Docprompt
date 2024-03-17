@@ -1,31 +1,38 @@
-import multiprocessing
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-from threading import Lock
-from typing import TYPE_CHECKING, Dict, Literal, Optional, Union
-
-import tqdm
-from tenacity import retry, stop_after_attempt, wait_exponential
-
+from typing import Optional, TYPE_CHECKING, Union, Literal, Dict, List
 from docprompt.schema.document import Document
+
+from docprompt.tasks.base import AbstractTaskProvider
+from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
+from ..base import CAPABILITIES
+from .result import OcrPageResult
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+import multiprocessing
+from threading import Lock
+
 from docprompt.schema.layout import (
-    BoundingPoly,
+    DirectionChoices,
+    TextBlock,
     NormBBox,
+    TextSpan,
+    BoundingPoly,
     Point,
     SegmentLevels,
-    TextBlock,
-    TextSpan,
+    TextBlockMetadata,
 )
-from docprompt.schema.operations import PageResult, PageTextExtractionOutput
-from docprompt.service_providers.base import ProviderResult
-from docprompt.service_providers.types import OPERATIONS
-from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
+from tenacity import retry, stop_after_attempt, wait_exponential
+import tqdm
+import logging
 
-from .base import BaseProvider
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from google.cloud import documentai
 
     from docprompt.schema.document import Document
+    from docprompt.schema.pipeline import DocumentNode
+
+
+service_account_file_read_lock = Lock()
 
 
 orientation_rotation_mapping = {
@@ -140,12 +147,12 @@ def text_blocks_from_page(
 
     type_mapping: Dict[str, SegmentLevels] = {
         "line": "line",
-        "paragraph": "paragraph",
+        "paragraph": "block",
         "block": "block",
         "token": "word",
     }
 
-    orientation_mapping = {
+    orientation_mapping: Dict[int, DirectionChoices] = {
         1: "UP",
         2: "RIGHT",
         3: "DOWN",
@@ -174,8 +181,10 @@ def text_blocks_from_page(
                 type=block_type,
                 bounding_box=geometry_kwargs["bounding_box"],
                 bounding_poly=geometry_kwargs["bounding_poly"],
-                confidence=round(confidence, 5),
-                direction=orientation,
+                metadata=TextBlockMetadata(
+                    direction=orientation,
+                    confidence=round(confidence, 5),
+                ),
                 text_spans=text_spans,
             )
         )
@@ -188,8 +197,10 @@ def process_page(
     page,
     doc_page_num: int,
     provider_name: str,
+    document_name: str,
+    file_hash: str,
     exclude_bounding_poly: bool = False,
-) -> PageResult:
+) -> OcrPageResult:
     layout = page.layout
 
     page_text = text_from_layout(layout, document_text)
@@ -204,71 +215,70 @@ def process_page(
         page, document_text, "block", exclude_bounding_poly=exclude_bounding_poly
     )
 
-    ocr_result = PageTextExtractionOutput(
-        text=page_text,
-        words=word_boxes,
-        lines=line_boxes,
-        blocks=block_boxes,
-    )
-
-    return PageResult(
+    return OcrPageResult(
         provider_name=provider_name,
+        document_name=document_name,
+        file_hash=file_hash,
         page_number=doc_page_num,
-        ocr_result=ocr_result,
+        page_text=page_text,
+        word_level_blocks=word_boxes,
+        line_level_blocks=line_boxes,
+        block_level_blocks=block_boxes,
     )
 
 
 def gcp_documents_to_result_single(
     documents: list["documentai.Document"],
     provider_name: str,
+    document_name: str,
+    file_hash: str,
     *,
     exclude_bounding_poly: bool = False,
 ):
     page_offset = 1  # We want pages to be 1-indexed
 
-    page_results = []
+    results: Dict[int, OcrPageResult] = {}
 
     for document in tqdm.tqdm(documents):
         for doc_page_num, page in enumerate(document.pages):
-            page_results.append(
-                process_page(
-                    document.text,
-                    page,
-                    page_offset + doc_page_num,
-                    provider_name,
-                    exclude_bounding_poly=exclude_bounding_poly,
-                )
+            page_result = process_page(
+                document.text,
+                page,
+                page_offset + doc_page_num,
+                provider_name,
+                document_name,
+                file_hash,
+                exclude_bounding_poly=exclude_bounding_poly,
             )
+
+            results[page_offset + doc_page_num] = page_result
 
         page_offset += doc_page_num + 1
 
-    return ProviderResult(
-        provider_name="GoogleDocumentAIProvider",
-        page_results=page_results,
-    )
+    return results
 
 
 def multi_process_page(args):
     idx, document, provider_name, page_offset, exclude_bounding_poly = args
 
-    page_results = []
+    results: Dict[int, OcrPageResult] = {}
 
     for doc_page_num, page in enumerate(document.pages):
-        page_results.append(
-            process_page(
-                document.text,
-                page,
-                page_offset + doc_page_num,
-                provider_name,
-                exclude_bounding_poly=exclude_bounding_poly,
-            )
+        page_result = process_page(
+            document.text,
+            page,
+            page_offset + doc_page_num,
+            provider_name,
+            exclude_bounding_poly=exclude_bounding_poly,
         )
 
-    return idx, page_results
+        results[page_offset + doc_page_num] = page_result
+
+    return idx, results
 
 
 def gcp_documents_to_result_multi(
-    documents: list["documentai.Document"],
+    documents: List["documentai.Document"],
     provider_name: str,
     *,
     exclude_bounding_poly: bool = False,
@@ -305,36 +315,50 @@ def gcp_documents_to_result_multi(
                 idx, page_results = future.result()
                 document_results[idx] = page_results
 
-    return ProviderResult(
-        provider_name="GoogleDocumentAIProvider",
-        page_results=[page for doc_pages in document_results for page in doc_pages],
-    )
+    results: Dict[int, OcrPageResult] = {}
+
+    for document_result in document_results:
+        results.update(document_result)  # type: ignore
+
+    return results
 
 
 def gcp_documents_to_result(
-    documents: list["documentai.Document"],
+    documents: List["documentai.Document"],
     provider_name: str,
+    document_name: str,
+    file_hash: str,
     *,
+    mode: Literal["single", "multi"] = "single",
     exclude_bounding_poly: bool = False,
-) -> ProviderResult:
-    if True or len(documents) == 1 or multiprocessing.cpu_count() == 1:
-        print("Using single process")
+) -> Dict[int, OcrPageResult]:
+    if mode == "single" or len(documents) == 1 or multiprocessing.cpu_count() == 1:
+        logger.info("Using single process")
         return gcp_documents_to_result_single(
             documents,
             provider_name,
+            document_name,
+            file_hash,
             exclude_bounding_poly=exclude_bounding_poly,
         )
-    else:
-        print("Using multiprocessing")
+    elif mode == "multi":
+        logger.info("Using multiprocessing")
         return gcp_documents_to_result_multi(
             documents,
             provider_name,
             exclude_bounding_poly=exclude_bounding_poly,
         )
+    else:
+        raise ValueError("Invalid mode for GCP document processing")
 
 
-class GoogleDocumentAIProvider(BaseProvider):
-    name = "GoogleDocumentAIProvider"
+class GoogleOcrProvider(AbstractTaskProvider):
+    name = "Google Document AI"
+    capabilities = [
+        CAPABILITIES.PAGE_TEXT_OCR.value,
+        CAPABILITIES.PAGE_LAYOUT_OCR.value,
+        CAPABILITIES.PAGE_RASTERIZATION.value,
+    ]
 
     max_bytes_per_request = (
         1024 * 1024 * 20
@@ -410,15 +434,7 @@ class GoogleDocumentAIProvider(BaseProvider):
         else:
             raise ValueError("Missing account info and service file path.")
 
-    @property
-    def capabilities(self) -> list[OPERATIONS]:
-        return [
-            OPERATIONS.TEXT_EXTRACTION,
-            OPERATIONS.LAYOUT_ANALYSIS,
-            OPERATIONS.IMAGE_PROCESSING,
-        ]
-
-    def _process_document_sync(self, file_bytes: bytes):
+    def _process_document_sync(self, document: Document):
         """
         Split the document into chunks of 15 pages or less, and process each chunk
         synchronously.
@@ -430,10 +446,12 @@ class GoogleDocumentAIProvider(BaseProvider):
             processor=self.processor_id,
         )
 
-        documents = []
+        documents: List["documentai.Document"] = []
+
+        file_bytes = document.get_bytes()
 
         @default_retry_decorator
-        def process_byte_chunk(split_bytes: bytes):
+        def process_byte_chunk(split_bytes: bytes) -> "documentai.Document":
             raw_document = self.documentai.RawDocument(
                 content=split_bytes,
                 mime_type="application/pdf",
@@ -466,10 +484,20 @@ class GoogleDocumentAIProvider(BaseProvider):
                 pbar.update(len(split_bytes))
 
         return gcp_documents_to_result(
-            documents, self.name, exclude_bounding_poly=self.exclude_bounding_poly
+            documents,
+            self.name,
+            document_name=document.name,
+            file_hash=document.document_hash,
+            exclude_bounding_poly=self.exclude_bounding_poly,
         )
 
-    def _process_document_concurrent(self, file_bytes: bytes):
+    def _process_document_concurrent(
+        self,
+        document: Document,
+        start: int | None = None,
+        stop: int | None = None,
+        include_raster: bool = False,
+    ):
         # Process page chunks concurrently
         client = self.get_documentai_client()
         processor_name = client.processor_path(
@@ -478,10 +506,10 @@ class GoogleDocumentAIProvider(BaseProvider):
             processor=self.processor_id,
         )
 
-        print("Splitting document into chunks...")
+        logger.info("Splitting document into chunks...")
         document_byte_splits = list(
             pdf_split_iter_with_max_bytes(
-                file_bytes,
+                document.get_bytes(),
                 max_page_count=self.max_page_count,
                 max_bytes=self.max_bytes_per_request,
             )
@@ -510,7 +538,7 @@ class GoogleDocumentAIProvider(BaseProvider):
 
             return document
 
-        print(f"Processing {len(document_byte_splits)} chunks...")
+        logger.info(f"Processing {len(document_byte_splits)} chunks...")
         with tqdm.tqdm(
             total=len(document_byte_splits), desc="Processing document"
         ) as pbar:
@@ -520,17 +548,37 @@ class GoogleDocumentAIProvider(BaseProvider):
                     for index, split in enumerate(document_byte_splits)
                 }
 
-                documents = [None] * len(document_byte_splits)
+                documents: List["documentai.Document"] = [None] * len(  # type: ignore
+                    document_byte_splits
+                )
 
                 for future in as_completed(future_to_index):
                     index = future_to_index[future]
                     documents[index] = future.result()
                     pbar.update(1)
 
-        print("Recombining")
+        logger.info("Recombining")
         return gcp_documents_to_result(
-            documents, self.name, exclude_bounding_poly=self.exclude_bounding_poly
+            documents,
+            self.name,
+            document_name=document.name,
+            file_hash=document.document_hash,
+            exclude_bounding_poly=self.exclude_bounding_poly,
         )
 
-    def _call(self, document: Document, pages=...) -> ProviderResult:
-        return self._process_document_concurrent(document.get_bytes())
+    def process_document_pages(
+        self,
+        document: Document,
+        start: int | None = None,
+        stop: int | None = None,
+        **kwargs,
+    ) -> Dict[int, OcrPageResult]:
+        return self._process_document_concurrent(document, start=start, stop=stop)
+
+    def contribute_to_document_node(
+        self, document_node: "DocumentNode", results: Dict[int, OcrPageResult]
+    ) -> None:
+        for page_number, result in results.items():
+            document_node.page_nodes[page_number - 1].ocr_results.results[self.name] = (
+                result
+            )

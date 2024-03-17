@@ -2,13 +2,17 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
-SegmentLevels = Literal["word", "line", "block", "paragraph"]
+SegmentLevels = Literal["word", "line", "block"]
+TextblockSource = Literal["ocr", "derived"]
+DirectionChoices = Literal["UP", "DOWN", "LEFT", "RIGHT"]
 
 
 class TextSpan(BaseModel):
     start_index: int
     end_index: int
-    level: Literal["page", "document"] = Field(default="page", description="The level of the span")
+    level: Literal["page", "document"] = Field(
+        default="page", description="The level of the span"
+    )
 
 
 class NormBBox(BaseModel):
@@ -116,7 +120,9 @@ class NormBBox(BaseModel):
         Returns a NormBBox from a BoundingPoly
         """
         if len(bounding_poly.normalized_vertices) != 4:
-            raise ValueError("BoundingPoly must have 4 vertices for NormBBox conversion")
+            raise ValueError(
+                "BoundingPoly must have 4 vertices for NormBBox conversion"
+            )
 
         (
             top_left,
@@ -182,6 +188,14 @@ class BoundingPoly(BaseModel):
         return self.normalized_vertices[index]
 
 
+class TextBlockMetadata(BaseModel):
+    direction: Optional[DirectionChoices] = None
+    confidence: Optional[float] = None
+    layout_category: Optional[str] = Field(
+        default=None, description="The category of the text block"
+    )
+
+
 class TextBlock(BaseModel):
     """
     Represents a single block of text, with its bounding box.
@@ -194,11 +208,24 @@ class TextBlock(BaseModel):
 
     text: str
     type: SegmentLevels
+    source: TextblockSource = Field(
+        default="derived", description="The source of the text block"
+    )
+
+    # Layout information
     bounding_box: NormBBox = Field(default=None, repr=False)
     bounding_poly: Optional[BoundingPoly] = Field(default=None, repr=False)
-    direction: Optional[str] = None
-    confidence: Optional[float] = None
     text_spans: Optional[list[TextSpan]] = Field(default=None, repr=False)
+
+    metadata: Optional[TextBlockMetadata] = Field(default_factory=TextBlockMetadata)
 
     def __getitem__(self, index):
         return getattr(self, index)
+
+    @property
+    def confidence(self):
+        return self.metadata.confidence
+
+    @property
+    def direction(self):
+        return self.metadata.direction
