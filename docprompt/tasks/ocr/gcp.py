@@ -405,6 +405,19 @@ class GoogleOcrProvider(AbstractTaskProvider):
                 "Please install 'google-cloud-documentai' to use the GoogleCloudVisionTextExtractionProvider"
             )
 
+    @classmethod
+    def from_service_account_file(
+        cls,
+        project_id: str,
+        processor_id: str,
+        service_account_file: str,
+    ):
+        return cls(
+            project_id,
+            processor_id,
+            service_account_file=service_account_file,
+        )
+
     def get_documentai_client(self, client_option_kwargs: dict = {}, **kwargs):
         from google.api_core.client_options import ClientOptions
 
