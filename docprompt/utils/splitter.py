@@ -3,15 +3,10 @@ import logging
 import tempfile
 from typing import Iterator, Optional
 
-from pikepdf import Pdf
+import pypdfium2 as pdfium
 
 from docprompt._exec.ghostscript import compress_pdf_to_bytes
 from docprompt.utils import get_page_count
-
-try:
-    from pypdf import PdfReader, PdfWriter  # noqa
-except ImportError:
-    print("pypdf not installed, PDF splitting will not work")
 
 logger = logging.getLogger(__name__)
 
@@ -38,21 +33,21 @@ def split_pdf_to_bytes(
         raise ValueError("stop_page must be greater than start_page")
 
     # Load the PDF from bytes
-    with Pdf.open(io.BytesIO(file_bytes)) as src_pdf:
-        # Create a new PDF for the current batch
-        dst_pdf = Pdf.new()
+    src_pdf = pdfium.PdfDocument(io.BytesIO(file_bytes))
 
-        # Append pages to the batch
-        for page in range(start_page, stop_page):
-            dst_pdf.pages.append(src_pdf.pages[page])
+    # Create a new PDF for the current batch
+    dst_pdf = pdfium.PdfDocument.new()
 
-        # Save the batch PDF to a bytes buffer
-        pdf_bytes_buffer = io.BytesIO()
-        dst_pdf.save(pdf_bytes_buffer)
-        pdf_bytes_buffer.seek(0)  # Reset buffer pointer to the beginning
+    # Append pages to the batch
+    dst_pdf.import_pages(src_pdf, list(range(start_page, stop_page)))
 
-        # Yield the bytes of the batch PDF
-        return pdf_bytes_buffer.getvalue()
+    # Save the batch PDF to a bytes buffer
+    pdf_bytes_buffer = io.BytesIO()
+    dst_pdf.save(pdf_bytes_buffer)
+    pdf_bytes_buffer.seek(0)  # Reset buffer pointer to the beginning
+
+    # Yield the bytes of the batch PDF
+    return pdf_bytes_buffer.getvalue()
 
 
 def pdf_split_iter_fast(file_bytes: bytes, max_page_count: int) -> Iterator[bytes]:
@@ -60,31 +55,30 @@ def pdf_split_iter_fast(file_bytes: bytes, max_page_count: int) -> Iterator[byte
     Splits a PDF into batches of pages up to `max_page_count` pages quickly.
     """
     # Load the PDF from bytes
-    with Pdf.open(io.BytesIO(file_bytes)) as src_pdf:
-        current_page = 0
-        total_pages = len(src_pdf.pages)
+    src_pdf = pdfium.PdfDocument(io.BytesIO(file_bytes))
 
-        while current_page < total_pages:
-            # Create a new PDF for the current batch
-            dst_pdf = Pdf.new()
+    current_page = 0
+    total_pages = len(src_pdf)
 
-            # Determine the last page for the current batch
-            last_page = min(current_page + max_page_count, total_pages)
+    while current_page < total_pages:
+        # Determine the last page for the current batch
+        last_page = min(current_page + max_page_count, total_pages)
 
-            # Append pages to the batch
-            for page in range(current_page, last_page):
-                dst_pdf.pages.append(src_pdf.pages[page])
+        dst_pdf = pdfium.PdfDocument.new()
 
-            # Save the batch PDF to a bytes buffer
-            pdf_bytes_buffer = io.BytesIO()
-            dst_pdf.save(pdf_bytes_buffer)
-            pdf_bytes_buffer.seek(0)  # Reset buffer pointer to the beginning
+        # Append pages to the batch
+        dst_pdf.import_pages(src_pdf, list(range(current_page, last_page)))
 
-            # Yield the bytes of the batch PDF
-            yield pdf_bytes_buffer.getvalue()
+        # Save the batch PDF to a bytes buffer
+        pdf_bytes_buffer = io.BytesIO()
+        dst_pdf.save(pdf_bytes_buffer)
+        pdf_bytes_buffer.seek(0)  # Reset buffer pointer to the beginning
 
-            # Update the current page for the next batch
-            current_page += max_page_count
+        # Yield the bytes of the batch PDF
+        yield pdf_bytes_buffer.getvalue()
+
+        # Update the current page for the next batch
+        current_page += max_page_count
 
 
 def pdf_split_iter_with_max_bytes(

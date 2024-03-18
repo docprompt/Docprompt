@@ -1,14 +1,16 @@
-from typing import Generic, TypeVar, TYPE_CHECKING
+from typing import Any, Dict, Generic, Literal, TypeVar, TYPE_CHECKING, Union
 from pydantic import BaseModel, Field
 
 from docprompt.schema.document import Document
 from typing import Optional
 from enum import Enum
 from datetime import datetime
+import importlib
 
 
 if TYPE_CHECKING:
     from docprompt.schema.pipeline import DocumentNode
+    from langchain.schema import SystemMessage, HumanMessage
 
 
 class CAPABILITIES(Enum):
@@ -64,6 +66,10 @@ class ResultContainer(BaseModel, Generic[PageOrDocumentTaskResult]):
 
 
 class AbstractTaskProvider(Generic[PageTaskResult]):
+    """
+    A task provider performs a specific, repeatable task on a document or its pages
+    """
+
     name: str
     capabilities: list[str]
 
@@ -102,3 +108,68 @@ class AbstractTaskProvider(Generic[PageTaskResult]):
             self.contribute_to_document_node(document_node, results)
 
         return results
+
+
+def attempt_import(name: str):
+    """
+    Attempts to import a module or class by name
+    """
+    package, obj = name.rsplit(".", 1)
+
+    try:
+        module = importlib.import_module(package)
+    except ImportError:
+        return None
+
+    return getattr(module, obj, None)
+
+
+SupportedModels = Literal["openai", "openai_async", "langchain"]
+
+
+def validate_language_model(model: Any):
+    langchain_chat_klass = attempt_import(
+        "langchain_core.language_models.chat_models.BaseChatModel"
+    )
+
+    if langchain_chat_klass and isinstance(model, langchain_chat_klass):
+        return "langchain"
+
+    openai_klass = attempt_import("openai.OpenAI")
+
+    if openai_klass and isinstance(model, openai_klass):
+        return "openai"
+
+    openai_async_klass = attempt_import("openai.OpenAIAsync")
+
+    if openai_async_klass and isinstance(model, openai_async_klass):
+        return "openai_async"
+
+    raise ValueError(
+        f"Model must be one of langchain_core.language_models.chat_models.BaseChatModel or openai.OpenAI. Got {type(model)}"
+    )
+
+
+SystemMessageLike = Union["SystemMessage", Dict[str, str], str]
+HumanMessageLike = Union["HumanMessage", Dict[str, Union[str, Dict[str, str]]], str]
+
+
+class AbstractLanguageModelTaskProvider(AbstractTaskProvider):
+    """
+    Provides additional methods for language model specific tasks
+    """
+
+    def __init__(self, language_model: Any, *, model_name: Optional[str] = None):
+        self.language_model = language_model
+        self.model_type = validate_language_model(language_model)
+
+        self.model_name = model_name
+
+        self._validate_kwargs()
+
+    def _validate_kwargs(self):
+        """
+        Validates the kwargs for the language model
+        """
+        if self.model_type == "openai" and self.model_name is None:
+            raise ValueError("model_name must be provided for OpenAI language models")

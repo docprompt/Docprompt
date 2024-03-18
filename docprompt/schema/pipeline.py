@@ -28,6 +28,11 @@ class PageNode(BaseModel, Generic[PageNodeMetadata]):
         description="The OCR results for the page",
         repr=False,
     )
+    table_extraction_results: ResultContainer = Field(
+        default_factory=lambda: ResultContainer(),
+        description="The table extraction results for the page",
+        repr=False,
+    )
 
 
 class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):

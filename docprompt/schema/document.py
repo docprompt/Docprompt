@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple, Union
 
 import magic
-import pikepdf
+import pypdfium2 as pdfium
 from PIL import Image
 from pydantic import (
     BaseModel,
@@ -24,8 +24,6 @@ from pydantic import (
 
 from docprompt._exec.ghostscript import (
     compress_pdf_to_bytes,
-    rasterize_page_to_bytes,
-    rasterize_pdf_to_bytes,
 )
 
 DEFAULT_DPI = 100
@@ -38,10 +36,10 @@ def get_page_render_size_from_bytes(
     Returns the render size of a page in pixels
     """
 
-    with pikepdf.Pdf.open(BytesIO(file_bytes)) as pdf:
-        page = pdf.pages[page_number]
+    pdf = pdfium.PdfDocument(BytesIO(file_bytes))
+    page = pdf.get_page(page_number)
 
-    mediabox: list[int] = list(page.mediabox.as_list())  # type: ignore
+    mediabox = page.get_mediabox()
 
     base_width = int(mediabox[2] - mediabox[0])
     base_height = int(mediabox[3] - mediabox[1])
@@ -158,7 +156,6 @@ class PdfDocument(BaseModel):
         *,
         dpi: int = DEFAULT_DPI,
         downscale_size: Optional[Tuple[int, int]] = None,
-        device="png16m",
         use_cache: bool = True,
     ) -> bytes:
         """
@@ -172,11 +169,18 @@ class PdfDocument(BaseModel):
         if use_cache and self._raster_cache.get(dpi, {}).get(page_number):
             rastered = self._raster_cache[dpi][page_number]
         else:
-            with self.as_tempfile() as temp_path:
-                rastered = rasterize_page_to_bytes(
-                    temp_path, page_number, dpi=dpi, device=device
-                )
-                generated_image = True
+            pdf = pdfium.PdfDocument(BytesIO(self.file_bytes))
+            page = pdf[page_number - 1]
+
+            bitmap = page.render(scale=(1 / 72) * dpi)
+
+            pil = bitmap.to_pil().convert("RGB")
+
+            img_bytes = BytesIO()
+            pil.save(img_bytes, format="PNG")
+            rastered = img_bytes.getvalue()
+
+            generated_image = True
 
         if use_cache and generated_image:
             self._raster_cache.setdefault(dpi, {})
@@ -199,7 +203,6 @@ class PdfDocument(BaseModel):
         *,
         dpi: int = DEFAULT_DPI,
         downscale_size: Optional[Tuple[int, int]] = None,
-        device="png16m",
         use_cache: bool = True,
     ) -> str:
         """
@@ -210,7 +213,6 @@ class PdfDocument(BaseModel):
             page_number,
             dpi=dpi,
             downscale_size=downscale_size,
-            device=device,
             use_cache=use_cache,
         )
         return f"data:image/png;base64,{base64.b64encode(image_bytes).decode('utf-8')}"
@@ -218,8 +220,6 @@ class PdfDocument(BaseModel):
     def rasterize_pdf(
         self,
         dpi: int = DEFAULT_DPI,
-        device="pnggray",
-        downscale_factor: Optional[int] = None,
         use_cache: bool = True,
     ) -> Dict[int, bytes]:
         """
@@ -232,9 +232,11 @@ class PdfDocument(BaseModel):
         ):
             return self._raster_cache[dpi]
 
-        with self.as_tempfile() as temp_path:
-            result = rasterize_pdf_to_bytes(
-                temp_path, dpi=dpi, device=device, downscale_factor=downscale_factor
+        result = {}
+
+        for page_number in range(1, self.num_pages + 1):
+            result[page_number] = self.rasterize_page(
+                page_number, dpi=dpi, use_cache=False
             )
 
         if use_cache:

@@ -34,7 +34,7 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extensive use of Ghostscript and PikePdf means common operations are fast and efficient.
+        Extensive use of C-level PDF libaries means common operations are fast and efficient.
         Batch processing means tasks like OCR can run on thousands of pages in <b>seconds.</b>
       </>
     ),

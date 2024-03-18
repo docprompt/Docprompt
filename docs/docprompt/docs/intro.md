@@ -12,7 +12,7 @@ https://github.com/Page-Leaf/Docprompt
   * PDF loading and serialization
   * PDF byte compression using Ghostscript :ghost:
   * Fast rasterization :fire: :rocket:
-  * Page splitting, re-export with PikePDF
+  * Page splitting, re-export with PDFium
 * Support for most OCR providers with batched inference
   * Google :white_check_mark:
   * Azure Document Intelligence :red_circle:

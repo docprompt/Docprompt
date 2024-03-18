@@ -9,7 +9,7 @@ from urllib.parse import unquote
 
 import fsspec
 import magic
-from pikepdf import Pdf
+import pypdfium2 as pdfium
 
 from docprompt._exec.ghostscript import compress_pdf_to_path
 from docprompt.schema.document import Document
@@ -47,8 +47,9 @@ def get_page_count(fd: Union[Path, PathLike, bytes]) -> int:
         with open(fd, "rb") as f:
             fd = f.read()
 
-    with Pdf.open(BytesIO(fd)) as pdf:
-        return len(pdf.pages)
+    pdf = pdfium.PdfDocument(BytesIO(fd))
+
+    return len(pdf)
 
 
 def load_document(
@@ -93,7 +94,9 @@ def load_document(
                 file_bytes = (temp_path / "compressed.pdf").read_bytes()
 
             if do_clean:
-                raise NotImplementedError("Cleaning with unpaper is not yet implemented")
+                raise NotImplementedError(
+                    "Cleaning with unpaper is not yet implemented"
+                )
                 # compress_pdf_to_path(temp_file, temp_path / "cleaned.pdf", clean=True)
                 # file_bytes = (temp_path / "cleaned.pdf").read_bytes()
 
@@ -112,11 +115,15 @@ def load_document_from_url(url: str, **kwargs):
     return Document(name=file_name, file_path=url, file_bytes=file_bytes)
 
 
-def load_documents_from_urls(urls: list[str], max_workers: int = 5, **kwargs) -> list[Document]:
+def load_documents_from_urls(
+    urls: list[str], max_workers: int = 5, **kwargs
+) -> list[Document]:
     documents = []
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_url = {executor.submit(load_document_from_url, url): url for url in urls}
+        future_to_url = {
+            executor.submit(load_document_from_url, url): url for url in urls
+        }
         for future in as_completed(future_to_url):
             url = future_to_url[future]
             try:
