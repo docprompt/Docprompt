@@ -4,6 +4,8 @@ import io
 
 from .fixtures import PDF_FIXTURES
 
+from docprompt.utils.splitter import pdf_split_iter_fast
+
 
 def test_load_document():
     for fixture in PDF_FIXTURES:
@@ -18,3 +20,19 @@ def test_rasterize():
         doc = load_document(fixture.get_full_path())
         img_bytes = doc.rasterize_page(1)
         Image.open(io.BytesIO(img_bytes))
+
+
+def test_split():
+    doc = load_document(PDF_FIXTURES[0].get_full_path())
+
+    new_docs = doc.split(start=2)
+
+    assert len(new_docs) == len(doc) - 2
+
+
+def test_pdf_split_iter_fast_1_sized():
+    doc = load_document(PDF_FIXTURES[0].get_full_path())
+
+    splits = list(pdf_split_iter_fast(doc.file_bytes, 1))
+
+    assert len(splits) == len(doc)
