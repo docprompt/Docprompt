@@ -2,10 +2,6 @@
 
 name: stage & preview workflow
 
-permissions:
-  contents: read
-  id-token: write
-
 # Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
@@ -24,6 +20,9 @@ jobs:
       matrix:
         python-versions: [ 3.8 ]
 
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,7 +36,7 @@ jobs:
           pip install poetry
           poetry install --no-root --all-extras
 
-      - name: test
+      - name: Run Pytest
         run:
           poetry run pytest -sxv
 
