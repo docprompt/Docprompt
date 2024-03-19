@@ -42,7 +42,7 @@ jobs:
           poetry run ruff --output-format=github .
       - name: Test with pytest
         run: |
-          poetry run pytest -sxv --cov --cov-report=xml .
+          poetry run pytest -sxv --cov --cov-report=xml docprompt
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
