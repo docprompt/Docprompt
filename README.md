@@ -1,6 +1,33 @@
-# Docprompt
+[![pypi](https://img.shields.io/pypi/v/docprompt.svg)](https://pypi.org/project/docprompt/)
+[![python](https://img.shields.io/pypi/pyversions/docprompt.svg)](https://pypi.org/project/docprompt/)
+[![Build Status](https://github.com/Page-Leaf/Docprompt/actions/workflows/dev.yml/badge.svg)](https://github.com/Page-Leaf/docprompt/actions/workflows/dev.yml)
+[![codecov](https://codecov.io/gh/Page-Leaf/Docprompt/branch/main/graphs/badge.svg)](https://codecov.io/github/Page-Leaf/Docprompt)
 
-Docprompt is a library for Document AI. It aims to make enterprise-level document analysis easy thanks to the zero-shot capability of large language models while also providing a toolset for working with various document formats.
+
+<br />
+<div align="center">
+  <a href="https://github.com/Page-Leaf/Docprompt">
+    <img src="docs/docprompt/static/img/logo.png" alt="Logo" width="80" height="80">
+  </a>
+
+  <h3 align="center">Docprompt</h3>
+
+  <p align="center">
+    Document AI, powered by LLM's
+    <br />
+    <a href="https://docprompt.dev"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    ·
+    <a href="https://github.com/Page-Leaf/Docprompt">Report Bug</a>
+    ·
+    <a href="https://github.com/Page-Leaf/Docprompt">Request Feature</a>
+  </p>
+</div>
+
+# About
+
+Docprompt is a library for Document AI. It aims to make enterprise-level document analysis easy thanks to the zero-shot capability of large language models.
 
 ## Supercharged Document Analysis
 
@@ -19,14 +46,6 @@ Docprompt is a library for Document AI. It aims to make enterprise-level documen
   * Page Classification
   * Segmentation
   * Key-value extraction
-
-
-
-[![pypi](https://img.shields.io/pypi/v/docprompt.svg)](https://pypi.org/project/docprompt/)
-[![python](https://img.shields.io/pypi/pyversions/docprompt.svg)](https://pypi.org/project/docprompt/)
-[![Build Status](https://github.com/Page-Leaf/Docprompt/actions/workflows/dev.yml/badge.svg)](https://github.com/Page-Leaf/docprompt/actions/workflows/dev.yml)
-[![codecov](https://codecov.io/gh/Page-Leaf/Docprompt/branch/main/graphs/badge.svg)](https://codecov.io/github/Page-Leaf/Docprompt)
-
 
 
 Documents and large language models
