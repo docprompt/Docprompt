@@ -28,3 +28,15 @@ class OcrPageResult(BasePageResult):
         description="The rasterized image of the page used in OCR",
         repr=False,
     )
+
+    @property
+    def words(self):
+        return self.word_level_blocks
+
+    @property
+    def lines(self):
+        return self.line_level_blocks
+
+    @property
+    def blocks(self):
+        return self.block_level_blocks

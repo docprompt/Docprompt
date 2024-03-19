@@ -1,9 +1,12 @@
-from typing import Generic, Optional, TypeVar
+from typing import Generic, Optional, TypeVar, TYPE_CHECKING
 
-from pydantic import BaseModel, Field, PositiveInt
+from pydantic import BaseModel, Field, PositiveInt, PrivateAttr
 
 from docprompt.tasks.base import ResultContainer
 from docprompt.tasks.ocr.result import OcrPageResult
+
+if TYPE_CHECKING:
+    from docprompt.provenance.search import DocumentProvenanceLocator
 
 from .document import Document
 
@@ -48,6 +51,8 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         description="Application-specific metadata for the document", default=None
     )
 
+    _locator: Optional["DocumentProvenanceLocator"] = PrivateAttr(default=None)
+
     def __len__(self):
         return len(self.page_nodes)
 
@@ -56,6 +61,28 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
 
     def __iter__(self):
         return iter(self.page_nodes)
+
+    @property
+    def locator(self):
+        if self._locator is None:
+            self.refresh_locator()
+
+        return self._locator
+
+    def refresh_locator(self):
+        """
+        Refreshes the locator for this document node
+        """
+        from docprompt.provenance.search import DocumentProvenanceLocator
+
+        if any(not page.ocr_results.result for page in self.page_nodes):
+            raise ValueError(
+                "Cannot create a locator for a document node with missing OCR results"
+            )
+
+        self._locator = DocumentProvenanceLocator.from_document_node(self)
+
+        return self.locator
 
     @classmethod
     def from_document(
