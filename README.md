@@ -7,7 +7,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/Page-Leaf/Docprompt">
-    <img src="docs/docprompt/static/img/logo.png" alt="Logo" width="80" height="80">
+    <img src="docs/docprompt/static/img/logo.png" alt="Logo" width="120" height="120">
   </a>
 
   <h3 align="center">Docprompt</h3>
@@ -36,6 +36,7 @@ Docprompt is a library for Document AI. It aims to make enterprise-level documen
   * PDF byte compression using Ghostscript :ghost:
   * Fast rasterization :fire: :rocket:
   * Page splitting, re-export with PDFium
+  * Document Search, powered by Rust :fire:
 * Support for most OCR providers with batched inference
   * Google :white_check_mark:
   * Azure Document Intelligence :red_circle:
@@ -61,6 +62,7 @@ Documents and large language models
 
 * Representations for common document layout types - `TextBlock`, `BoundingBox`, etc
 * Generic implementations of OCR providers
+* Document Search powered by Rust and R-trees :fire:
 
 ## Installation
 
@@ -128,7 +130,7 @@ When a large language model returns a result, we might want to highlight that re
 
 After extracting text from a PDF, we can support this pattern using `DocumentProvenanceLocator`, which lives on a `DocumentNode`
 
-```
+```python
 from docprompt import load_document, DocumentNode
 from docprompt.tasks.ocr.gcp import GoogleOcrProvider
 
