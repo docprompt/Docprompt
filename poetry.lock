@@ -3194,11 +3194,10 @@ azure = ["azure-ai-formrecognizer"]
 dev = ["bump2version", "pip", "pre-commit", "toml", "tox", "twine", "virtualenv"]
 doc = ["mkdocs", "mkdocs-autorefs", "mkdocs-include-markdown-plugin", "mkdocs-material", "mkdocstrings"]
 google = ["google-cloud-documentai"]
-modeling = ["numpy", "torch", "transformers"]
 search = ["networkx", "rtree", "tantivy"]
 test = ["black", "flake8", "flake8-docstrings", "isort", "mypy", "pytest", "pytest-cov"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "04d2a30c63c64e436d69f6c4681975ca97a8d147db74b0984dcea5e4cbff9da4"
+content-hash = "4a758be1f771f5614761f73d3be30411d4da90987eaa6ad76e2d9fb2e84ea01f"
