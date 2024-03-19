@@ -1,9 +1,7 @@
-<div align="center">
-  [![pypi](https://img.shields.io/pypi/v/docprompt.svg)](https://pypi.org/project/docprompt/)
-  [![python](https://img.shields.io/pypi/pyversions/docprompt.svg)](https://pypi.org/project/docprompt/)
-  [![Build Status](https://github.com/Page-Leaf/Docprompt/actions/workflows/dev.yml/badge.svg)](https://github.com/Page-Leaf/docprompt/actions/workflows/dev.yml)
-  [![codecov](https://codecov.io/gh/Page-Leaf/Docprompt/branch/main/graphs/badge.svg)](https://codecov.io/github/Page-Leaf/Docprompt)
-</div>
+[![pypi](https://img.shields.io/pypi/v/docprompt.svg)](https://pypi.org/project/docprompt/)
+[![python](https://img.shields.io/pypi/pyversions/docprompt.svg)](https://pypi.org/project/docprompt/)
+[![Build Status](https://github.com/Page-Leaf/Docprompt/actions/workflows/dev.yml/badge.svg)](https://github.com/Page-Leaf/docprompt/actions/workflows/dev.yml)
+[![codecov](https://codecov.io/gh/Page-Leaf/Docprompt/branch/main/graphs/badge.svg)](https://codecov.io/github/Page-Leaf/Docprompt)
 
 
 <br />
