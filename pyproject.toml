@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "docprompt"
-version = "0.2"
+version = "0.2.1"
 homepage = "https://github.com/Page-Leaf/docprompt"
 description = "Documents and large language models."
 authors = ["Frankie Colson <frank@pageleaf.io>"]
@@ -48,8 +48,6 @@ bump2version = {version = "^1.0.1", optional = true}
 python-dateutil = "^2.8.2"
 
 numpy = {version = "^1.26.1", optional = true}
-transformers = {version = "^4.34.1", optional = true}
-torch = {version = "^2.1.0", optional = true}
 pillow = ">=9.0.1"
 python-magic = ">=0.4.24"
 google-cloud-documentai = {version = ">=2.20.0", optional = true}
