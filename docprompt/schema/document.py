@@ -7,7 +7,7 @@ from functools import cached_property
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Generator, Optional, Tuple, Union
 
 import magic
 import pypdfium2 as pdfium
@@ -267,7 +267,7 @@ class PdfDocument(BaseModel):
         """
 
         @contextmanager
-        def tempfile_context() -> str:
+        def tempfile_context() -> Generator[str, None, None]:
             tempfile_kwargs = {"mode": "wb", "delete": True, "suffix": ".pdf", **kwargs}
 
             with tempfile.NamedTemporaryFile(**tempfile_kwargs) as f:

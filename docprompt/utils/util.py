@@ -29,12 +29,12 @@ def is_pdf(fd: Union[Path, PathLike, bytes]) -> bool:
     """
     Determines if a file is a PDF
     """
-    if not isinstance(fd, bytes):
+    if isinstance(fd, (bytes, str)):
+        mime = magic.from_buffer(fd, mime=True)
+    else:
         with open(fd, "rb") as f:
-            fd: bytes = f.read(1024)
             # We only need the first 1024 bytes to determine if it's a PDF
-
-    mime = magic.from_buffer(fd, mime=True)
+            mime = magic.from_buffer(f.read(1024), mime=True)
 
     return mime == "application/pdf"
 

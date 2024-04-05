@@ -507,8 +507,8 @@ class GoogleOcrProvider(AbstractTaskProvider):
     def _process_document_concurrent(
         self,
         document: Document,
-        start: int | None = None,
-        stop: int | None = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
         include_raster: bool = False,
     ):
         # Process page chunks concurrently
@@ -582,8 +582,8 @@ class GoogleOcrProvider(AbstractTaskProvider):
     def process_document_pages(
         self,
         document: Document,
-        start: int | None = None,
-        stop: int | None = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
         **kwargs,
     ) -> Dict[int, OcrPageResult]:
         return self._process_document_concurrent(document, start=start, stop=stop)

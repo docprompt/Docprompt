@@ -129,7 +129,7 @@ default_date_formats = [
 
 def extract_dates_from_text(
     input_string: str, *, date_formats: DateFormatsType = default_date_formats
-) -> List[tuple[date, str]]:
+) -> List[Tuple[date, str]]:
     """
     Extract dates from a string using a set of predefined regex patterns.
 

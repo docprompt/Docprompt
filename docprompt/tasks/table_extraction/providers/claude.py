@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from docprompt.schema.document import PdfDocument
 from docprompt.tasks.message import OpenAIMessage, OpenAIComplexContent, OpenAIImageURL
@@ -97,8 +97,8 @@ class ClaudeTableExtractionProvider(BaseTableExtractionProvider):
     def process_document_pages(
         self,
         document: PdfDocument,
-        start: int | None = None,
-        stop: int | None = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
         **kwargs,
     ) -> Dict[int, TableExtractionPageResult]:
         messages = []
