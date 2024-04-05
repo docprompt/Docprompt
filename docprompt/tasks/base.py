@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, Literal, TypeVar, TYPE_CHECKING, Union
+from typing import Any, Dict, Generic, List, Literal, TypeVar, TYPE_CHECKING, Union
 from pydantic import BaseModel, Field
 
 from docprompt.schema.document import Document
@@ -56,7 +56,7 @@ class ResultContainer(BaseModel, Generic[PageOrDocumentTaskResult]):
     Represents a container for results of a task
     """
 
-    results: dict[str, PageOrDocumentTaskResult] = Field(
+    results: Dict[str, PageOrDocumentTaskResult] = Field(
         description="The results of the task, keyed by provider", default_factory=dict
     )
 
@@ -71,7 +71,7 @@ class AbstractTaskProvider(Generic[PageTaskResult]):
     """
 
     name: str
-    capabilities: list[str]
+    capabilities: List[str]
 
     def process_document_pages(
         self,
@@ -79,13 +79,13 @@ class AbstractTaskProvider(Generic[PageTaskResult]):
         start: Optional[int] = None,
         stop: Optional[int] = None,
         **kwargs,
-    ) -> dict[int, PageTaskResult]:
+    ) -> Dict[int, PageTaskResult]:
         raise NotImplementedError
 
     def contribute_to_document_node(
         self,
         document_node: "DocumentNode",
-        results: dict[int, PageTaskResult],
+        results: Dict[int, PageTaskResult],
     ) -> None:
         """
         Adds the results of this task to the document node and/or its page nodes
@@ -99,7 +99,7 @@ class AbstractTaskProvider(Generic[PageTaskResult]):
         stop: Optional[int] = None,
         contribute_to_document: bool = True,
         **kwargs,
-    ) -> dict[int, PageTaskResult]:
+    ) -> Dict[int, PageTaskResult]:
         results = self.process_document_pages(
             document_node.document, start=start, stop=stop, **kwargs
         )

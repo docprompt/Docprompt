@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import Optional, Union
+from typing import List, Optional, Union
 from urllib.parse import unquote
 
 import fsspec
@@ -116,8 +116,8 @@ def load_document_from_url(url: str, **kwargs):
 
 
 def load_documents_from_urls(
-    urls: list[str], max_workers: int = 5, **kwargs
-) -> list[Document]:
+    urls: List[str], max_workers: int = 5, **kwargs
+) -> List[Document]:
     documents = []
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:

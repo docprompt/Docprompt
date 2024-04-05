@@ -118,7 +118,7 @@ def text_spans_from_layout(
     layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"],
     level: Literal["page", "document"],
     offset: int = 0,
-) -> list[TextSpan]:
+) -> List[TextSpan]:
     text_spans = []
 
     for segment in sorted(layout.text_anchor.text_segments, key=lambda x: x.end_index):
@@ -142,7 +142,7 @@ def text_blocks_from_page(
     type: Literal["line", "block", "token", "paragraph"],
     *,
     exclude_bounding_poly: bool = False,
-) -> list[TextBlock]:
+) -> List[TextBlock]:
     text_blocks = []
 
     type_mapping: Dict[str, SegmentLevels] = {
@@ -228,7 +228,7 @@ def process_page(
 
 
 def gcp_documents_to_result_single(
-    documents: list["documentai.Document"],
+    documents: List["documentai.Document"],
     provider_name: str,
     document_name: str,
     file_hash: str,

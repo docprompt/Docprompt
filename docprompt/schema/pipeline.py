@@ -1,4 +1,4 @@
-from typing import Generic, Optional, TypeVar, TYPE_CHECKING
+from typing import Generic, List, Optional, TypeVar, TYPE_CHECKING
 
 from pydantic import BaseModel, Field, PositiveInt, PrivateAttr
 
@@ -44,7 +44,7 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     """
 
     document: Document
-    page_nodes: list[PageNode[PageNodeMetadata]] = Field(
+    page_nodes: List[PageNode[PageNodeMetadata]] = Field(
         description="The pages in the document", default_factory=list, repr=False
     )
     metadata: Optional[DocumentNodeMetadata] = Field(
@@ -118,5 +118,5 @@ class DocumentCollection(
     Represents a collection of documents with some common metadata
     """
 
-    document_nodes: list[DocumentNode[DocumentNodeMetadata, PageNodeMetadata]]
+    document_nodes: List[DocumentNode[DocumentNodeMetadata, PageNodeMetadata]]
     metadata: DocumentCollectionMetadata

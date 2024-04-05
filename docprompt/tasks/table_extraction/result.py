@@ -1,6 +1,6 @@
 from docprompt.tasks.base import BasePageResult
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import List, Optional
 from docprompt.schema.layout import NormBBox
 
 
@@ -15,7 +15,7 @@ class TableCell(BaseModel):
 
 
 class TableRow(BaseModel):
-    cells: list[TableCell] = Field(default_factory=list)
+    cells: List[TableCell] = Field(default_factory=list)
     bbox: Optional[NormBBox] = None
 
 
@@ -23,9 +23,9 @@ class ExtractedTable(BaseModel):
     title: Optional[str] = None
     bbox: Optional[NormBBox] = None
 
-    headers: list[TableHeader] = Field(default_factory=list)
-    rows: list[TableRow] = Field(default_factory=list)
+    headers: List[TableHeader] = Field(default_factory=list)
+    rows: List[TableRow] = Field(default_factory=list)
 
 
 class TableExtractionPageResult(BasePageResult):
-    tables: list[ExtractedTable] = Field(default_factory=list)
+    tables: List[ExtractedTable] = Field(default_factory=list)

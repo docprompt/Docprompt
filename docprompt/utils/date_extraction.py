@@ -1,7 +1,8 @@
 import re
 from datetime import date, datetime
+from typing import List, Tuple
 
-DateFormatsType = list[tuple[re.Pattern, str]]
+DateFormatsType = List[Tuple[re.Pattern, str]]
 
 default_date_formats = [
     # Pre-compile regex patterns for efficiency
@@ -128,7 +129,7 @@ default_date_formats = [
 
 def extract_dates_from_text(
     input_string: str, *, date_formats: DateFormatsType = default_date_formats
-) -> list[tuple[date, str]]:
+) -> List[tuple[date, str]]:
     """
     Extract dates from a string using a set of predefined regex patterns.
 

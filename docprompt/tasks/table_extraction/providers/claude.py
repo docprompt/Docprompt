@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Dict, List, Union
 
 from docprompt.schema.document import PdfDocument
 from docprompt.tasks.message import OpenAIMessage, OpenAIComplexContent, OpenAIImageURL
@@ -42,7 +42,7 @@ def _title_from_tree(tree: ET.Element) -> Union[str, None]:
     return None
 
 
-def _headers_from_tree(tree: ET.Element) -> list[TableHeader]:
+def _headers_from_tree(tree: ET.Element) -> List[TableHeader]:
     headers = tree.find("headers")
     if headers is not None:
         return [
@@ -51,7 +51,7 @@ def _headers_from_tree(tree: ET.Element) -> list[TableHeader]:
     return []
 
 
-def _rows_from_tree(tree: ET.Element) -> list[TableRow]:
+def _rows_from_tree(tree: ET.Element) -> List[TableRow]:
     rows = tree.find("rows")
     if rows is not None:
         return [
@@ -65,19 +65,19 @@ def _rows_from_tree(tree: ET.Element) -> list[TableRow]:
     return []
 
 
-def _find_start_indices(s: str, sub: str) -> list[int]:
+def _find_start_indices(s: str, sub: str) -> List[int]:
     return [m.start() for m in re.finditer(sub, s)]
 
 
-def _find_end_indices(s: str, sub: str) -> list[int]:
+def _find_end_indices(s: str, sub: str) -> List[int]:
     return [m.end() for m in re.finditer(sub, s)]
 
 
-def parse_response(response: str) -> list[ExtractedTable]:
+def parse_response(response: str) -> List[ExtractedTable]:
     table_start_indices = _find_start_indices(response, "<table>")
     table_end_indices = _find_end_indices(response, "</table>")
 
-    tables: list[ExtractedTable] = []
+    tables: List[ExtractedTable] = []
 
     for table_start, table_end in zip(table_start_indices, table_end_indices):
         table_str = response[table_start:table_end]
@@ -100,7 +100,7 @@ class ClaudeTableExtractionProvider(BaseTableExtractionProvider):
         start: int | None = None,
         stop: int | None = None,
         **kwargs,
-    ) -> dict[int, TableExtractionPageResult]:
+    ) -> Dict[int, TableExtractionPageResult]:
         messages = []
         for page_number in range(start or 1, (stop or len(document)) + 1):
             rastered_page = document.rasterize_page_to_data_uri(page_number)

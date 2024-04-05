@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -182,7 +182,7 @@ class BoundingPoly(BaseModel):
     Used for higher order shapes like polygons on a page
     """
 
-    normalized_vertices: list[Point]
+    normalized_vertices: List[Point]
 
     def __getitem__(self, index):
         return self.normalized_vertices[index]
@@ -215,7 +215,7 @@ class TextBlock(BaseModel):
     # Layout information
     bounding_box: NormBBox = Field(default=None, repr=False)
     bounding_poly: Optional[BoundingPoly] = Field(default=None, repr=False)
-    text_spans: Optional[list[TextSpan]] = Field(default=None, repr=False)
+    text_spans: Optional[List[TextSpan]] = Field(default=None, repr=False)
 
     metadata: Optional[TextBlockMetadata] = Field(default_factory=TextBlockMetadata)
 

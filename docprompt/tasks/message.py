@@ -3,7 +3,7 @@ The core primatives for any language model interfacing. Docprompt uses these for
 supports free conversion to and from these types from other libaries.
 """
 
-from typing import Literal, Union, Optional
+from typing import List, Literal, Union, Optional
 from pydantic import BaseModel, model_validator
 
 
@@ -33,7 +33,7 @@ class OpenAIComplexContent(BaseModel):
 
 class OpenAIMessage(BaseModel):
     role: Literal["system", "user", "assistant"]
-    content: Union[str, list[OpenAIComplexContent]]
+    content: Union[str, List[OpenAIComplexContent]]
 
     def to_langchain_message(self):
         try:
