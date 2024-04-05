@@ -7,8 +7,12 @@ import pypdfium2 as pdfium
 
 from docprompt._exec.ghostscript import compress_pdf_to_bytes
 from docprompt.utils import get_page_count
+from threading import Lock
+import time
 
 logger = logging.getLogger(__name__)
+
+PDFIUM_SPLIT_LOCK = Lock()
 
 
 class UnsupportedDocumentType(ValueError):
@@ -55,30 +59,37 @@ def pdf_split_iter_fast(file_bytes: bytes, max_page_count: int) -> Iterator[byte
     Splits a PDF into batches of pages up to `max_page_count` pages quickly.
     """
     # Load the PDF from bytes
-    src_pdf = pdfium.PdfDocument(io.BytesIO(file_bytes))
+    with PDFIUM_SPLIT_LOCK:
+        src_pdf = pdfium.PdfDocument(io.BytesIO(file_bytes))
 
-    current_page = 0
-    total_pages = len(src_pdf)
+        current_page = 0
+        total_pages = len(src_pdf)
 
-    while current_page < total_pages:
-        # Determine the last page for the current batch
-        last_page = min(current_page + max_page_count, total_pages)
+        while current_page < total_pages:
+            # Determine the last page for the current batch
+            last_page = min(current_page + max_page_count, total_pages)
 
-        dst_pdf = pdfium.PdfDocument.new()
+            dst_pdf = pdfium.PdfDocument.new()
 
-        # Append pages to the batch
-        dst_pdf.import_pages(src_pdf, list(range(current_page, last_page)))
+            # Append pages to the batch
+            dst_pdf.import_pages(src_pdf, list(range(current_page, last_page)))
 
-        # Save the batch PDF to a bytes buffer
-        pdf_bytes_buffer = io.BytesIO()
-        dst_pdf.save(pdf_bytes_buffer)
-        pdf_bytes_buffer.seek(0)  # Reset buffer pointer to the beginning
+            # Save the batch PDF to a bytes buffer
+            pdf_bytes_buffer = io.BytesIO()
+            dst_pdf.save(pdf_bytes_buffer)
+            pdf_bytes_buffer.seek(0)  # Reset buffer pointer to the beginning
 
-        # Yield the bytes of the batch PDF
-        yield pdf_bytes_buffer.getvalue()
+            dst_pdf.close()
 
-        # Update the current page for the next batch
-        current_page += max_page_count
+            # Yield the bytes of the batch PDF
+            yield pdf_bytes_buffer.getvalue()
+
+            # Update the current page for the next batch
+            current_page += max_page_count
+
+        src_pdf.close()
+
+    time.sleep(0.1)
 
 
 def pdf_split_iter_with_max_bytes(
