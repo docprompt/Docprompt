@@ -50,6 +50,40 @@ def get_page_render_size_from_bytes(
     return width, height
 
 
+def process_raster_image(
+    image_bytes: bytes,
+    *,
+    do_resize: bool = False,
+    resize_width: Optional[int] = None,
+    resize_height: Optional[int] = None,
+    do_convert: bool = True,
+    image_covert_mode: str = "L",
+    do_quantize: bool = True,
+    quantize_color_count: int = 8,
+):
+    if not do_resize and not do_quantize and not do_convert:
+        return image_bytes
+
+    image = Image.open(BytesIO(image_bytes))
+
+    if do_resize:
+        if resize_width is None or resize_height is None:
+            raise ValueError("Must specify both resize_width and resize_height")
+
+        image = image.resize((resize_width, resize_height))
+
+    if do_convert:
+        image = image.convert(image_covert_mode)
+
+    if do_quantize:
+        image = image.quantize(colors=quantize_color_count)
+
+    buffer = BytesIO()
+    image.save(buffer, format="PNG", optimize=True)
+
+    return buffer.getvalue()
+
+
 class PdfDocument(BaseModel):
     """
     Represents a PDF document
@@ -157,6 +191,10 @@ class PdfDocument(BaseModel):
         dpi: int = DEFAULT_DPI,
         downscale_size: Optional[Tuple[int, int]] = None,
         use_cache: bool = True,
+        do_convert: bool = False,
+        image_covert_mode: str = "L",
+        do_quantize: bool = False,
+        quantize_color_count: int = 8,
     ) -> bytes:
         """
         Rasterizes a page of the document using Ghostscript
@@ -186,14 +224,16 @@ class PdfDocument(BaseModel):
             self._raster_cache.setdefault(dpi, {})
             self._raster_cache[dpi][page_number] = rastered
 
-        if downscale_size:
-            with Image.open(BytesIO(rastered)) as img:
-                width, height = img.size
-                if not (width < downscale_size[0] or height < downscale_size[1]):
-                    img = img.resize(downscale_size)
-                    img_bytes = BytesIO()
-                    img.save(img_bytes, format="PNG")
-                    rastered = img_bytes.getvalue()
+        rastered = process_raster_image(
+            rastered,
+            do_resize=downscale_size is not None,
+            resize_width=downscale_size[0] if downscale_size else None,
+            resize_height=downscale_size[1] if downscale_size else None,
+            do_convert=do_convert,
+            image_covert_mode=image_covert_mode,
+            do_quantize=do_quantize,
+            quantize_color_count=quantize_color_count,
+        )
 
         return rastered
 
@@ -206,7 +246,7 @@ class PdfDocument(BaseModel):
         use_cache: bool = True,
     ) -> str:
         """
-        Rasterizes a page of the document using Ghostscript and returns a data URI, which can
+        Rasterizes a page of the document using Pdfium and returns a data URI, which can
         be embedded into HTML or passed to large language models
         """
         image_bytes = self.rasterize_page(
@@ -223,7 +263,7 @@ class PdfDocument(BaseModel):
         use_cache: bool = True,
     ) -> Dict[int, bytes]:
         """
-        Rasterizes the entire document using Ghostscript
+        Rasterizes the entire document using Pdfium
         """
         if (
             use_cache

@@ -33,3 +33,15 @@ def test_search():
     result_page_1 = locator.search("rooted", page_number=1)
 
     assert len(result_page_1) == 1
+
+    result_multiple_words = locator.search("MMAX2 system", page_number=1)
+
+    assert len(result_multiple_words) == 1
+
+    n_best = locator.search_n_best("and", n=3)
+
+    assert len(n_best) == 3
+
+    raw_search = locator.search_raw('content:"rooted"')
+
+    assert len(raw_search) == 1
