@@ -114,3 +114,5 @@ ENV/
 site/
 
 .creds/
+
+data/
