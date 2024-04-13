@@ -519,10 +519,16 @@ class GoogleOcrProvider(AbstractTaskProvider):
             processor=self.processor_id,
         )
 
+        file_bytes = document.file_bytes
+
+        if document.bytes_per_page > 1024 * 1024 * 2:
+            logger.info("Document has few pages but is large, compressing first")
+            file_bytes = document.to_compressed_bytes()
+
         logger.info("Splitting document into chunks...")
         document_byte_splits = list(
             pdf_split_iter_with_max_bytes(
-                document.get_bytes(),
+                file_bytes,
                 max_page_count=self.max_page_count,
                 max_bytes=self.max_bytes_per_request,
             )

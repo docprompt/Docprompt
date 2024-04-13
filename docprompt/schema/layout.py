@@ -1,10 +1,16 @@
 from typing import List, Literal, Optional
+from typing_extensions import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PlainSerializer
 
 SegmentLevels = Literal["word", "line", "block"]
 TextblockSource = Literal["ocr", "derived"]
 DirectionChoices = Literal["UP", "DOWN", "LEFT", "RIGHT"]
+
+RoundedFloat = Annotated[float, PlainSerializer(lambda x: round(x, 5))]
+BoundedFloat = Annotated[
+    RoundedFloat, Field(..., ge=0, le=1, description="A float between 0 and 1")
+]
 
 
 class TextSpan(BaseModel):
@@ -22,10 +28,10 @@ class NormBBox(BaseModel):
     Where x1 > x0 and bottom > top
     """
 
-    x0: float
-    top: float
-    x1: float
-    bottom: float
+    x0: BoundedFloat
+    top: BoundedFloat
+    x1: BoundedFloat
+    bottom: BoundedFloat
 
     class Config:
         json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
@@ -171,8 +177,8 @@ class Point(BaseModel):
     class Config:
         json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
 
-    x: float
-    y: float
+    x: BoundedFloat
+    y: BoundedFloat
 
 
 class BoundingPoly(BaseModel):
@@ -190,7 +196,7 @@ class BoundingPoly(BaseModel):
 
 class TextBlockMetadata(BaseModel):
     direction: Optional[DirectionChoices] = None
-    confidence: Optional[float] = None
+    confidence: Optional[RoundedFloat] = None
     layout_category: Optional[str] = Field(
         default=None, description="The category of the text block"
     )

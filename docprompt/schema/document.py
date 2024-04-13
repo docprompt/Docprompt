@@ -112,6 +112,10 @@ class PdfDocument(BaseModel):
     def num_pages(self):
         return self.page_count
 
+    @property
+    def bytes_per_page(self):
+        return len(self.file_bytes) / self.num_pages
+
     @computed_field
     @cached_property
     def document_hash(self) -> str:

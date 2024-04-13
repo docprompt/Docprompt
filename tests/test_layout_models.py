@@ -1,5 +1,6 @@
 from docprompt import NormBBox
 from docprompt.schema.layout import BoundingPoly, Point
+import pytest
 
 
 def test_normbbox_utilities():
@@ -21,16 +22,21 @@ def test_normbbox_utilities():
     # Test equality
     assert bbox == NormBBox(x0=0, top=0, x1=1, bottom=1)
 
+    # Test out of bounds
+
+    with pytest.raises(ValueError):
+        NormBBox(x0=0, top=0, x1=1, bottom=2)
+
     # Add two bboxes
 
-    bbox_2 = NormBBox(x0=0.5, top=0.5, x1=1.5, bottom=1.5)
+    bbox_2 = NormBBox(x0=0.5, top=0.5, x1=1, bottom=1.0)
     combined_bbox = bbox + bbox_2
-    assert combined_bbox == NormBBox(x0=0, top=0, x1=1.5, bottom=1.5)
+    assert combined_bbox == NormBBox(x0=0, top=0, x1=1.0, bottom=1.0)
 
     # Add two bboxes via combine
 
     combined_bbox = NormBBox.combine(bbox, bbox_2)
-    assert combined_bbox == NormBBox(x0=0, top=0, x1=1.5, bottom=1.5)
+    assert combined_bbox == NormBBox(x0=0, top=0, x1=1.0, bottom=1.0)
 
     # Test from bounding poly
     bounding_poly = BoundingPoly(
