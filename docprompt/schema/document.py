@@ -7,12 +7,11 @@ from functools import cached_property
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Generator, Literal, Optional, Tuple, Union
+from typing import Dict, Generator, Optional, Tuple, Union, Iterable
 from pydantic import Field
 
 import magic
 import pypdfium2 as pdfium
-from PIL import Image
 from pydantic import (
     BaseModel,
     PositiveInt,
@@ -25,11 +24,10 @@ from pydantic import (
 from docprompt._exec.ghostscript import (
     compress_pdf_to_bytes,
 )
+from docprompt.rasterize import process_raster_image, ResizeModes, AspectRatioRule
 import logging
 
 DEFAULT_DPI = 100
-
-ResizeModes = Literal["thumbnail", "resize"]
 
 logger = logging.getLogger(__name__)
 
@@ -53,105 +51,6 @@ def get_page_render_size_from_bytes(
     height = int(base_height * dpi / 72)
 
     return width, height
-
-
-def resize_image_to_fize_size_limit(
-    image_bytes: bytes,
-    max_file_size_bytes: int,
-    *,
-    resize_mode: ResizeModes = "thumbnail",
-    resize_step_size: float = 0.1,
-):
-    """
-    Incrementally resizes an image until it is under a certain file size
-    """
-
-    if resize_step_size <= 0 or resize_step_size >= 0.5:
-        raise ValueError("resize_step_size must be between 0 and 0.5")
-
-    if len(image_bytes) < max_file_size_bytes:
-        return image_bytes
-
-    output_bytes = image_bytes
-    step_count = 0
-
-    while len(output_bytes) > max_file_size_bytes:
-        image = Image.open(BytesIO(output_bytes))
-
-        new_width = int(image.width * (1 - resize_step_size * step_count))
-        new_height = int(image.height * (1 - resize_step_size * step_count))
-
-        if new_width <= 200 or new_height <= 200:
-            logger.warning(
-                f"Image could not be resized to under {max_file_size_bytes} bytes. Reached {len(output_bytes)} bytes."
-            )
-            break
-
-        if resize_mode == "thumbnail":
-            image.thumbnail((new_width, new_height))
-        elif resize_mode == "resize":
-            image = image.resize((new_width, new_height))
-
-        buffer = BytesIO()
-
-        image.save(buffer, format="PNG", optimize=True)
-
-        output_bytes = buffer.getvalue()
-
-        step_count += 1
-
-    return output_bytes
-
-
-def process_raster_image(
-    image_bytes: bytes,
-    *,
-    do_resize: bool = False,
-    resize_width: Optional[int] = None,
-    resize_height: Optional[int] = None,
-    resize_mode: ResizeModes = "thumbnail",
-    do_convert: bool = True,
-    image_covert_mode: str = "L",
-    do_quantize: bool = True,
-    quantize_color_count: int = 8,
-    max_file_size_bytes: Optional[int] = None,
-):
-    if not do_resize and not do_quantize and not do_convert and not max_file_size_bytes:
-        return image_bytes
-
-    image = Image.open(BytesIO(image_bytes))
-
-    if do_resize:
-        if resize_width is None or resize_height is None:
-            raise ValueError("Must specify both resize_width and resize_height")
-
-        if resize_mode == "resize":
-            image = image.resize((resize_width, resize_height))
-        elif resize_mode == "thumbnail":
-            image.thumbnail((resize_width, resize_height))
-        else:
-            raise ValueError("Invalid resize_mode")
-
-    if do_convert:
-        image = image.convert(image_covert_mode)
-
-    if do_quantize:
-        image = image.quantize(colors=quantize_color_count)
-
-    buffer = BytesIO()
-    image.save(buffer, format="PNG", optimize=True)
-
-    result = buffer.getvalue()
-
-    if max_file_size_bytes and len(result) > max_file_size_bytes:
-        result = resize_image_to_fize_size_limit(
-            result,
-            max_file_size_bytes,
-            resize_mode=resize_mode,
-            resize_step_size=0.1,
-        )
-
-    return result
 
 
 class PdfDocument(BaseModel):
@@ -266,6 +165,7 @@ class PdfDocument(BaseModel):
         downscale_size: Optional[Tuple[int, int]] = None,
         resize_mode: ResizeModes = "thumbnail",
         max_file_size_bytes: Optional[int] = None,
+        resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
         use_cache: bool = True,
         do_convert: bool = False,
         image_covert_mode: str = "L",
@@ -302,10 +202,10 @@ class PdfDocument(BaseModel):
 
         rastered = process_raster_image(
             rastered,
-            do_resize=downscale_size is not None,
             resize_width=downscale_size[0] if downscale_size else None,
             resize_height=downscale_size[1] if downscale_size else None,
             resize_mode=resize_mode,
+            resize_aspect_ratios=resize_aspect_ratios,
             do_convert=do_convert,
             image_covert_mode=image_covert_mode,
             do_quantize=do_quantize,
@@ -321,12 +221,14 @@ class PdfDocument(BaseModel):
         *,
         dpi: int = DEFAULT_DPI,
         downscale_size: Optional[Tuple[int, int]] = None,
+        resize_mode: ResizeModes = "thumbnail",
+        max_file_size_bytes: Optional[int] = None,
+        resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
         use_cache: bool = True,
         do_convert: bool = False,
         image_covert_mode: str = "L",
         do_quantize: bool = False,
         quantize_color_count: int = 8,
-        max_image_file_size: Optional[int] = None,
     ) -> str:
         """
         Rasterizes a page of the document using Pdfium and returns a data URI, which can
@@ -341,7 +243,9 @@ class PdfDocument(BaseModel):
             image_covert_mode=image_covert_mode,
             do_quantize=do_quantize,
             quantize_color_count=quantize_color_count,
-            max_image_file_size=max_image_file_size,
+            resize_mode=resize_mode,
+            max_file_size_bytes=max_file_size_bytes,
+            resize_aspect_ratios=resize_aspect_ratios,
         )
         return f"data:image/png;base64,{base64.b64encode(image_bytes).decode('utf-8')}"
 

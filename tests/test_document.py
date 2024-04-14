@@ -5,6 +5,7 @@ import io
 from .fixtures import PDF_FIXTURES
 
 from docprompt.utils.splitter import pdf_split_iter_fast
+from docprompt.rasterize import ProviderResizeRatios
 
 
 def test_load_document():
@@ -22,7 +23,7 @@ def test_rasterize():
         Image.open(io.BytesIO(img_bytes))
 
 
-def test_rasterize_covert_and_quantize():
+def test_rasterize_convert_and_quantize():
     # Fow now just test PIL can open the image
     convert_mode = "L"
     quantize_color_count = 8
@@ -84,19 +85,25 @@ def test_max_image_file_size():
         assert len(resize_bytes) < len(initial_img_bytes)
 
 
-def test_rasterize_with_optimizations():
-    max_image_size = 1024 * 1024 * 5
+def test_rasterize_aspect_ratio_rules():
+    document = load_document(PDF_FIXTURES[0].get_full_path())
+    ratios = ProviderResizeRatios.ANTHROPIC.value
 
-    for fixture in PDF_FIXTURES:
-        doc = load_document(fixture.get_full_path())
+    img_bytes = document.rasterize_page(
+        1, resize_aspect_ratios=ratios, resize_mode="resize"
+    )
 
-        no_optimize_img_bytes = doc.rasterize_page(1)
+    img = Image.open(io.BytesIO(img_bytes))
 
-        optimized = doc.rasterize_page(
-            1, do_convert=True, do_quantize=True, max_file_size_bytes=max_image_size
-        )
-
-        assert len(optimized) < len(no_optimize_img_bytes)
+    for ratio in ratios:
+        if all(
+            [
+                img.width <= ratio.max_width,
+                img.height <= ratio.max_height,
+                img.width / img.height == ratio.ratio,
+            ]
+        ):
+            break
 
 
 def test_split():

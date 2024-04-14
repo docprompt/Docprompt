@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        python-versions: [ 3.9 ]
+        python-versions: [ 3.8 ]
 
     permissions:
       id-token: write
