@@ -39,17 +39,64 @@ def test_rasterize_covert_and_quantize():
         Image.open(io.BytesIO(img_bytes))
 
 
-def test_rasterize_resize():
+def test_rasterize_resize__regular():
     # Fow now just test PIL can open the image
     resize_width = 100
     resize_height = 100
 
     for fixture in PDF_FIXTURES:
         doc = load_document(fixture.get_full_path())
-        img_bytes = doc.rasterize_page(1, downscale_size=(resize_width, resize_height))
+        img_bytes = doc.rasterize_page(
+            1, downscale_size=(resize_width, resize_height), resize_mode="resize"
+        )
         result = Image.open(io.BytesIO(img_bytes))
 
         assert result.size == (resize_width, resize_height)
+
+
+def test_rasterize_resize__thumbnail():
+    # Fow now just test PIL can open the image
+    resize_width = 100
+    resize_height = 100
+
+    for fixture in PDF_FIXTURES:
+        doc = load_document(fixture.get_full_path())
+        img_bytes = doc.rasterize_page(
+            1, downscale_size=(resize_width, resize_height), resize_mode="thumbnail"
+        )
+        result = Image.open(io.BytesIO(img_bytes))
+
+        result_width, result_height = result.size
+
+        assert result_width == resize_width or result_height == resize_height
+
+
+def test_max_image_file_size():
+    for fixture in PDF_FIXTURES:
+        doc = load_document(fixture.get_full_path())
+
+        initial_img_bytes = doc.rasterize_page(1)
+
+        resize_bytes = doc.rasterize_page(
+            1, max_file_size_bytes=len(initial_img_bytes) - 10000
+        )
+
+        assert len(resize_bytes) < len(initial_img_bytes)
+
+
+def test_rasterize_with_optimizations():
+    max_image_size = 1024 * 1024 * 5
+
+    for fixture in PDF_FIXTURES:
+        doc = load_document(fixture.get_full_path())
+
+        no_optimize_img_bytes = doc.rasterize_page(1)
+
+        optimized = doc.rasterize_page(
+            1, do_convert=True, do_quantize=True, max_file_size_bytes=max_image_size
+        )
+
+        assert len(optimized) < len(no_optimize_img_bytes)
 
 
 def test_split():
