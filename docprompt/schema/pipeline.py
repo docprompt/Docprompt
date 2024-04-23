@@ -115,12 +115,10 @@ class PageRasterizer:
         name: str,
         *,
         dpi: int = 100,
-        resize_width: Optional[int] = None,
-        resize_height: Optional[int] = None,
         resize_mode: ResizeModes = "thumbnail",
         resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
         do_convert: bool = False,
-        image_covert_mode: str = "L",
+        image_convert_mode: str = "L",
         do_quantize: bool = False,
         quantize_color_count: int = 8,
         max_file_size_bytes: Optional[int] = None,
@@ -130,19 +128,17 @@ class PageRasterizer:
             name,
             return_mode="bytes",
             dpi=dpi,
-            resize_width=resize_width,
-            resize_height=resize_height,
             resize_mode=resize_mode,
             resize_aspect_ratios=resize_aspect_ratios,
             do_convert=do_convert,
-            image_covert_mode=image_covert_mode,
+            image_convert_mode=image_convert_mode,
             do_quantize=do_quantize,
             quantize_color_count=quantize_color_count,
             max_file_size_bytes=max_file_size_bytes,
             mask_bounding_boxes=mask_bounding_boxes,
         )
 
-        return f"data:image/png;base64,{base64.b64encode(rastered.decode('utf-8'))}"
+        return f"data:image/png;base64,{base64.b64encode(rastered).decode('utf-8')}"
 
     def clear_cache(self):
         self.raster_cache.clear()
