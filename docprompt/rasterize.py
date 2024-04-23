@@ -1,14 +1,18 @@
-from typing import Literal, Iterable, Optional
+from typing import Literal, Iterable, Optional, Union
 from pydantic import BaseModel
-from PIL import Image
+from PIL import Image, ImageDraw
 from io import BytesIO
 import logging
 from enum import Enum
+
+from docprompt.schema.layout import NormBBox
 
 logger = logging.getLogger(__name__)
 
 
 ResizeModes = Literal["thumbnail", "resize"]
+
+PILOrBytes = Union[Image.Image, bytes]
 
 
 class AspectRatioRule(BaseModel):
@@ -143,53 +147,100 @@ def process_raster_image(
     resize_height: Optional[int] = None,
     resize_mode: ResizeModes = "thumbnail",
     resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
-    do_convert: bool = True,
+    do_convert: bool = False,
     image_covert_mode: str = "L",
-    do_quantize: bool = True,
+    do_quantize: bool = False,
     quantize_color_count: int = 8,
     max_file_size_bytes: Optional[int] = None,
 ):
-    if (
-        not resize_width
-        and not resize_width
-        and not resize_aspect_ratios
-        and not do_quantize
-        and not do_convert
-        and not max_file_size_bytes
-    ):
-        return image_bytes
-
-    image = Image.open(BytesIO(image_bytes))
-
-    image = resize_pil_image(
-        image,
-        width=resize_width,
-        height=resize_height,
-        resize_mode=resize_mode,
-        aspect_ratios=resize_aspect_ratios,
+    should_load_image = any(
+        (
+            resize_width,
+            resize_height,
+            resize_aspect_ratios,
+            do_quantize,
+            do_convert,
+        )
     )
 
-    if do_convert:
-        image = image.convert(image_covert_mode)
+    if should_load_image:
+        image = Image.open(BytesIO(image_bytes))
 
-    if do_quantize:
-        image = image.quantize(colors=quantize_color_count)
-
-    buffer = BytesIO()
-    image.save(buffer, format="PNG", optimize=True)
-
-    result = buffer.getvalue()
-
-    # We want to do this last to avoid resizing if optimization would have made it smaller anyway
-    if max_file_size_bytes and len(result) > max_file_size_bytes:
-        result = resize_image_to_fize_size_limit(
-            result,
-            max_file_size_bytes,
+        image = resize_pil_image(
+            image,
+            width=resize_width,
+            height=resize_height,
             resize_mode=resize_mode,
-            resize_step_size=0.1,
+            aspect_ratios=resize_aspect_ratios,
         )
 
-    return result
+        if do_convert:
+            image = image.convert(image_covert_mode)
+
+        if do_quantize:
+            image = image.quantize(colors=quantize_color_count)
+
+        buffer = BytesIO()
+        image.save(buffer, format="PNG", optimize=True)
+
+        result = buffer.getvalue()
+
+        # We want to do this last to avoid resizing if optimization would have made it smaller anyway
+        if max_file_size_bytes and len(result) > max_file_size_bytes:
+            result = resize_image_to_fize_size_limit(
+                result,
+                max_file_size_bytes,
+                resize_mode=resize_mode,
+                resize_step_size=0.1,
+            )
+
+        return result
+
+    elif max_file_size_bytes:
+        return resize_image_to_fize_size_limit(
+            image_bytes,
+            max_file_size_bytes,
+            resize_mode=resize_mode,
+        )
+    else:
+        return image_bytes
+
+
+def mask_image_from_bboxes(
+    image: Union[Image.Image, bytes],
+    bboxes: Iterable[NormBBox],
+    *,
+    mask_color: Union[str, int] = "black",
+):
+    """
+    Given a set of normalized bounding boxes, masks the image.
+    :param image: PIL Image object or bytes object representing an image.
+    :param bboxes: Iterable of NormBBox objects.
+    :param mask_color: Color used for the mask, can be a string (e.g., "black") or a tuple (e.g., (0, 0, 0)).
+    """
+    # Convert bytes image to PIL Image if necessary
+    if isinstance(image, bytes):
+        image = Image.open(BytesIO(image))
+
+    # Get image dimensions
+    width, height = image.size
+
+    # Create a drawing context
+    draw = ImageDraw.Draw(image)
+
+    # Draw rectangles over the specified bounding boxes
+    for bbox in bboxes:
+        # Convert normalized coordinates to absolute coordinates
+        absolute_bbox = (
+            bbox.x0 * width,
+            bbox.top * height,
+            bbox.x1 * width,
+            bbox.bottom * height,
+        )
+        # Draw rectangle
+        draw.rectangle(absolute_bbox, fill=mask_color)
+
+    return image
 
 
 class ProviderResizeRatios(Enum):

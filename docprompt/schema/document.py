@@ -15,7 +15,6 @@ import pypdfium2 as pdfium
 from pydantic import (
     BaseModel,
     PositiveInt,
-    PrivateAttr,
     computed_field,
     field_serializer,
     field_validator,
@@ -61,8 +60,6 @@ class PdfDocument(BaseModel):
     name: str = Field(description="The name of the document")
     file_bytes: bytes = Field(description="The bytes of the document", repr=False)
     file_path: Optional[str] = None
-
-    _raster_cache: Dict[int, Dict[int, bytes]] = PrivateAttr(default_factory=dict)
 
     def __len__(self):
         return self.num_pages
@@ -166,7 +163,6 @@ class PdfDocument(BaseModel):
         resize_mode: ResizeModes = "thumbnail",
         max_file_size_bytes: Optional[int] = None,
         resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
-        use_cache: bool = True,
         do_convert: bool = False,
         image_covert_mode: str = "L",
         do_quantize: bool = False,
@@ -175,30 +171,20 @@ class PdfDocument(BaseModel):
         """
         Rasterizes a page of the document using Pdfium
         """
-        generated_image = False
 
         if page_number < 0 or page_number > self.num_pages:
             raise ValueError(f"Page number must be between 0 and {self.num_pages}")
 
-        if use_cache and self._raster_cache.get(dpi, {}).get(page_number):
-            rastered = self._raster_cache[dpi][page_number]
-        else:
-            pdf = pdfium.PdfDocument(BytesIO(self.file_bytes))
-            page = pdf[page_number - 1]
+        pdf = pdfium.PdfDocument(BytesIO(self.file_bytes))
+        page = pdf[page_number - 1]
 
-            bitmap = page.render(scale=(1 / 72) * dpi)
+        bitmap = page.render(scale=(1 / 72) * dpi)
 
-            pil = bitmap.to_pil().convert("RGB")
+        pil = bitmap.to_pil().convert("RGB")
 
-            img_bytes = BytesIO()
-            pil.save(img_bytes, format="PNG")
-            rastered = img_bytes.getvalue()
-
-            generated_image = True
-
-        if use_cache and generated_image:
-            self._raster_cache.setdefault(dpi, {})
-            self._raster_cache[dpi][page_number] = rastered
+        img_bytes = BytesIO()
+        pil.save(img_bytes, format="PNG")
+        rastered = img_bytes.getvalue()
 
         rastered = process_raster_image(
             rastered,
@@ -252,27 +238,21 @@ class PdfDocument(BaseModel):
     def rasterize_pdf(
         self,
         dpi: int = DEFAULT_DPI,
-        use_cache: bool = True,
+        max_file_size_bytes: Optional[int] = None,
     ) -> Dict[int, bytes]:
         """
         Rasterizes the entire document using Pdfium
         """
-        if (
-            use_cache
-            and self._raster_cache.get(dpi)
-            and len(self._raster_cache[dpi]) == self.num_pages
-        ):
-            return self._raster_cache[dpi]
 
         result = {}
 
         for page_number in range(1, self.num_pages + 1):
             result[page_number] = self.rasterize_page(
-                page_number, dpi=dpi, use_cache=False
+                page_number,
+                dpi=dpi,
+                use_cache=False,
+                max_file_size_bytes=max_file_size_bytes,
             )
-
-        if use_cache:
-            self._raster_cache[dpi] = result.copy()  # Shallow copy should be OK
 
         return result
 
