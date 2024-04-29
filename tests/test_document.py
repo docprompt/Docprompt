@@ -1,4 +1,4 @@
-from docprompt import load_document
+from docprompt import load_document, load_documents
 from PIL import Image
 import io
 
@@ -13,6 +13,14 @@ def test_load_document():
         doc = load_document(fixture.get_full_path())
         assert doc.page_count == fixture.page_count
         assert doc.document_hash == fixture.file_hash
+
+
+def test_load_documents():
+    fixture = PDF_FIXTURES[0]
+
+    docs = load_documents([fixture.get_full_path()] * 3)
+
+    assert len(docs) == 3
 
 
 def test_rasterize():

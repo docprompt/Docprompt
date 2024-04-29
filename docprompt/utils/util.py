@@ -1,28 +1,17 @@
-import hashlib
-import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import hashlib
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from typing import List, Optional, Union
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
+import warnings
 
 import fsspec
 import magic
 import pypdfium2 as pdfium
 
-from docprompt._exec.ghostscript import compress_pdf_to_path
-from docprompt.schema.document import Document
-
-
-def ensure_path(fp: Union[Path, PathLike]) -> Path:
-    """
-    Ensures that a file path is a Path object
-    """
-    if not isinstance(fp, Path):
-        fp = Path(fp)
-
-    return fp
+from docprompt.schema.document import PdfDocument
 
 
 def is_pdf(fd: Union[Path, PathLike, bytes]) -> bool:
@@ -52,97 +41,119 @@ def get_page_count(fd: Union[Path, PathLike, bytes]) -> int:
     return len(pdf)
 
 
+def name_from_path(path: Union[Path, PathLike]) -> str:
+    if not isinstance(path, Path):
+        path = Path(path)
+
+    file_name = path.name
+
+    parsed = urlparse(file_name)
+
+    return unquote(parsed.path)
+
+
+def read_pdf_bytes_from_path(path: Union[Path, PathLike], **kwargs) -> bytes:
+    with fsspec.open(urlpath=str(path), mode="rb", **kwargs) as f:
+        return f.read()
+
+
+def determine_pdf_name_from_bytes(file_bytes: bytes) -> str:
+    """
+    Attempts to determine the name of a PDF by exaimining metadata
+    """
+    pdf = pdfium.PdfDocument(BytesIO(file_bytes))
+
+    metadata_dict = pdf.get_metadata_dict(skip_empty=True)
+
+    name = None
+
+    if metadata_dict:
+        name = (
+            metadata_dict.get("Title")
+            or metadata_dict.get("Subject")
+            or metadata_dict.get("Author")
+        )
+
+    if name:
+        return f"{name.strip()}.pdf"
+
+    return f"document-{hash_from_bytes(file_bytes)}.pdf"
+
+
 def load_document(
     fp: Union[Path, PathLike, bytes],
     *,
     file_name: Optional[str] = None,
-    do_compress: bool = False,
-    do_clean: bool = False,
-) -> Document:
+) -> PdfDocument:
     """
     Loads a document from a file path
     """
     if isinstance(fp, bytes):
         file_bytes = fp
-        if file_name is None:
-            file_name = "document.pdf"
+        file_name = file_name or determine_pdf_name_from_bytes(file_bytes)
     else:
-        if not isinstance(fp, Path):
-            fp = Path(fp)
+        file_name = name_from_path(fp) if file_name is None else file_name
 
-        if fp.is_symlink():
-            fp = fp.resolve()
-
-        file_name = fp.name
-
-        with open(fp, "rb") as f:
-            file_bytes: bytes = f.read()
+        file_bytes = read_pdf_bytes_from_path(fp)
 
     if not is_pdf(file_bytes):
         raise ValueError("File is not a PDF")
 
-    if do_compress or do_clean:
-        with tempfile.TemporaryDirectory(f"_process_{file_name}") as temp_dir:
-            temp_path = Path(temp_dir)
-            temp_file = temp_path / file_name
+    return PdfDocument(
+        name=unquote(file_name), file_path=str(fp), file_bytes=file_bytes
+    )
 
-            with temp_file.open("wb") as f:
-                f.write(file_bytes)
 
-            if do_compress:
-                compress_pdf_to_path(temp_file, temp_path / "compressed.pdf")
-                file_bytes = (temp_path / "compressed.pdf").read_bytes()
+def load_documents(
+    fps: List[Union[Path, PathLike, bytes]],
+    *,
+    max_threads: int = 12,
+):
+    """
+    Loads multiple documents from file paths, using a thread pool
+    """
+    futures = []
 
-            if do_clean:
-                raise NotImplementedError(
-                    "Cleaning with unpaper is not yet implemented"
-                )
-                # compress_pdf_to_path(temp_file, temp_path / "cleaned.pdf", clean=True)
-                # file_bytes = (temp_path / "cleaned.pdf").read_bytes()
+    thread_count = min(max_threads, len(fps))
 
-    return Document(name=unquote(file_name), file_path=str(fp), file_bytes=file_bytes)
+    with ThreadPoolExecutor(max_workers=thread_count) as executor:
+        for fp in fps:
+            futures.append(executor.submit(load_document, fp))
+
+    results = []
+
+    for future in as_completed(futures):
+        results.append(future.result())
+
+    return results
 
 
 def load_document_from_url(url: str, **kwargs):
-    with fsspec.open(url, "rb") as f:
-        file_bytes: bytes = f.read()
-
-    file_name = unquote(url.split("/")[-1])
-
-    if not is_pdf(file_bytes):
-        raise ValueError("File is not a PDF")
-
-    return Document(name=file_name, file_path=url, file_bytes=file_bytes)
+    warnings.warn(
+        "load_document_from_url is deprecated and will be removed in a future release. Use load_document instead.",
+        DeprecationWarning,
+    )
+    return load_document(url, **kwargs)
 
 
-def load_documents_from_urls(
-    urls: List[str], max_workers: int = 5, **kwargs
-) -> List[Document]:
-    documents = []
+def hash_from_bytes(
+    byte_data: bytes, hash_func=hashlib.md5, threshold=1024 * 1024 * 128
+) -> str:
+    """
+    Gets a hash from bytes. If the bytes are larger than the threshold, the hash is computed in chunks
+    to avoid memory issues. The default hash function is MD5 with a threshold of 128MB which is optimal
+    for most machines and use cases.
+    """
+    hash = hash_func()
 
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_url = {
-            executor.submit(load_document_from_url, url): url for url in urls
-        }
-        for future in as_completed(future_to_url):
-            url = future_to_url[future]
-            try:
-                documents.append(future.result())
-            except Exception as exc:
-                print(f"{url} generated an exception: {exc}")
-                raise
+    if len(byte_data) > threshold:
+        stream = BytesIO(byte_data)
+        b = bytearray(128 * 1024)
+        mv = memoryview(b)
 
-    return documents
-
-
-def hash_from_bytes(byte_data: bytes) -> str:
-    stream = BytesIO(byte_data)
-
-    hash = hashlib.md5()
-    b = bytearray(128 * 1024)
-    mv = memoryview(b)
-
-    while n := stream.readinto(mv):
-        hash.update(mv[:n])
+        while n := stream.readinto(mv):
+            hash.update(mv[:n])
+    else:
+        hash.update(byte_data)
 
     return hash.hexdigest()

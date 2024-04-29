@@ -147,11 +147,6 @@ class PageRasterizer:
         return self.raster_cache.pop(name, default=default)
 
 
-class PageRasterizationDescriptor:
-    def __get__(self, owner):
-        return PageRasterizer(owner._raster_cache, owner)
-
-
 class PageNode(BaseModel, Generic[PageNodeMetadata]):
     """
     Represents a single page in a document, with some metadata
