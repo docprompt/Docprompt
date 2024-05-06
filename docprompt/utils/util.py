@@ -9,9 +9,9 @@ import warnings
 
 import fsspec
 import magic
-import pypdfium2 as pdfium
 
 from docprompt.schema.document import PdfDocument
+from docprompt._pdfium import get_pdfium_document
 
 
 def is_pdf(fd: Union[Path, PathLike, bytes]) -> bool:
@@ -36,9 +36,8 @@ def get_page_count(fd: Union[Path, PathLike, bytes]) -> int:
         with open(fd, "rb") as f:
             fd = f.read()
 
-    pdf = pdfium.PdfDocument(BytesIO(fd))
-
-    return len(pdf)
+    with get_pdfium_document(fd) as pdf:
+        return len(pdf)
 
 
 def name_from_path(path: Union[Path, PathLike]) -> str:
@@ -61,9 +60,8 @@ def determine_pdf_name_from_bytes(file_bytes: bytes) -> str:
     """
     Attempts to determine the name of a PDF by exaimining metadata
     """
-    pdf = pdfium.PdfDocument(BytesIO(file_bytes))
-
-    metadata_dict = pdf.get_metadata_dict(skip_empty=True)
+    with get_pdfium_document(file_bytes) as pdf:
+        metadata_dict = pdf.get_metadata_dict(skip_empty=True)
 
     name = None
 

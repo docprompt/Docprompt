@@ -7,38 +7,15 @@ import pypdfium2 as pdfium
 
 from docprompt._exec.ghostscript import compress_pdf_to_bytes
 from docprompt.utils import get_page_count
-from threading import Lock
-import contextlib
+
+from docprompt._pdfium import get_pdfium_document, writable_temp_pdf
 
 
 logger = logging.getLogger(__name__)
 
-PDFIUM_WRITE_LOCK = Lock()  # Deadlocks occur in threaded environments without this lock
-
 
 class UnsupportedDocumentType(ValueError):
     pass
-
-
-@contextlib.contextmanager
-def load_pdf_from_bytes(file_bytes: bytes):
-    pdf = pdfium.PdfDocument(file_bytes)
-
-    try:
-        yield pdf
-    finally:
-        pdf.close()
-
-
-@contextlib.contextmanager
-def writable_temp_pdf():
-    with PDFIUM_WRITE_LOCK:
-        pdf = pdfium.PdfDocument.new()
-
-        try:
-            yield pdf
-        finally:
-            pdf.close()
 
 
 def split_pdf_to_bytes(
@@ -59,7 +36,7 @@ def split_pdf_to_bytes(
         raise ValueError("stop_page must be greater than start_page")
 
     # Load the PDF from bytes
-    with load_pdf_from_bytes(file_bytes) as src_pdf:
+    with get_pdfium_document(file_bytes) as src_pdf:
         # Create a new PDF for the current batch
         dst_pdf = pdfium.PdfDocument.new()
 
@@ -79,7 +56,7 @@ def pdf_split_iter_fast(file_bytes: bytes, max_page_count: int) -> Iterator[byte
     """
     Splits a PDF into batches of pages up to `max_page_count` pages quickly.
     """
-    with load_pdf_from_bytes(file_bytes) as src_pdf:
+    with get_pdfium_document(file_bytes) as src_pdf:
         current_page = 0
         total_pages = len(src_pdf)
 

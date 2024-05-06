@@ -11,7 +11,6 @@ from typing import Dict, Generator, Optional, Tuple, Union, Iterable
 from pydantic import Field
 
 import magic
-import pypdfium2 as pdfium
 from pydantic import (
     BaseModel,
     PositiveInt,
@@ -25,6 +24,7 @@ from docprompt._exec.ghostscript import (
 )
 from docprompt.rasterize import process_raster_image, ResizeModes, AspectRatioRule
 import logging
+from docprompt._pdfium import get_pdfium_document
 
 DEFAULT_DPI = 100
 
@@ -38,18 +38,18 @@ def get_page_render_size_from_bytes(
     Returns the render size of a page in pixels
     """
 
-    pdf = pdfium.PdfDocument(BytesIO(file_bytes))
-    page = pdf.get_page(page_number)
+    with get_pdfium_document(file_bytes) as pdf:
+        page = pdf.get_page(page_number)
 
-    mediabox = page.get_mediabox()
+        mediabox = page.get_mediabox()
 
-    base_width = int(mediabox[2] - mediabox[0])
-    base_height = int(mediabox[3] - mediabox[1])
+        base_width = int(mediabox[2] - mediabox[0])
+        base_height = int(mediabox[3] - mediabox[1])
 
-    width = int(base_width * dpi / 72)
-    height = int(base_height * dpi / 72)
+        width = int(base_width * dpi / 72)
+        height = int(base_height * dpi / 72)
 
-    return width, height
+        return width, height
 
 
 class PdfDocument(BaseModel):
@@ -175,12 +175,12 @@ class PdfDocument(BaseModel):
         if page_number < 0 or page_number > self.num_pages:
             raise ValueError(f"Page number must be between 0 and {self.num_pages}")
 
-        pdf = pdfium.PdfDocument(BytesIO(self.file_bytes))
-        page = pdf[page_number - 1]
+        with get_pdfium_document(self.file_bytes) as pdf:
+            page = pdf[page_number - 1]
 
-        bitmap = page.render(scale=(1 / 72) * dpi)
+            bitmap = page.render(scale=(1 / 72) * dpi)
 
-        pil = bitmap.to_pil().convert("RGB")
+            pil = bitmap.to_pil().convert("RGB")
 
         img_bytes = BytesIO()
         pil.save(img_bytes, format="PNG")
@@ -248,7 +248,6 @@ class PdfDocument(BaseModel):
             result[page_number] = self.rasterize_page(
                 page_number,
                 dpi=dpi,
-                use_cache=False,
                 max_file_size_bytes=max_file_size_bytes,
             )
 
