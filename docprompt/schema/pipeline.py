@@ -6,6 +6,7 @@ from typing import (
     List,
     Literal,
     Optional,
+    Tuple,
     TypeVar,
     TYPE_CHECKING,
     Union,
@@ -55,6 +56,7 @@ class PageRasterizer:
         *,
         return_mode: Literal["bytes", "pil"] = "bytes",
         dpi: int = 100,
+        downscale_size: Optional[Tuple[int, int]] = None,
         resize_mode: ResizeModes = "thumbnail",
         resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
         do_convert: bool = False,
@@ -69,6 +71,7 @@ class PageRasterizer:
             if name
             else self._construct_cache_key(
                 dpi=dpi,
+                downscale_size=downscale_size,
                 resize_mode=resize_mode,
                 resize_aspect_ratios=resize_aspect_ratios,
                 do_convert=do_convert,
@@ -86,6 +89,7 @@ class PageRasterizer:
             rastered = self.owner.document.document.rasterize_page(
                 self.owner.page_number,
                 dpi=dpi,
+                downscale_size=downscale_size,
                 resize_mode=resize_mode,
                 resize_aspect_ratios=resize_aspect_ratios,
                 do_convert=do_convert,
@@ -115,6 +119,7 @@ class PageRasterizer:
         name: str,
         *,
         dpi: int = 100,
+        downscale_size: Optional[Tuple[int, int]] = None,
         resize_mode: ResizeModes = "thumbnail",
         resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
         do_convert: bool = False,
@@ -128,6 +133,7 @@ class PageRasterizer:
             name,
             return_mode="bytes",
             dpi=dpi,
+            downscale_size=downscale_size,
             resize_mode=resize_mode,
             resize_aspect_ratios=resize_aspect_ratios,
             do_convert=do_convert,
