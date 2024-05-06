@@ -2,6 +2,7 @@ from .fixtures import PDF_FIXTURES
 
 from docprompt import DocumentNode, load_document
 from pytest import raises
+import pickle
 
 
 def test_search():
@@ -45,3 +46,49 @@ def test_search():
     raw_search = locator.search_raw('content:"rooted"')
 
     assert len(raw_search) == 1
+
+
+def test_pickling__removes_locator_document_basis():
+    document = load_document(PDF_FIXTURES[0].get_full_path())
+    document_node = DocumentNode.from_document(document)
+
+    ocr_results = PDF_FIXTURES[0].get_ocr_results()
+
+    for page_num, ocr_results in ocr_results.items():
+        document_node.page_nodes[page_num - 1].ocr_results.results[
+            ocr_results.provider_name
+        ] = ocr_results
+
+    result_page_1 = document_node.locator.search("rooted", page_number=1)
+
+    assert len(result_page_1) == 1
+
+    dumped = pickle.dumps(document_node)
+
+    loaded = pickle.loads(dumped)
+
+    assert loaded._locator is None
+
+
+def test_pickling__removes_locator_page_basis():
+    document = load_document(PDF_FIXTURES[0].get_full_path())
+    document_node = DocumentNode.from_document(document)
+
+    ocr_results = PDF_FIXTURES[0].get_ocr_results()
+
+    for page_num, ocr_results in ocr_results.items():
+        document_node.page_nodes[page_num - 1].ocr_results.results[
+            ocr_results.provider_name
+        ] = ocr_results
+
+    page = document_node.page_nodes[0]
+
+    result_page_1 = page.search("rooted")
+
+    assert len(result_page_1) == 1
+
+    dumped = pickle.dumps(page)
+
+    loaded = pickle.loads(dumped)
+
+    assert loaded.document._locator is None

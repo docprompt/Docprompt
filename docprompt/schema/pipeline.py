@@ -163,17 +163,29 @@ class PageNode(BaseModel, Generic[PageNodeMetadata]):
         description="The OCR results for the page",
         repr=False,
     )
-    table_extraction_results: ResultContainer = Field(
-        default_factory=lambda: ResultContainer(),
-        description="The table extraction results for the page",
-        repr=False,
-    )
 
     _raster_cache: Dict[str, bytes] = PrivateAttr(default_factory=dict)
+
+    def __getstate__(self):
+        state = super().__getstate__()
+
+        state["__pydantic_private__"]["_raster_cache"] = {}
+
+        return state
 
     @property
     def rasterizer(self):
         return PageRasterizer(self._raster_cache, self)
+
+    def search(
+        self, query: str, refine_to_words: bool = True, require_exact_match: bool = True
+    ):
+        return self.document.locator.search(
+            query,
+            page_number=self.page_number,
+            refine_to_word=refine_to_words,
+            require_exact_match=require_exact_match,
+        )
 
 
 class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
@@ -190,6 +202,13 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     )
 
     _locator: Optional["DocumentProvenanceLocator"] = PrivateAttr(default=None)
+
+    def __getstate__(self):
+        state = super().__getstate__()
+
+        state["__pydantic_private__"]["_locator"] = None
+
+        return state
 
     def __len__(self):
         return len(self.page_nodes)
