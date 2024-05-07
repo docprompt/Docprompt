@@ -1,5 +1,6 @@
 import base64
 from io import BytesIO
+import multiprocessing
 from typing import (
     Dict,
     Generic,
@@ -19,6 +20,8 @@ from docprompt.rasterize import AspectRatioRule, ResizeModes, process_raster_ima
 from docprompt.tasks.base import ResultContainer
 from docprompt.tasks.ocr.result import OcrPageResult
 from docprompt._pdfium import rasterize_pdf_with_pdfium
+from multiprocessing import get_context
+from concurrent.futures import ProcessPoolExecutor
 from PIL import Image
 import io
 
@@ -148,6 +151,39 @@ class PageRasterizer:
         return self.raster_cache.pop(name, default=default)
 
 
+def process_bitmap(
+    image,
+    *,
+    resize_width: Optional[int] = None,
+    resize_height: Optional[int] = None,
+    resize_mode: ResizeModes = "thumbnail",
+    aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
+    do_convert: bool = False,
+    image_convert_mode: str = "L",
+    do_quantize: bool = False,
+    quantize_color_count: int = 8,
+    max_file_size_bytes: Optional[int] = None,
+):
+    img_bytes = BytesIO()
+    image.save(img_bytes, format="PNG")
+    rastered = img_bytes.getvalue()
+
+    rastered = process_raster_image(
+        rastered,
+        resize_width=resize_width,
+        resize_height=resize_height,
+        resize_mode=resize_mode,
+        resize_aspect_ratios=aspect_ratios,
+        do_convert=do_convert,
+        do_quantize=do_quantize,
+        image_convert_mode=image_convert_mode,
+        quantize_color_count=quantize_color_count,
+        max_file_size_bytes=max_file_size_bytes,
+    )
+
+    return rastered
+
+
 class DocumentRasterizer:
     def __init__(self, owner: "DocumentNode"):
         self.owner = owner
@@ -173,32 +209,39 @@ class DocumentRasterizer:
 
         results: List[Union[bytes, Image.Image]] = []
 
-        for page_node, bitmap in zip(self.owner.page_nodes, bitmaps):
-            pil = bitmap.to_pil().convert("RGB")
+        futures = []
 
-            img_bytes = BytesIO()
-            pil.save(img_bytes, format="PNG")
-            rastered = img_bytes.getvalue()
+        worker_count = min(len(self.owner.page_nodes), multiprocessing.cpu_count() - 1)
 
-            rastered = process_raster_image(
-                rastered,
-                resize_width=downscale_size[0] if downscale_size else None,
-                resize_height=downscale_size[1] if downscale_size else None,
-                resize_mode=resize_mode,
-                resize_aspect_ratios=resize_aspect_ratios,
-                do_convert=do_convert,
-                do_quantize=do_quantize,
-                image_convert_mode=image_convert_mode,
-                quantize_color_count=quantize_color_count,
-                max_file_size_bytes=max_file_size_bytes,
-            )
+        with ProcessPoolExecutor(
+            max_workers=worker_count, mp_context=get_context("spawn")
+        ) as executor:
+            for bitmap in bitmaps:
+                futures.append(
+                    executor.submit(
+                        process_bitmap,
+                        bitmap.to_pil().convert("RGB"),
+                        resize_width=downscale_size[0] if downscale_size else None,
+                        resize_height=downscale_size[1] if downscale_size else None,
+                        resize_mode=resize_mode,
+                        aspect_ratios=resize_aspect_ratios,
+                        do_convert=do_convert,
+                        image_convert_mode=image_convert_mode,
+                        do_quantize=do_quantize,
+                        quantize_color_count=quantize_color_count,
+                        max_file_size_bytes=max_file_size_bytes,
+                    )
+                )
 
-            page_node._raster_cache[name] = rastered
+        for future, page_node in zip(futures, self.owner.page_nodes):
+            result = future.result()
 
-            if return_mode == "pil" and isinstance(rastered, bytes):
-                results.append(Image.open(io.BytesIO(rastered)))
-            elif return_mode == "bytes" and isinstance(rastered, bytes):
-                results.append(rastered)
+            page_node._raster_cache[name] = result
+
+            if return_mode == "pil" and isinstance(result, bytes):
+                results.append(Image.open(io.BytesIO(result)))
+            elif return_mode == "bytes" and isinstance(result, bytes):
+                results.append(result)
 
         return results
 
