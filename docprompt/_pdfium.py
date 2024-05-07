@@ -8,6 +8,9 @@ from pathlib import Path
 
 PDFIUM_LOAD_LOCK = Lock()  # PDF fails to load without this lock
 PDFIUM_WRITE_LOCK = Lock()  # Deadlocks occur in threaded environments without this lock
+PDFIUM_RASTERIZE_LOCK = (
+    Lock()
+)  # Rasterization fails without this lock in threaded environments
 
 
 @contextmanager
@@ -35,3 +38,28 @@ def writable_temp_pdf():
             yield pdf
         finally:
             pdf.close()
+
+
+def rasterize_page_with_pdfium(
+    fp: Union[PathLike, Path, bytes],
+    page_number: int,
+    **kwargs,
+):
+    """
+    Rasterizes a page of a PDF document
+    """
+    with get_pdfium_document(fp) as pdf:
+        page = pdf.get_page(page_number)
+        return page.render(**kwargs)
+
+
+def rasterize_pdf_with_pdfium(
+    fp: Union[PathLike, Path, bytes],
+    **kwargs,
+):
+    """
+    Rasterizes a page of a PDF document
+    """
+    with get_pdfium_document(fp) as pdf:
+        for page in pdf:
+            yield page.render(**kwargs)

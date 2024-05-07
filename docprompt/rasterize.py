@@ -148,7 +148,7 @@ def process_raster_image(
     resize_mode: ResizeModes = "thumbnail",
     resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
     do_convert: bool = False,
-    image_covert_mode: str = "L",
+    image_convert_mode: str = "L",
     do_quantize: bool = False,
     quantize_color_count: int = 8,
     max_file_size_bytes: Optional[int] = None,
@@ -175,7 +175,7 @@ def process_raster_image(
         )
 
         if do_convert:
-            image = image.convert(image_covert_mode)
+            image = image.convert(image_convert_mode)
 
         if do_quantize:
             image = image.quantize(colors=quantize_color_count)

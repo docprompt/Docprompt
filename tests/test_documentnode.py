@@ -36,6 +36,23 @@ def test_rasterize_via_page_node():
     assert image_bytes == page_node.rasterizer.rasterize("test", return_mode="bytes")
 
 
+def test_rasterize_via_document_node():
+    document = load_document(PDF_FIXTURES[0].get_full_path())
+
+    document_node = DocumentNode.from_document(document)
+
+    images = document_node.rasterizer.rasterize("default")
+
+    assert len(images) == len(document_node)
+    assert all(isinstance(image, bytes) for image in images)
+    assert all(
+        (
+            "default" in page_node.rasterizer.raster_cache
+            for page_node in document_node.page_nodes
+        )
+    )
+
+
 def test__pickling_drops_cache():
     document = load_document(PDF_FIXTURES[0].get_full_path())
 

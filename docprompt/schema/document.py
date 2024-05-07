@@ -24,7 +24,11 @@ from docprompt._exec.ghostscript import (
 )
 from docprompt.rasterize import process_raster_image, ResizeModes, AspectRatioRule
 import logging
-from docprompt._pdfium import get_pdfium_document
+from docprompt._pdfium import (
+    get_pdfium_document,
+    rasterize_page_with_pdfium,
+    rasterize_pdf_with_pdfium,
+)
 
 DEFAULT_DPI = 100
 
@@ -154,6 +158,18 @@ class PdfDocument(BaseModel):
         with self.as_tempfile() as temp_path:
             return compress_pdf_to_bytes(temp_path, **compression_kwargs)
 
+    def render_page_to_bytes(self, page_number: int, dpi: int = DEFAULT_DPI) -> bytes:
+        bitmap = rasterize_page_with_pdfium(
+            self.file_bytes, page_number, scale=(1 / 72) * dpi
+        )
+        pil = bitmap.to_pil().convert("RGB")
+
+        img_bytes = BytesIO()
+        pil.save(img_bytes, format="PNG")
+        rastered = img_bytes.getvalue()
+
+        return rastered
+
     def rasterize_page(
         self,
         page_number: int,
@@ -175,16 +191,7 @@ class PdfDocument(BaseModel):
         if page_number < 0 or page_number > self.num_pages:
             raise ValueError(f"Page number must be between 0 and {self.num_pages}")
 
-        with get_pdfium_document(self.file_bytes) as pdf:
-            page = pdf[page_number - 1]
-
-            bitmap = page.render(scale=(1 / 72) * dpi)
-
-            pil = bitmap.to_pil().convert("RGB")
-
-        img_bytes = BytesIO()
-        pil.save(img_bytes, format="PNG")
-        rastered = img_bytes.getvalue()
+        rastered = self.render_page_to_bytes(page_number, dpi=dpi)
 
         rastered = process_raster_image(
             rastered,
@@ -193,7 +200,7 @@ class PdfDocument(BaseModel):
             resize_mode=resize_mode,
             resize_aspect_ratios=resize_aspect_ratios,
             do_convert=do_convert,
-            image_covert_mode=image_covert_mode,
+            image_convert_mode=image_covert_mode,
             do_quantize=do_quantize,
             quantize_color_count=quantize_color_count,
             max_file_size_bytes=max_file_size_bytes,
@@ -244,12 +251,21 @@ class PdfDocument(BaseModel):
 
         result = {}
 
-        for page_number in range(1, self.num_pages + 1):
-            result[page_number] = self.rasterize_page(
-                page_number,
-                dpi=dpi,
+        for idx, bitmap in enumerate(
+            rasterize_pdf_with_pdfium(self.file_bytes, scale=(1 / 72) * dpi)
+        ):
+            pil = bitmap.to_pil().convert("RGB")
+
+            img_bytes = BytesIO()
+            pil.save(img_bytes, format="PNG")
+            rastered = img_bytes.getvalue()
+
+            rastered = process_raster_image(
+                rastered,
                 max_file_size_bytes=max_file_size_bytes,
             )
+
+            result[idx + 1] = rastered
 
         return result
 

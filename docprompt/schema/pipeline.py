@@ -1,4 +1,5 @@
 import base64
+from io import BytesIO
 from typing import (
     Dict,
     Generic,
@@ -14,11 +15,12 @@ from typing import (
 
 from pydantic import BaseModel, Field, PositiveInt, PrivateAttr
 
-from docprompt.rasterize import AspectRatioRule, ResizeModes, mask_image_from_bboxes
-from docprompt.schema.layout import NormBBox
+from docprompt.rasterize import AspectRatioRule, ResizeModes, process_raster_image
 from docprompt.tasks.base import ResultContainer
 from docprompt.tasks.ocr.result import OcrPageResult
+from docprompt._pdfium import rasterize_pdf_with_pdfium
 from PIL import Image
+import io
 
 if TYPE_CHECKING:
     from docprompt.provenance.search import DocumentProvenanceLocator
@@ -64,7 +66,6 @@ class PageRasterizer:
         do_quantize: bool = False,
         quantize_color_count: int = 8,
         max_file_size_bytes: Optional[int] = None,
-        mask_bounding_boxes: List[NormBBox] = [],
     ) -> Union[bytes, Image.Image]:
         cache_key = (
             name
@@ -79,7 +80,6 @@ class PageRasterizer:
                 do_quantize=do_quantize,
                 quantize_color_count=quantize_color_count,
                 max_file_size_bytes=max_file_size_bytes,
-                mask_bounding_boxes=mask_bounding_boxes,
             )
         )
 
@@ -98,9 +98,6 @@ class PageRasterizer:
                 quantize_color_count=quantize_color_count,
                 max_file_size_bytes=max_file_size_bytes,
             )
-
-            if mask_bounding_boxes:
-                rastered = mask_image_from_bboxes(rastered, mask_bounding_boxes)
 
             self.raster_cache[cache_key] = rastered
 
@@ -127,7 +124,6 @@ class PageRasterizer:
         do_quantize: bool = False,
         quantize_color_count: int = 8,
         max_file_size_bytes: Optional[int] = None,
-        mask_bounding_boxes: List[NormBBox] = [],
     ) -> str:
         rastered = self.rasterize(
             name,
@@ -141,7 +137,6 @@ class PageRasterizer:
             do_quantize=do_quantize,
             quantize_color_count=quantize_color_count,
             max_file_size_bytes=max_file_size_bytes,
-            mask_bounding_boxes=mask_bounding_boxes,
         )
 
         return f"data:image/png;base64,{base64.b64encode(rastered).decode('utf-8')}"
@@ -151,6 +146,61 @@ class PageRasterizer:
 
     def pop(self, name: str, default=None):
         return self.raster_cache.pop(name, default=default)
+
+
+class DocumentRasterizer:
+    def __init__(self, owner: "DocumentNode"):
+        self.owner = owner
+
+    def rasterize(
+        self,
+        name: str,
+        *,
+        return_mode: Literal["bytes", "pil"] = "bytes",
+        dpi: int = 100,
+        downscale_size: Optional[Tuple[int, int]] = None,
+        resize_mode: ResizeModes = "thumbnail",
+        resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
+        do_convert: bool = False,
+        image_convert_mode: str = "L",
+        do_quantize: bool = False,
+        quantize_color_count: int = 8,
+        max_file_size_bytes: Optional[int] = None,
+    ) -> List[Union[bytes, Image.Image]]:
+        bitmaps = rasterize_pdf_with_pdfium(
+            self.owner.document.file_bytes, scale=(1 / 72) * dpi
+        )
+
+        results: List[Union[bytes, Image.Image]] = []
+
+        for page_node, bitmap in zip(self.owner.page_nodes, bitmaps):
+            pil = bitmap.to_pil().convert("RGB")
+
+            img_bytes = BytesIO()
+            pil.save(img_bytes, format="PNG")
+            rastered = img_bytes.getvalue()
+
+            rastered = process_raster_image(
+                rastered,
+                resize_width=downscale_size[0] if downscale_size else None,
+                resize_height=downscale_size[1] if downscale_size else None,
+                resize_mode=resize_mode,
+                resize_aspect_ratios=resize_aspect_ratios,
+                do_convert=do_convert,
+                do_quantize=do_quantize,
+                image_convert_mode=image_convert_mode,
+                quantize_color_count=quantize_color_count,
+                max_file_size_bytes=max_file_size_bytes,
+            )
+
+            page_node._raster_cache[name] = rastered
+
+            if return_mode == "pil" and isinstance(rastered, bytes):
+                results.append(Image.open(io.BytesIO(rastered)))
+            elif return_mode == "bytes" and isinstance(rastered, bytes):
+                results.append(rastered)
+
+        return results
 
 
 class PageNode(BaseModel, Generic[PageNodeMetadata]):
@@ -224,6 +274,10 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
 
     def __iter__(self):
         return iter(self.page_nodes)
+
+    @property
+    def rasterizer(self):
+        return DocumentRasterizer(self)
 
     @property
     def locator(self):
