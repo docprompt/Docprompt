@@ -39,6 +39,20 @@ def test_search():
 
     assert len(result_multiple_words) == 1
 
+    sources = result_multiple_words[0].text_location.source_blocks
+
+    assert len(sources) == 2
+
+    result_multiple_words = locator.search(
+        "MMAX2 system", page_number=1, refine_to_word=False
+    )
+
+    assert len(result_multiple_words) == 1
+
+    sources = result_multiple_words[0].text_location.source_blocks
+
+    assert len(sources) == 1
+
     n_best = locator.search_n_best("and", n=3)
 
     assert len(n_best) == 3

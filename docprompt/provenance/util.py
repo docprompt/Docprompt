@@ -3,6 +3,7 @@ import re
 from docprompt.schema.layout import NormBBox, TextBlock
 from typing import Any, Iterable, List, Optional
 from rapidfuzz import fuzz
+from rapidfuzz.utils import default_process
 
 try:
     import tantivy
@@ -35,28 +36,6 @@ def preprocess_query_text(text: str) -> str:
     text = text.replace('"', "")
 
     return text
-
-
-def fuzzify_token(
-    token: str,
-    lowercase: bool = True,
-    strip_punct: bool = True,
-    strip_whitespace: bool = True,
-) -> str:
-    """
-    Convert a token into a form that is suitable for fuzzy matching.
-    """
-    if strip_whitespace:
-        token = token.strip()
-
-    if strip_punct:
-        token = token.strip(".")
-        token = token.strip(",")
-
-    if lowercase:
-        token = token.lower()
-
-    return token
 
 
 def word_tokenize(text: str) -> List[str]:
@@ -124,11 +103,16 @@ def refine_block_to_word_level(
     tokenized_query = word_tokenize(query)
 
     if len(tokenized_query) == 1:
-        fuzzified = fuzzify_token(tokenized_query[0])
+        fuzzified = default_process(tokenized_query[0])
         for word_level_block in intersecting_word_level_blocks:
-            if fuzz.ratio(fuzzified, fuzzify_token(word_level_block.text)) > 87.5:
+            if fuzz.ratio(fuzzified, default_process(word_level_block.text)) > 87.5:
                 return word_level_block, [word_level_block]
     else:
+        fuzzified_word_level_texts = [
+            default_process(word_level_block.text)
+            for word_level_block in intersecting_word_level_blocks
+        ]
+
         # Populate the block mapping
         token_block_mapping = defaultdict(set)
 
@@ -136,10 +120,9 @@ def refine_block_to_word_level(
         last_word = tokenized_query[-1]
 
         for token in tokenized_query:
-            fuzzified_token = fuzzify_token(token)
+            fuzzified_token = default_process(token)
             for i, word_level_block in enumerate(intersecting_word_level_blocks):
-                fuzzified_block_text = fuzzify_token(word_level_block.text)
-                if fuzz.ratio(fuzzified_token, fuzzified_block_text) > 87.5:
+                if fuzz.ratio(fuzzified_token, fuzzified_word_level_texts[i]) > 87.5:
                     token_block_mapping[token].add(i)
 
         graph = networkx.DiGraph()

@@ -216,6 +216,7 @@ class DocumentProvenanceLocator:
         self,
         query: str,
         page_number: Optional[int] = None,
+        *,
         refine_to_word: bool = True,
         require_exact_match: bool = True,
     ) -> List[ProvenanceSource]:

@@ -26,17 +26,18 @@ class ProvenanceSource(BaseModel):
 
     document_name: str
     page_number: PositiveInt
-    text_location: PageTextLocation
+    text_location: Optional[PageTextLocation] = None
 
     @computed_field  # type: ignore
     @property
     def source_block(self) -> Optional[TextBlock]:
-        if self.text_location.merged_source_block:
-            return self.text_location.merged_source_block
-        if self.text_location.source_blocks:
-            return self.text_location.source_blocks[0]
+        if self.text_location:
+            if self.text_location.merged_source_block:
+                return self.text_location.merged_source_block
+            if self.text_location.source_blocks:
+                return self.text_location.source_blocks[0]
 
-        return None
+            return None
 
     @property
     def text(self) -> str:
