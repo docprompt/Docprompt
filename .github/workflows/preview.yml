@@ -34,18 +34,16 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y ghostscript
           python -m pip install --upgrade pip
-          pip install poetry
-          poetry install --no-root --all-extras
+          pip install pdm
+          pdm install -d
 
       - name: Run Pytest
         run:
-          poetry run pytest -sxv
+          pdm run pytest -sxv
 
       - name: Build wheels and source tarball
         run: |
-          poetry version $(poetry version --short)-dev.$GITHUB_RUN_NUMBER
-          poetry version --short
-          poetry build
+          pdm build
 
       - name: Publish package distributions to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1

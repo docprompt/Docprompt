@@ -116,3 +116,5 @@ site/
 .creds/
 
 data/
+
+.pdm-python

@@ -36,14 +36,14 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y ghostscript
           python -m pip install --upgrade pip
-          pip install poetry
-          poetry install --no-root --all-extras
+          pip install -U pdm
+          pdm install -d
       - name: Lint with Ruff
         run: |
-          poetry run ruff --output-format=github .
+          pdm run ruff --output-format=github .
       - name: Test with pytest
         run: |
-          poetry run pytest -sxv --cov --cov-report=xml .
+          pdm run pytest -sxv --cov --cov-report=xml .
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:

@@ -55,11 +55,11 @@ Ready to contribute? Here's how to set up `docprompt` for local development.
     $ git clone git@github.com:your_name_here/docprompt.git
     ```
 
-3. Ensure [poetry](https://python-poetry.org/docs/) is installed.
+3. Ensure [pdm](https://pdm-project.org/en/latest/) is installed.
 4. Install dependencies and start your virtualenv:
 
     ```
-    $ poetry install -E test -E doc -E dev
+    $ pdm install -d
     ```
 
 5. Create a branch for local development:
@@ -74,7 +74,7 @@ Ready to contribute? Here's how to set up `docprompt` for local development.
    tests, including testing other Python versions, with tox:
 
     ```
-    $ poetry run tox
+    $ pdm run tox
     ```
 
 7. Commit your changes and push your branch to GitHub:
@@ -102,7 +102,7 @@ Before you submit a pull request, check that it meets these guidelines:
 ## Tips
 
 ```
-$ poetry run pytest tests/test_docprompt.py
+$ pdm run pytest tests/test_docprompt.py
 ```
 
 To run a subset of tests.
@@ -115,7 +115,7 @@ Make sure all your changes are committed (including an entry in CHANGELOG.md).
 Then run:
 
 ```
-$ poetry run bump2version patch # possible: major / minor / patch
+$ pdm run bump2version patch # possible: major / minor / patch
 $ git push
 $ git push --tags
 ```

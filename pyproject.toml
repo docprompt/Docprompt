@@ -1,108 +1,43 @@
-[tool]
-[tool.poetry]
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project]
 name = "docprompt"
 version = "0.4.4"
-homepage = "https://github.com/Page-Leaf/docprompt"
 description = "Documents and large language models."
-authors = ["Frankie Colson <frank@pageleaf.io>"]
+authors = [
+  {name = "Frank Colson", email = "frank@pageleaf.io"}
+]
+dependencies = [
+  "python-dateutil<3.0.0,>=2.8.2",
+  "pillow>=9.0.1",
+  "python-magic>=0.4.24",
+  "tqdm>=4.50.2",
+  "fsspec>=2022.11.0",
+  "pydantic>=2.1.0",
+  "tenacity>=7.0.0",
+  "pypdfium2<5.0.0,>=4.28.0",
+  "rapidfuzz>=3.0.0"
+]
+requires-python = "<3.13,>=3.8.1"
 readme = "README.md"
-license =  "Apache-2.0"
-classifiers=[
-    'Development Status :: 2 - Pre-Alpha',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved :: Apache Software License',
-    'Natural Language :: English',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
-    'Programming Language :: Python :: 3.12',
-]
-packages = [
-    { include = "docprompt" },
-    { include = "tests", format = "sdist" },
-]
+license = {text = "Apache-2.0"}
+classifiers = ["Development Status :: 2 - Pre-Alpha", "Intended Audience :: Developers", "License :: OSI Approved :: Apache Software License", "Natural Language :: English", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.8", "Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12"]
 
-[tool.poetry.dependencies]
-python = ">=3.8.1,<3.13"
+[project.optional-dependencies]
+test = ["isort<6.0.0,>=5.12.0", "flake8<7.0.0,>=6.1.0", "flake8-docstrings<2.0.0,>=1.7.0", "mypy<2.0.0,>=1.6.1", "pytest<8.0.0,>=7.4.2", "pytest-cov<5.0.0,>=4.1.0", "ruff<1.0.0,>=0.3.3"]
+dev = ["tox<4.0.0,>=3.20.1", "virtualenv<21.0.0,>=20.2.2", "pip<21.0.0,>=20.3.1", "twine<4.0.0,>=3.3.0", "pre-commit<3.0.0,>=2.12.0", "toml<1.0.0,>=0.10.2", "bump2version<2.0.0,>=1.0.1"]
+doc = ["mkdocs<2.0.0,>=1.1.2", "mkdocs-include-markdown-plugin<2.0.0,>=1.0.0", "mkdocs-material<7.0.0,>=6.1.7", "mkdocstrings<1.0.0,>=0.15.2", "mkdocs-autorefs<1.0.0,>=0.2.1"]
+google = ["google-cloud-documentai>=2.20.0"]
+azure = ["azure-ai-formrecognizer>=3.3.0"]
+search = ["tantivy<1.0.0,>=0.21.0", "rtree<2.0.0,>=1.2.0", "networkx>=2.8.8"]
 
-isort  = { version = "^5.12.0", optional = true}
-flake8  = { version = "^6.1.0", optional = true}
-flake8-docstrings = { version = "^1.7.0", optional = true }
-mypy = {version = "^1.6.1", optional = true}
-pytest  = { version = "^7.4.2", optional = true}
-pytest-cov  = { version = "^4.1.0", optional = true}
-tox  = { version = "^3.20.1", optional = true}
-virtualenv  = { version = "^20.2.2", optional = true}
-pip  = { version = "^20.3.1", optional = true}
-mkdocs  = { version = "^1.1.2", optional = true}
-mkdocs-include-markdown-plugin  = { version = "^1.0.0", optional = true}
-mkdocs-material  = { version = "^6.1.7", optional = true}
-mkdocstrings  = { version = "^0.15.2", optional = true}
-mkdocs-material-extensions  = { version = "^1.0.1", optional = true}
-twine  = { version = "^3.3.0", optional = true}
-mkdocs-autorefs = {version = "^0.2.1", optional = true}
-pre-commit = {version = "^2.12.0", optional = true}
-toml = {version = "^0.10.2", optional = true}
-bump2version = {version = "^1.0.1", optional = true}
-python-dateutil = "^2.8.2"
+[project.scripts]
+docprompt = "docprompt.cli:main"
 
-numpy = {version = "^1.20.3", optional = true}
-pillow = ">=9.0.1"
-python-magic = ">=0.4.24"
-google-cloud-documentai = {version = ">=2.20.0", optional = true}
-azure-ai-formrecognizer = {version = ">=3.3.0", optional = true}
-tqdm = ">=4.61.0"
-fsspec = ">=2022.11.0"
-pydantic = ">=2.1.0"
-tenacity = ">=7.0.0"
-pypdfium2 = "^4.28.0"
-tantivy = {version = "^0.21.0", optional = true}
-rtree = {version = "^1.2.0", optional = true}
-networkx = {version = ">=2.8.8", optional = true}
-rapidfuzz = ">=3.0.0"
-ruff = {version = "^0.3.3", optional = true}
-
-[tool.poetry.extras]
-test = [
-    "pytest",
-    "isort",
-    "mypy",
-    "flake8",
-    "flake8-docstrings",
-    "pytest-cov",
-    "ruff"
-    ]
-
-dev = ["tox", "pre-commit", "virtualenv", "pip", "twine", "toml", "bump2version"]
-
-doc = [
-    "mkdocs",
-    "mkdocs-include-markdown-plugin",
-    "mkdocs-material",
-    "mkdocstrings",
-    "mkdocs-material-extension",
-    "mkdocs-autorefs"
-    ]
-
-google = [
-    "google-cloud-documentai"
-]
-
-azure = [
-    "azure-ai-formrecognizer"
-]
-
-search = [
-    "tantivy",
-    "rtree",
-    "networkx"
-]
-
-
-[tool.poetry.scripts]
-docprompt = 'docprompt.cli:main'
+[project.urls]
+homepage = "https://github.com/Page-Leaf/docprompt"
 
 [tool.black]
 line-length = 120
@@ -124,6 +59,11 @@ exclude = '''
 )/
 '''
 
+[tool.flake8]
+ignore = [
+  "E501"
+]
+
 [tool.isort]
 multi_line_output = 3
 include_trailing_comma = true
@@ -132,17 +72,15 @@ use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 120
 skip_gitignore = true
-# you can skip files as below
-#skip_glob = docs/conf.py
 
-[tool.flake8]
-ignore = [
-    "E501",
-]
+[tool.pdm]
+distribution = true
+
+[tool.pdm.build]
+includes = ["docprompt", "tests"]
 
 [tool.ruff]
 target-version = "py38"
-
 
 [tool.ruff.lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
@@ -150,15 +88,8 @@ target-version = "py38"
 # McCabe complexity (`C901`) by default.
 select = ["E4", "E7", "E9", "F"]
 ignore = []
-
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
-
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
