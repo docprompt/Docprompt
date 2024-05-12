@@ -69,6 +69,18 @@ def test_rasterize():
         Image.open(io.BytesIO(img_bytes))
 
 
+def test_rasterize_invalid_page():
+    document = load_document(PDF_FIXTURES[0].get_full_path())
+
+    with pytest.raises(ValueError):
+        document.rasterize_page(0)
+
+    with pytest.raises(ValueError):
+        document.rasterize_page(1000)
+
+    document.rasterize_page(len(document))  # Should rasterize last page
+
+
 def test_rasterize_convert_and_quantize():
     # Fow now just test PIL can open the image
     convert_mode = "L"

@@ -49,7 +49,7 @@ def rasterize_page_with_pdfium(
     Rasterizes a page of a PDF document
     """
     with get_pdfium_document(fp) as pdf:
-        page = pdf.get_page(page_number)
+        page = pdf.get_page(page_number - 1)
         return page.render(**kwargs)
 
 

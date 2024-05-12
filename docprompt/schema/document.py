@@ -159,6 +159,9 @@ class PdfDocument(BaseModel):
             return compress_pdf_to_bytes(temp_path, **compression_kwargs)
 
     def render_page_to_bytes(self, page_number: int, dpi: int = DEFAULT_DPI) -> bytes:
+        if page_number <= 0 or page_number > self.num_pages:
+            raise ValueError(f"Page number must be between 0 and {self.num_pages}")
+
         bitmap = rasterize_page_with_pdfium(
             self.file_bytes, page_number, scale=(1 / 72) * dpi
         )
