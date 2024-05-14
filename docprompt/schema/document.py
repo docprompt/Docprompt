@@ -9,8 +9,8 @@ from os import PathLike
 from pathlib import Path
 from typing import Dict, Generator, Optional, Tuple, Union, Iterable
 from pydantic import Field
+import filetype
 
-import magic
 from pydantic import (
     BaseModel,
     PositiveInt,
@@ -107,13 +107,13 @@ class PdfDocument(BaseModel):
         if len(v) == 0:
             raise ValueError("File bytes must not be empty")
 
-        if magic.from_buffer(v, mime=True) == "text/plain":
+        if filetype.guess_mime(v) == "text/plain":
             v = base64.b64decode(v, validate=True)
 
-        if magic.from_buffer(v, mime=True) == "application/gzip":
+        if filetype.guess_mime(v) == "application/gzip":
             v = gzip.decompress(v)
 
-        if magic.from_buffer(v, mime=True) != "application/pdf":
+        if filetype.guess_mime(v) != "application/pdf":
             raise ValueError("File bytes must be a PDF")
 
         return v

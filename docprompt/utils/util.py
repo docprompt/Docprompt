@@ -8,7 +8,7 @@ from urllib.parse import unquote, urlparse
 import warnings
 
 import fsspec
-import magic
+import filetype
 
 from docprompt.schema.document import PdfDocument
 from docprompt._pdfium import get_pdfium_document
@@ -19,11 +19,11 @@ def is_pdf(fd: Union[Path, PathLike, bytes]) -> bool:
     Determines if a file is a PDF
     """
     if isinstance(fd, (bytes, str)):
-        mime = magic.from_buffer(fd, mime=True)
+        mime = filetype.guess_mime(fd)
     else:
         with open(fd, "rb") as f:
             # We only need the first 1024 bytes to determine if it's a PDF
-            mime = magic.from_buffer(f.read(1024), mime=True)
+            mime = filetype.guess_mime(f.read(1024))
 
     return mime == "application/pdf"
 

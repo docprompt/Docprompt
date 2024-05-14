@@ -2,6 +2,7 @@ import base64
 from io import BytesIO
 import multiprocessing
 from typing import (
+    Any,
     Dict,
     Generic,
     Iterable,
@@ -255,6 +256,10 @@ class PageNode(BaseModel, Generic[PageNodeMetadata]):
     page_number: PositiveInt = Field(description="The page number")
     metadata: Optional[PageNodeMetadata] = Field(
         description="Application-specific metadata for the page", default=None
+    )
+    extra: Dict[str, Any] = Field(
+        description="Extra data that can be stored on the page node",
+        default_factory=dict,
     )
 
     ocr_results: ResultContainer[OcrPageResult] = Field(
