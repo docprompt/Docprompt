@@ -3,7 +3,7 @@ import os
 import pypdfium2 as pdfium
 from contextlib import contextmanager
 from threading import Lock
-from typing import Any, List, Literal, Union, Optional
+from typing import Any, Dict, List, Literal, Union, Optional
 from os import PathLike
 from pathlib import Path
 import logging
@@ -67,7 +67,7 @@ def _render_parallel_init(
 def _render_job(
     i: int,
     pdf: pdfium.PdfDocument,
-    kwargs: dict[str, Any],
+    kwargs: Dict[str, Any],
     return_mode: Literal["pil", "bytes"],
 ):
     # logger.info(f"Started page {i+1} ...")
