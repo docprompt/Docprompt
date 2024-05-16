@@ -1,5 +1,4 @@
 import base64
-from io import BytesIO
 import multiprocessing
 from typing import (
     Any,
@@ -152,8 +151,8 @@ class PageRasterizer:
         return self.raster_cache.pop(name, default=default)
 
 
-def process_bitmap(
-    image,
+def process_bytes(
+    rastered: bytes,
     *,
     resize_width: Optional[int] = None,
     resize_height: Optional[int] = None,
@@ -165,10 +164,6 @@ def process_bitmap(
     quantize_color_count: int = 8,
     max_file_size_bytes: Optional[int] = None,
 ):
-    img_bytes = BytesIO()
-    image.save(img_bytes, format="PNG")
-    rastered = img_bytes.getvalue()
-
     rastered = process_raster_image(
         rastered,
         resize_width=resize_width,
@@ -203,9 +198,13 @@ class DocumentRasterizer:
         do_quantize: bool = False,
         quantize_color_count: int = 8,
         max_file_size_bytes: Optional[int] = None,
+        render_grayscale: bool = False,
     ) -> List[Union[bytes, Image.Image]]:
-        bitmaps = rasterize_pdf_with_pdfium(
-            self.owner.document.file_bytes, scale=(1 / 72) * dpi
+        images = rasterize_pdf_with_pdfium(
+            self.owner.document.file_bytes,
+            scale=(1 / 72) * dpi,
+            return_mode="bytes",
+            grayscale=render_grayscale,
         )
 
         results: List[Union[bytes, Image.Image]] = []
@@ -217,11 +216,11 @@ class DocumentRasterizer:
         with ProcessPoolExecutor(
             max_workers=worker_count, mp_context=get_context("spawn")
         ) as executor:
-            for bitmap in bitmaps:
+            for image in images:
                 futures.append(
                     executor.submit(
-                        process_bitmap,
-                        bitmap.to_pil().convert("RGB"),
+                        process_bytes,
+                        image,
                         resize_width=downscale_size[0] if downscale_size else None,
                         resize_height=downscale_size[1] if downscale_size else None,
                         resize_mode=resize_mode,

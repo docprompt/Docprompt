@@ -162,10 +162,9 @@ class PdfDocument(BaseModel):
         if page_number <= 0 or page_number > self.num_pages:
             raise ValueError(f"Page number must be between 0 and {self.num_pages}")
 
-        bitmap = rasterize_page_with_pdfium(
+        pil = rasterize_page_with_pdfium(
             self.file_bytes, page_number, scale=(1 / 72) * dpi
         )
-        pil = bitmap.to_pil().convert("RGB")
 
         img_bytes = BytesIO()
         pil.save(img_bytes, format="PNG")
@@ -247,6 +246,8 @@ class PdfDocument(BaseModel):
         self,
         dpi: int = DEFAULT_DPI,
         max_file_size_bytes: Optional[int] = None,
+        downscale_size: Optional[Tuple[int, int]] = None,
+        render_grayscale: bool = False,
     ) -> Dict[int, bytes]:
         """
         Rasterizes the entire document using Pdfium
@@ -254,19 +255,19 @@ class PdfDocument(BaseModel):
 
         result = {}
 
-        for idx, bitmap in enumerate(
-            rasterize_pdf_with_pdfium(self.file_bytes, scale=(1 / 72) * dpi)
-        ):
-            pil = bitmap.to_pil().convert("RGB")
-
-            img_bytes = BytesIO()
-            pil.save(img_bytes, format="PNG")
-            rastered = img_bytes.getvalue()
-
-            rastered = process_raster_image(
-                rastered,
-                max_file_size_bytes=max_file_size_bytes,
+        for idx, rastered in enumerate(
+            rasterize_pdf_with_pdfium(
+                self.file_bytes,
+                scale=(1 / 72) * dpi,
+                grayscale=render_grayscale,
+                return_mode="bytes",
             )
+        ):
+            if max_file_size_bytes or downscale_size:
+                rastered = process_raster_image(
+                    rastered,
+                    max_file_size_bytes=max_file_size_bytes,
+                )
 
             result[idx + 1] = rastered
 
