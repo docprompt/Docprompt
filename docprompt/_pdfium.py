@@ -10,6 +10,7 @@ import logging
 import multiprocessing as mp
 import concurrent.futures as ft
 from PIL import Image
+import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,33 @@ def _render_parallel_init(
     ProcObjs = (pdf, kwargs, return_mode, post_process_fn)
 
 
+def _render_parallel_multi_doc_init(
+    extra_init,
+    inputs,
+    passwords,
+    may_init_forms,
+    kwargs,
+    return_mode="pil",
+    post_process_fn=None,
+):
+    if extra_init:
+        extra_init()
+
+    logger.info(f"Initializing data for process {os.getpid()}")
+
+    pdfs_map = {}
+
+    for i, (input, password) in enumerate(zip(inputs, passwords)):
+        pdf = pdfium.PdfDocument(input, password=password, autoclose=True)
+        if may_init_forms:
+            pdf.init_forms()
+
+        pdfs_map[i] = pdf
+
+    global ProcObjsMultiDoc
+    ProcObjsMultiDoc = (pdfs_map, kwargs, return_mode, post_process_fn)
+
+
 def _render_job(
     i: int,
     pdf: pdfium.PdfDocument,
@@ -98,9 +126,17 @@ def _render_job(
             return buffer.getvalue()
 
 
-def _render_parallel_job(i):
+def _render_parallel_job(page_indice):
     global ProcObjs
-    return _render_job(i, *ProcObjs)
+    return _render_job(page_indice, *ProcObjs)
+
+
+def _render_parallel_multi_doc_job(pdf_indice, page_indice):
+    global ProcObjsMultiDoc
+
+    pdf = ProcObjsMultiDoc[0][pdf_indice]
+
+    return pdf_indice, page_indice, _render_job(page_indice, pdf, *ProcObjsMultiDoc[1:])
 
 
 def rasterize_page_with_pdfium(
@@ -133,7 +169,7 @@ def rasterize_pdf_with_pdfium(
     **kwargs,
 ) -> List[Union[Image.Image, bytes]]:
     """
-    Rasterizes a page of a PDF document
+    Rasterizes an entire PDF using PDFium and a pool of workers
     """
     with get_pdfium_document(fp, password=password) as pdf:
         total_pages = len(pdf)
@@ -153,3 +189,69 @@ def rasterize_pdf_with_pdfium(
         results = executor.map(_render_parallel_job, range(total_pages), chunksize=1)
 
     return list(results)
+
+
+def rasterize_pdfs_with_pdfium(
+    fps: List[Union[PathLike, Path, bytes]],
+    passwords: Optional[List[str]] = None,
+    *,
+    return_mode: Literal["pil", "bytes"] = "pil",
+    post_process_fn: Optional[Callable[[Image.Image], Image.Image]] = None,
+    **kwargs,
+) -> Dict[int, Dict[int, Union[Image.Image, bytes]]]:
+    """
+    Like 'rasterize_pdf_with_pdfium', but optimized for multiple PDFs by loading all PDF's into the workers memory space
+    """
+    if passwords and len(passwords) != len(fps):
+        raise ValueError(
+            "If specifying passwords, must provide one for each PDF. Use None for no password."
+        )
+
+    passwords = passwords or [None] * len(fps)
+
+    ctx = mp.get_context("spawn")
+
+    page_counts = []
+    total_to_process = 0
+
+    for fp, password in zip(fps, passwords):
+        with get_pdfium_document(fp, password) as pdf:
+            page_counts.append(len(pdf))
+            total_to_process += len(pdf)
+
+    initargs = (
+        None,
+        fps,
+        passwords,
+        False,
+        kwargs,
+        return_mode,
+        post_process_fn,
+    )
+
+    results = {}
+
+    futures = []
+
+    max_workers = min(mp.cpu_count(), total_to_process)
+
+    with tqdm.tqdm(total=total_to_process) as pbar:
+        with ft.ProcessPoolExecutor(
+            max_workers=max_workers,
+            initializer=_render_parallel_multi_doc_init,
+            initargs=initargs,
+            mp_context=ctx,
+        ) as executor:
+            for i, page_count in enumerate(page_counts):
+                for j in range(page_count):
+                    futures.append(
+                        executor.submit(_render_parallel_multi_doc_job, i, j)
+                    )
+
+        for future in ft.as_completed(futures):
+            pdf_indice, page_indice, result = future.result()
+
+            results.setdefault(pdf_indice, {})[page_indice + 1] = result
+            pbar.update(1)
+
+    return results

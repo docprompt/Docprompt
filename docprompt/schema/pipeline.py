@@ -216,6 +216,15 @@ class DocumentRasterizer:
 
         return list(images.values())
 
+    def propagate_cache(self, name: str, rasters: Dict[int, Union[bytes, Image.Image]]):
+        """
+        Should be one-indexed
+        """
+        for page_number, raster in rasters.items():
+            page_node = self.owner.page_nodes[page_number - 1]
+
+            page_node._raster_cache[name] = raster
+
 
 class PageNode(BaseModel, Generic[PageNodeMetadata]):
     """

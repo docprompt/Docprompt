@@ -1,5 +1,6 @@
 import pickle
 from docprompt import load_document, DocumentNode
+from docprompt._pdfium import rasterize_pdfs_with_pdfium
 from .fixtures import PDF_FIXTURES
 
 from PIL import Image
@@ -49,6 +50,33 @@ def test_rasterize_via_document_node():
         (
             "default" in page_node.rasterizer.raster_cache
             for page_node in document_node.page_nodes
+        )
+    )
+
+
+def test_multi_rasterize():
+    document_1 = load_document(PDF_FIXTURES[0].get_full_path())
+    document_2 = load_document(PDF_FIXTURES[1].get_full_path())
+
+    node_1 = DocumentNode.from_document(document_1)
+    node_2 = DocumentNode.from_document(document_2)
+
+    results = rasterize_pdfs_with_pdfium([document_1.file_bytes, document_2.file_bytes])
+
+    node_1.rasterizer.propagate_cache("default", results[0])
+    node_2.rasterizer.propagate_cache("default", results[1])
+
+    assert all(
+        (
+            "default" in page_node.rasterizer.raster_cache
+            for page_node in node_1.page_nodes
+        )
+    )
+
+    assert all(
+        (
+            "default" in page_node.rasterizer.raster_cache
+            for page_node in node_2.page_nodes
         )
     )
 
