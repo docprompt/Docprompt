@@ -91,7 +91,7 @@ def test_rasterize_convert_and_quantize():
         img_bytes = doc.rasterize_page(
             1,
             do_convert=True,
-            image_covert_mode=convert_mode,
+            image_convert_mode=convert_mode,
             do_quantize=True,
             quantize_color_count=quantize_color_count,
         )

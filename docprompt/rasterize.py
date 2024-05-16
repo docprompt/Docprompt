@@ -141,7 +141,7 @@ def resize_pil_image(
 
 
 def process_raster_image(
-    image_bytes: bytes,
+    image: Image.Image,
     *,
     resize_width: Optional[int] = None,
     resize_height: Optional[int] = None,
@@ -153,33 +153,23 @@ def process_raster_image(
     quantize_color_count: int = 8,
     max_file_size_bytes: Optional[int] = None,
 ):
-    should_load_image = any(
-        (
-            resize_width,
-            resize_height,
-            resize_aspect_ratios,
-            do_quantize,
-            do_convert,
-        )
+    image = resize_pil_image(
+        image,
+        width=resize_width,
+        height=resize_height,
+        resize_mode=resize_mode,
+        aspect_ratios=resize_aspect_ratios,
     )
 
-    if should_load_image:
-        image = Image.open(BytesIO(image_bytes))
+    if do_convert:
+        image = image.convert(image_convert_mode)
 
-        image = resize_pil_image(
-            image,
-            width=resize_width,
-            height=resize_height,
-            resize_mode=resize_mode,
-            aspect_ratios=resize_aspect_ratios,
-        )
+    if do_quantize:
+        image = image.quantize(colors=quantize_color_count)
 
-        if do_convert:
-            image = image.convert(image_convert_mode)
+    result = image
 
-        if do_quantize:
-            image = image.quantize(colors=quantize_color_count)
-
+    if max_file_size_bytes:
         buffer = BytesIO()
         image.save(buffer, format="PNG", optimize=True)
 
@@ -194,16 +184,7 @@ def process_raster_image(
                 resize_step_size=0.1,
             )
 
-        return result
-
-    elif max_file_size_bytes:
-        return resize_image_to_fize_size_limit(
-            image_bytes,
-            max_file_size_bytes,
-            resize_mode=resize_mode,
-        )
-    else:
-        return image_bytes
+    return result
 
 
 def mask_image_from_bboxes(

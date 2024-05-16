@@ -4,11 +4,11 @@ import tempfile
 from contextlib import contextmanager
 from datetime import datetime
 from functools import cached_property
-from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Generator, Optional, Tuple, Union, Iterable
+from typing import Dict, Generator, Literal, Optional, Tuple, Union, Iterable
 from pydantic import Field
+from functools import partial
 import filetype
 
 from pydantic import (
@@ -158,20 +158,6 @@ class PdfDocument(BaseModel):
         with self.as_tempfile() as temp_path:
             return compress_pdf_to_bytes(temp_path, **compression_kwargs)
 
-    def render_page_to_bytes(self, page_number: int, dpi: int = DEFAULT_DPI) -> bytes:
-        if page_number <= 0 or page_number > self.num_pages:
-            raise ValueError(f"Page number must be between 0 and {self.num_pages}")
-
-        pil = rasterize_page_with_pdfium(
-            self.file_bytes, page_number, scale=(1 / 72) * dpi
-        )
-
-        img_bytes = BytesIO()
-        pil.save(img_bytes, format="PNG")
-        rastered = img_bytes.getvalue()
-
-        return rastered
-
     def rasterize_page(
         self,
         page_number: int,
@@ -182,30 +168,46 @@ class PdfDocument(BaseModel):
         max_file_size_bytes: Optional[int] = None,
         resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
         do_convert: bool = False,
-        image_covert_mode: str = "L",
+        image_convert_mode: str = "L",
         do_quantize: bool = False,
         quantize_color_count: int = 8,
     ) -> bytes:
         """
         Rasterizes a page of the document using Pdfium
         """
-
-        if page_number < 0 or page_number > self.num_pages:
+        if page_number <= 0 or page_number > self.num_pages:
             raise ValueError(f"Page number must be between 0 and {self.num_pages}")
 
-        rastered = self.render_page_to_bytes(page_number, dpi=dpi)
+        post_process_fn = None
 
-        rastered = process_raster_image(
-            rastered,
-            resize_width=downscale_size[0] if downscale_size else None,
-            resize_height=downscale_size[1] if downscale_size else None,
-            resize_mode=resize_mode,
-            resize_aspect_ratios=resize_aspect_ratios,
-            do_convert=do_convert,
-            image_convert_mode=image_covert_mode,
-            do_quantize=do_quantize,
-            quantize_color_count=quantize_color_count,
-            max_file_size_bytes=max_file_size_bytes,
+        if any(
+            (
+                downscale_size,
+                max_file_size_bytes,
+                resize_aspect_ratios,
+                do_convert,
+                do_quantize,
+            )
+        ):
+            post_process_fn = partial(
+                process_raster_image,
+                resize_width=downscale_size[0] if downscale_size else None,
+                resize_height=downscale_size[1] if downscale_size else None,
+                resize_mode=resize_mode,
+                resize_aspect_ratios=resize_aspect_ratios,
+                do_convert=do_convert,
+                image_convert_mode=image_convert_mode,
+                do_quantize=do_quantize,
+                quantize_color_count=quantize_color_count,
+                max_file_size_bytes=max_file_size_bytes,
+            )
+
+        rastered = rasterize_page_with_pdfium(
+            self.file_bytes,
+            page_number,
+            return_mode="bytes",
+            post_process_fn=post_process_fn,
+            scale=(1 / 72) * dpi,
         )
 
         return rastered
@@ -220,9 +222,10 @@ class PdfDocument(BaseModel):
         max_file_size_bytes: Optional[int] = None,
         resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
         do_convert: bool = False,
-        image_covert_mode: str = "L",
+        image_convert_mode: str = "L",
         do_quantize: bool = False,
         quantize_color_count: int = 8,
+        render_grayscale: bool = False,
     ) -> str:
         """
         Rasterizes a page of the document using Pdfium and returns a data URI, which can
@@ -233,7 +236,7 @@ class PdfDocument(BaseModel):
             dpi=dpi,
             downscale_size=downscale_size,
             do_convert=do_convert,
-            image_covert_mode=image_covert_mode,
+            image_convert_mode=image_convert_mode,
             do_quantize=do_quantize,
             quantize_color_count=quantize_color_count,
             resize_mode=resize_mode,
@@ -245,30 +248,55 @@ class PdfDocument(BaseModel):
     def rasterize_pdf(
         self,
         dpi: int = DEFAULT_DPI,
-        max_file_size_bytes: Optional[int] = None,
         downscale_size: Optional[Tuple[int, int]] = None,
+        resize_mode: ResizeModes = "thumbnail",
+        max_file_size_bytes: Optional[int] = None,
+        resize_aspect_ratios: Optional[Iterable[AspectRatioRule]] = None,
+        do_convert: bool = False,
+        image_convert_mode: str = "L",
+        do_quantize: bool = False,
+        quantize_color_count: int = 8,
+        return_mode: Literal["pil", "bytes"] = "bytes",
         render_grayscale: bool = False,
     ) -> Dict[int, bytes]:
         """
         Rasterizes the entire document using Pdfium
         """
-
         result = {}
+
+        post_process_fn = None
+
+        if any(
+            (
+                downscale_size,
+                max_file_size_bytes,
+                resize_aspect_ratios,
+                do_convert,
+                do_quantize,
+            )
+        ):
+            post_process_fn = partial(
+                process_raster_image,
+                resize_width=downscale_size[0] if downscale_size else None,
+                resize_height=downscale_size[1] if downscale_size else None,
+                resize_mode=resize_mode,
+                resize_aspect_ratios=resize_aspect_ratios,
+                do_convert=do_convert,
+                image_convert_mode=image_convert_mode,
+                do_quantize=do_quantize,
+                quantize_color_count=quantize_color_count,
+                max_file_size_bytes=max_file_size_bytes,
+            )
 
         for idx, rastered in enumerate(
             rasterize_pdf_with_pdfium(
                 self.file_bytes,
                 scale=(1 / 72) * dpi,
                 grayscale=render_grayscale,
-                return_mode="bytes",
+                return_mode=return_mode,
+                post_process_fn=post_process_fn,
             )
         ):
-            if max_file_size_bytes or downscale_size:
-                rastered = process_raster_image(
-                    rastered,
-                    max_file_size_bytes=max_file_size_bytes,
-                )
-
             result[idx + 1] = rastered
 
         return result

@@ -3,7 +3,7 @@ import os
 import pypdfium2 as pdfium
 from contextlib import contextmanager
 from threading import Lock
-from typing import Any, Dict, List, Literal, Union, Optional
+from typing import Any, Callable, Dict, List, Literal, Union, Optional
 from os import PathLike
 from pathlib import Path
 import logging
@@ -49,7 +49,13 @@ def writable_temp_pdf():
 
 
 def _render_parallel_init(
-    extra_init, input, password, may_init_forms, kwargs, return_mode="pil"
+    extra_init,
+    input,
+    password,
+    may_init_forms,
+    kwargs,
+    return_mode="pil",
+    post_process_fn=None,
 ):
     if extra_init:
         extra_init()
@@ -61,27 +67,35 @@ def _render_parallel_init(
         pdf.init_forms()
 
     global ProcObjs
-    ProcObjs = (pdf, kwargs, return_mode)
+    ProcObjs = (pdf, kwargs, return_mode, post_process_fn)
 
 
 def _render_job(
     i: int,
     pdf: pdfium.PdfDocument,
-    kwargs: Dict[str, Any],
+    raster_kwargs: Dict[str, Any],
     return_mode: Literal["pil", "bytes"],
+    post_process_fn: Optional[Callable[[Image.Image], Image.Image]] = None,
 ):
     # logger.info(f"Started page {i+1} ...")
     page = pdf[i]
-    image = page.render(**kwargs).to_pil().convert("RGB")
+    image = page.render(**raster_kwargs).to_pil().convert("RGB")
+
+    if post_process_fn:
+        image = post_process_fn(image)
 
     if return_mode == "pil":
-        return image
-
-    img_bytes = BytesIO()
-
-    image.save(img_bytes, format="PNG")
-
-    return img_bytes.getvalue()
+        if isinstance(image, Image.Image):
+            return image
+        else:
+            image = Image.open(BytesIO(image))
+    else:
+        if isinstance(image, bytes):
+            return image
+        else:
+            buffer = BytesIO()
+            image.save(buffer, format="PNG")
+            return buffer.getvalue()
 
 
 def _render_parallel_job(i):
@@ -94,13 +108,20 @@ def rasterize_page_with_pdfium(
     page_number: int,
     *,
     return_mode: Literal["pil", "bytes"] = "pil",
+    post_process_fn: Optional[Callable[[Image.Image], Image.Image]] = None,
     **kwargs,
 ) -> Union[Image.Image, bytes]:
     """
     Rasterizes a page of a PDF document
     """
     with get_pdfium_document(fp) as pdf:
-        return _render_job(page_number - 1, pdf, kwargs, return_mode=return_mode)
+        return _render_job(
+            page_number - 1,
+            pdf,
+            kwargs,
+            return_mode=return_mode,
+            post_process_fn=post_process_fn,
+        )
 
 
 def rasterize_pdf_with_pdfium(
@@ -108,6 +129,7 @@ def rasterize_pdf_with_pdfium(
     password: Optional[str] = None,
     *,
     return_mode: Literal["pil", "bytes"] = "pil",
+    post_process_fn: Optional[Callable[[Image.Image], Image.Image]] = None,
     **kwargs,
 ) -> List[Union[Image.Image, bytes]]:
     """
@@ -120,7 +142,7 @@ def rasterize_pdf_with_pdfium(
 
     ctx = mp.get_context("spawn")
 
-    initargs = (None, fp, password, False, kwargs, return_mode)
+    initargs = (None, fp, password, False, kwargs, return_mode, post_process_fn)
 
     with ft.ProcessPoolExecutor(
         max_workers=max_workers,
