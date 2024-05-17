@@ -1,5 +1,7 @@
 from io import BytesIO
 import os
+import random
+import tempfile
 import pypdfium2 as pdfium
 from contextlib import contextmanager
 from threading import Lock
@@ -126,17 +128,17 @@ def _render_job(
             return buffer.getvalue()
 
 
-def _render_parallel_job(page_indice):
-    global ProcObjs
-    return _render_job(page_indice, *ProcObjs)
-
-
 def _render_parallel_multi_doc_job(pdf_indice, page_indice):
     global ProcObjsMultiDoc
 
     pdf = ProcObjsMultiDoc[0][pdf_indice]
 
     return pdf_indice, page_indice, _render_job(page_indice, pdf, *ProcObjsMultiDoc[1:])
+
+
+def _render_parallel_job(page_indice):
+    global ProcObjs
+    return _render_job(page_indice, *ProcObjs)
 
 
 def rasterize_page_with_pdfium(
@@ -160,6 +162,17 @@ def rasterize_page_with_pdfium(
         )
 
 
+@contextmanager
+def potential_temporary_file(fp: Union[PathLike, Path, bytes]):
+    if isinstance(fp, bytes):
+        with tempfile.NamedTemporaryFile(suffix=".pdf") as temp_fp:
+            temp_fp.write(fp)
+            temp_fp.flush()
+            yield temp_fp.name
+    else:
+        yield fp
+
+
 def rasterize_pdf_with_pdfium(
     fp: Union[PathLike, Path, bytes],
     password: Optional[str] = None,
@@ -178,17 +191,28 @@ def rasterize_pdf_with_pdfium(
 
     ctx = mp.get_context("spawn")
 
-    initargs = (None, fp, password, False, kwargs, return_mode, post_process_fn)
+    with potential_temporary_file(fp) as temp_fp:
+        initargs = (
+            None,
+            temp_fp,
+            password,
+            False,
+            kwargs,
+            return_mode,
+            post_process_fn,
+        )
 
-    with ft.ProcessPoolExecutor(
-        max_workers=max_workers,
-        initializer=_render_parallel_init,
-        initargs=initargs,
-        mp_context=ctx,
-    ) as executor:
-        results = executor.map(_render_parallel_job, range(total_pages), chunksize=1)
+        with ft.ProcessPoolExecutor(
+            max_workers=max_workers,
+            initializer=_render_parallel_init,
+            initargs=initargs,
+            mp_context=ctx,
+        ) as executor:
+            results = executor.map(
+                _render_parallel_job, range(total_pages), chunksize=1
+            )
 
-    return list(results)
+        return list(results)
 
 
 def rasterize_pdfs_with_pdfium(
@@ -219,39 +243,53 @@ def rasterize_pdfs_with_pdfium(
             page_counts.append(len(pdf))
             total_to_process += len(pdf)
 
-    initargs = (
-        None,
-        fps,
-        passwords,
-        False,
-        kwargs,
-        return_mode,
-        post_process_fn,
-    )
+    writable_fps = []
 
-    results = {}
+    with tempfile.TemporaryDirectory(prefix="docprompt_raster_tmp") as tempdir:
+        for i, fp in enumerate(fps):
+            if isinstance(fp, bytes):
+                temp_fp = os.path.join(
+                    tempdir, f"{i}_{random.randint(10000, 50000)}.pdf"
+                )
+                with open(temp_fp, "wb") as f:
+                    f.write(fp)
+                writable_fps.append(temp_fp)
+            else:
+                writable_fps.append(str(fp))
 
-    futures = []
+        initargs = (
+            None,
+            writable_fps,
+            passwords,
+            False,
+            kwargs,
+            return_mode,
+            post_process_fn,
+        )
 
-    max_workers = min(mp.cpu_count(), total_to_process)
+        results = {}
 
-    with tqdm.tqdm(total=total_to_process) as pbar:
-        with ft.ProcessPoolExecutor(
-            max_workers=max_workers,
-            initializer=_render_parallel_multi_doc_init,
-            initargs=initargs,
-            mp_context=ctx,
-        ) as executor:
-            for i, page_count in enumerate(page_counts):
-                for j in range(page_count):
-                    futures.append(
-                        executor.submit(_render_parallel_multi_doc_job, i, j)
-                    )
+        futures = []
 
-        for future in ft.as_completed(futures):
-            pdf_indice, page_indice, result = future.result()
+        max_workers = min(mp.cpu_count(), total_to_process)
 
-            results.setdefault(pdf_indice, {})[page_indice + 1] = result
-            pbar.update(1)
+        with tqdm.tqdm(total=total_to_process) as pbar:
+            with ft.ProcessPoolExecutor(
+                max_workers=max_workers,
+                initializer=_render_parallel_multi_doc_init,
+                initargs=initargs,
+                mp_context=ctx,
+            ) as executor:
+                for i, page_count in enumerate(page_counts):
+                    for j in range(page_count):
+                        futures.append(
+                            executor.submit(_render_parallel_multi_doc_job, i, j)
+                        )
+
+            for future in ft.as_completed(futures):
+                pdf_indice, page_indice, result = future.result()
+
+                results.setdefault(pdf_indice, {})[page_indice + 1] = result
+                pbar.update(1)
 
     return results
