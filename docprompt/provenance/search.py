@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, TYPE_CHECKING, Optional
+from typing import Dict, List, Literal, TYPE_CHECKING, Optional
 
 from docprompt.schema.layout import NormBBox, TextBlock
 from docprompt.tasks.ocr.result import OcrPageResult
@@ -33,7 +33,7 @@ DocumentProvenanceGeoMap = Dict[int, Dict[BlockGranularity, RTreeIndex]]
 @dataclass
 class DocumentProvenanceLocator:
     document_name: str
-    search_index: Any
+    search_index: "tantivy.Index"
     block_mapping: Dict[int, OcrPageResult] = field(repr=False)
     geo_index: DocumentProvenanceGeoMap = field(repr=False)
 
