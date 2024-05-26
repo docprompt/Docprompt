@@ -63,6 +63,11 @@ def test_multi_rasterize():
 
     results = rasterize_pdfs_with_pdfium([document_1.file_bytes, document_2.file_bytes])
 
+    assert len(results) == 2
+
+    assert len(results[0]) == len(document_1)
+    assert len(results[1]) == len(document_2)
+
     node_1.rasterizer.propagate_cache("default", results[0])
     node_2.rasterizer.propagate_cache("default", results[1])
 

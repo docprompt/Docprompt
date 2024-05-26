@@ -51,3 +51,20 @@ def test_normbbox_utilities():
     bbox = NormBBox.from_bounding_poly(bounding_poly)
 
     assert bbox == NormBBox(x0=0, top=0, x1=1, bottom=1)
+
+    # Test contains
+
+    small_bbox = NormBBox(x0=0.25, top=0.25, x1=0.75, bottom=0.75)
+    big_bbox = NormBBox(x0=0, top=0, x1=1, bottom=1)
+
+    assert small_bbox in big_bbox
+    assert big_bbox not in small_bbox
+
+    # Test Overlap
+
+    assert small_bbox.x_overlap(big_bbox) == 0.5
+    assert small_bbox.y_overlap(big_bbox) == 0.5
+
+    # Should be commutative
+    assert big_bbox.x_overlap(small_bbox) == 0.5
+    assert big_bbox.y_overlap(small_bbox) == 0.5
