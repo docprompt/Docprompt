@@ -171,7 +171,8 @@ class PdfDocument(BaseModel):
         image_convert_mode: str = "L",
         do_quantize: bool = False,
         quantize_color_count: int = 8,
-    ) -> bytes:
+        return_mode: Literal["pil", "bytes"] = "bytes",
+    ):
         """
         Rasterizes a page of the document using Pdfium
         """
@@ -205,7 +206,7 @@ class PdfDocument(BaseModel):
         rastered = rasterize_page_with_pdfium(
             self.file_bytes,
             page_number,
-            return_mode="bytes",
+            return_mode=return_mode,
             post_process_fn=post_process_fn,
             scale=(1 / 72) * dpi,
         )
@@ -242,6 +243,7 @@ class PdfDocument(BaseModel):
             resize_mode=resize_mode,
             max_file_size_bytes=max_file_size_bytes,
             resize_aspect_ratios=resize_aspect_ratios,
+            return_mode="bytes",
         )
         return f"data:image/png;base64,{base64.b64encode(image_bytes).decode('utf-8')}"
 
