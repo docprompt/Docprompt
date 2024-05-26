@@ -14,7 +14,10 @@ import logging
 import multiprocessing as mp
 import concurrent.futures as ft
 from PIL import Image
-from typing import Iterable, TypeVar
+from typing import TypeVar, Iterable
+import queue
+
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -340,31 +343,33 @@ def rasterize_pdfs_with_pdfium(
         core_pdf_assignments = distribute_pdfs(pdf_page_map, max_workers)
 
         with mp.Manager() as manager:
-            queue = manager.Queue()
+            mp_queue = manager.Queue()
 
             processes = []
 
-            for core_id, pdf_page_map in core_pdf_assignments.items():
-                data = {
-                    (writable_fps[i], passwords[i]): pages
-                    for i, pages in pdf_page_map.items()
-                }
+            with tqdm(total=total_to_process, desc="Rasterizing PDF's") as pbar:
+                for core_id, pdf_page_map in core_pdf_assignments.items():
+                    data = {
+                        (writable_fps[i], passwords[i]): pages
+                        for i, pages in pdf_page_map.items()
+                    }
 
-                p = ctx.Process(
-                    target=process_work,
-                    args=(data, post_process_fn, return_mode, queue),
-                )
-                p.start()
-                processes.append(p)
+                    p = ctx.Process(
+                        target=process_work,
+                        args=(data, post_process_fn, return_mode, mp_queue),
+                    )
+                    p.start()
+                    processes.append(p)
 
-            for process in processes:
-                process.join()
+                results: Dict[int, Dict[int, Union[Image.Image, bytes]]] = {}
 
-            results = {}
-
-            while not queue.empty():
-                pdf, page, result = queue.get()
-                i = name_to_idx[pdf]
-                results.setdefault(i, {})[page] = result
+                while any(p.is_alive() for p in processes) or not mp_queue.empty():
+                    try:
+                        pdf, page, result = mp_queue.get(timeout=0.5)
+                        i = name_to_idx[pdf]
+                        results.setdefault(i, {})[page] = result
+                        pbar.update(1)
+                    except queue.Empty:
+                        pass
 
     return results
