@@ -78,6 +78,25 @@ class NormBBox(BaseModel):
             # Return an empty or non-existent bounding box representation
             return None
 
+    def __add__(self, other):
+        if not isinstance(other, NormBBox):
+            raise TypeError("Can only add NormBBox to NormBBox")
+
+        return NormBBox(
+            x0=min(self.x0, other.x0),
+            top=min(self.top, other.top),
+            x1=max(self.x1, other.x1),
+            bottom=max(self.bottom, other.bottom),
+        )
+
+    def __contains__(self, other):
+        return (
+            self.x0 <= other.x0
+            and self.top <= other.top
+            and self.x1 >= other.x1
+            and self.bottom >= other.bottom
+        )
+
     def intersection_over_union(self, other):
         if not isinstance(other, NormBBox):
             raise TypeError("Can only compute IOU with NormBBox")
@@ -92,16 +111,17 @@ class NormBBox(BaseModel):
 
         return 0  # No intersection
 
-    def __add__(self, other):
-        if not isinstance(other, NormBBox):
-            raise TypeError("Can only add NormBBox to NormBBox")
+    def x_overlap(self, other):
+        """
+        Get the overlap, between 0 and 1, of the x-axis of two bounding boxes
+        """
+        return max(0, min(self.x1, other.x1) - max(self.x0, other.x0))
 
-        return NormBBox(
-            x0=min(self.x0, other.x0),
-            top=min(self.top, other.top),
-            x1=max(self.x1, other.x1),
-            bottom=max(self.bottom, other.bottom),
-        )
+    def y_overlap(self, other):
+        """
+        Get the overlap, between 0 and 1, of the y-axis of two bounding boxes
+        """
+        return max(0, min(self.bottom, other.bottom) - max(self.top, other.top))
 
     @classmethod
     def combine(cls, *bboxes: "NormBBox"):
@@ -227,6 +247,9 @@ class TextBlock(BaseModel):
 
     def __getitem__(self, index):
         return getattr(self, index)
+
+    def __hash__(self):
+        return hash((self.text, self.bounding_box.as_tuple()))
 
     @property
     def confidence(self):
