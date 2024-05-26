@@ -1,6 +1,7 @@
 from typing import Optional, TYPE_CHECKING, Union, Literal, Dict, List
 from docprompt.schema.document import Document
 
+from docprompt.schema.pipeline import DocumentNode
 from docprompt.tasks.base import AbstractTaskProvider
 from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
 from ..base import CAPABILITIES
@@ -200,6 +201,7 @@ def process_page(
     document_name: str,
     file_hash: str,
     exclude_bounding_poly: bool = False,
+    return_image: bool = False,
 ) -> OcrPageResult:
     layout = page.layout
 
@@ -215,6 +217,11 @@ def process_page(
         page, document_text, "block", exclude_bounding_poly=exclude_bounding_poly
     )
 
+    if return_image:
+        image = page.image.content
+    else:
+        image = None
+
     return OcrPageResult(
         provider_name=provider_name,
         document_name=document_name,
@@ -224,6 +231,7 @@ def process_page(
         word_level_blocks=word_boxes,
         line_level_blocks=line_boxes,
         block_level_blocks=block_boxes,
+        raster_image=image,
     )
 
 
@@ -234,6 +242,7 @@ def gcp_documents_to_result_single(
     file_hash: str,
     *,
     exclude_bounding_poly: bool = False,
+    return_images: bool = False,
 ):
     page_offset = 1  # We want pages to be 1-indexed
 
@@ -249,6 +258,7 @@ def gcp_documents_to_result_single(
                 document_name,
                 file_hash,
                 exclude_bounding_poly=exclude_bounding_poly,
+                return_image=return_images,
             )
 
             results[page_offset + doc_page_num] = page_result
@@ -282,6 +292,7 @@ def gcp_documents_to_result_multi(
     provider_name: str,
     *,
     exclude_bounding_poly: bool = False,
+    return_images: bool = False,
 ):
     tasks = []
     page_offset = 1  # Pages are 1-indexed
@@ -331,6 +342,7 @@ def gcp_documents_to_result(
     *,
     mode: Literal["single", "multi"] = "single",
     exclude_bounding_poly: bool = False,
+    return_images: bool = False,
 ) -> Dict[int, OcrPageResult]:
     if mode == "single" or len(documents) == 1 or multiprocessing.cpu_count() == 1:
         logger.info("Using single process")
@@ -340,6 +352,7 @@ def gcp_documents_to_result(
             document_name,
             file_hash,
             exclude_bounding_poly=exclude_bounding_poly,
+            return_images=return_images,
         )
     elif mode == "multi":
         logger.info("Using multiprocessing")
@@ -347,12 +360,13 @@ def gcp_documents_to_result(
             documents,
             provider_name,
             exclude_bounding_poly=exclude_bounding_poly,
+            return_images=return_images,
         )
     else:
         raise ValueError("Invalid mode for GCP document processing")
 
 
-class GoogleOcrProvider(AbstractTaskProvider):
+class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
     name = "Google Document AI"
     capabilities = [
         CAPABILITIES.PAGE_TEXT_OCR.value,
@@ -375,6 +389,7 @@ class GoogleOcrProvider(AbstractTaskProvider):
         location: str = "us",
         max_workers: int = multiprocessing.cpu_count() * 2,
         exclude_bounding_poly: bool = False,
+        return_images: bool = False,
     ):
         if service_account_info is None and service_account_file is None:
             raise ValueError(
@@ -395,6 +410,7 @@ class GoogleOcrProvider(AbstractTaskProvider):
         self.service_account_file = service_account_file
 
         self.exclude_bounding_poly = exclude_bounding_poly
+        self.return_images = return_images
 
         try:
             from google.cloud import documentai
@@ -474,6 +490,9 @@ class GoogleOcrProvider(AbstractTaskProvider):
                 "text,pages.layout,pages.words,pages.lines,pages.tokens,pages.blocks"
             )
 
+            if self.return_images:
+                field_mask += ",pages.image"
+
             request = self.documentai.ProcessRequest(
                 name=processor_name, raw_document=raw_document, field_mask=field_mask
             )
@@ -502,6 +521,7 @@ class GoogleOcrProvider(AbstractTaskProvider):
             document_name=document.name,
             file_hash=document.document_hash,
             exclude_bounding_poly=self.exclude_bounding_poly,
+            return_images=self.return_images,
         )
 
     def _process_document_concurrent(
@@ -547,6 +567,9 @@ class GoogleOcrProvider(AbstractTaskProvider):
                 "text,pages.layout,pages.words,pages.lines,pages.tokens,pages.blocks"
             )
 
+            if self.return_images:
+                field_mask += ",pages.image"
+
             request = self.documentai.ProcessRequest(
                 name=processor_name, raw_document=raw_document, field_mask=field_mask
             )
@@ -576,13 +599,14 @@ class GoogleOcrProvider(AbstractTaskProvider):
                     documents[index] = future.result()
                     pbar.update(1)
 
-        logger.info("Recombining")
+        logger.info("Recombining OCR results...")
         return gcp_documents_to_result(
             documents,
             self.name,
             document_name=document.name,
             file_hash=document.document_hash,
             exclude_bounding_poly=self.exclude_bounding_poly,
+            return_images=self.return_images,
         )
 
     def process_document_pages(

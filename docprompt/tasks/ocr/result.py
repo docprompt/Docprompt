@@ -2,6 +2,7 @@ from typing import List, Optional
 from pydantic import Field
 from docprompt.schema.layout import TextBlock
 from docprompt.tasks.base import BasePageResult
+from io import BytesIO
 
 
 class OcrPageResult(BasePageResult):
@@ -28,6 +29,12 @@ class OcrPageResult(BasePageResult):
         description="The rasterized image of the page used in OCR",
         repr=False,
     )
+
+    @property
+    def pil_image(self):
+        from PIL import Image
+
+        return Image.open(BytesIO(self.raster_image))
 
     @property
     def words(self):
