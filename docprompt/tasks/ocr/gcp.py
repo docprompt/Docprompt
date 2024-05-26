@@ -43,6 +43,20 @@ orientation_rotation_mapping = {
     4: -90,
 }
 
+type_mapping: Dict[str, SegmentLevels] = {
+    "line": "line",
+    "paragraph": "block",
+    "block": "block",
+    "token": "word",
+}
+
+orientation_mapping: Dict[int, DirectionChoices] = {
+    1: "UP",
+    2: "RIGHT",
+    3: "DOWN",
+    4: "LEFT",
+}
+
 service_account_file_read_lock = Lock()
 
 # This will wait up to ~8 minutes before giving up, which covers almost all high-contention cases
@@ -66,17 +80,17 @@ def bounding_poly_from_layout(
 def bounding_box_from_layout(
     layout: Union["documentai.Document.Page.Layout", "documentai.Document.Page.Token"],
 ):
-    sorted_vertices = sorted(
-        layout.bounding_poly.normalized_vertices, key=lambda x: (x.x, x.y)
-    )
-    upper_left = sorted_vertices[0]
-    lower_right = sorted_vertices[-1]
+    top = min(vertex.y for vertex in layout.bounding_poly.normalized_vertices)
+    bottom = max(vertex.y for vertex in layout.bounding_poly.normalized_vertices)
+
+    left = min(vertex.x for vertex in layout.bounding_poly.normalized_vertices)
+    right = max(vertex.x for vertex in layout.bounding_poly.normalized_vertices)
 
     return NormBBox(
-        x0=round(upper_left.x, 5),
-        top=round(upper_left.y, 5),
-        x1=round(lower_right.x, 5),
-        bottom=round(lower_right.y, 5),
+        x0=round(left, 5),
+        top=round(top, 5),
+        x1=round(right, 5),
+        bottom=round(bottom, 5),
     )
 
 
@@ -144,20 +158,6 @@ def text_blocks_from_page(
     exclude_bounding_poly: bool = False,
 ) -> List[TextBlock]:
     text_blocks = []
-
-    type_mapping: Dict[str, SegmentLevels] = {
-        "line": "line",
-        "paragraph": "block",
-        "block": "block",
-        "token": "word",
-    }
-
-    orientation_mapping: Dict[int, DirectionChoices] = {
-        1: "UP",
-        2: "RIGHT",
-        3: "DOWN",
-        4: "LEFT",
-    }
 
     # Offset is used to account for the fact that text references are relative to the entire document.
     # while we need to compute spans relative to the page.
