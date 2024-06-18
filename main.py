@@ -4,7 +4,10 @@ import os
 import argparse
 
 
+from pydantic import BaseModel, Field
 from docprompt import load_document, DocumentNode
+
+from docprompt.storage import LocalFileSystemStorageProvider
 
 
 PDF_SAMPLE_DIR = os.path.abspath("data")
@@ -29,10 +32,26 @@ def pdf_path():
     return pdf_name
 
 
+class TestMetadata(BaseModel):
+    title: str = Field(...)
+
+
 def main():
     fp = pdf_path()
     document = load_document(fp)
     _document_node = DocumentNode.from_document(document)
+
+    _document_node.metadata = TestMetadata(title="Test Title")
+
+    storage_provider = LocalFileSystemStorageProvider(
+        document_node_class=DocumentNode, document_metadata_class=TestMetadata
+    )
+
+    storage_provider.store(_document_node)
+
+    retrieved_document = storage_provider.retrieve(_document_node.file_hash)
+
+    assert retrieved_document.metadata.title == _document_node.metadata.title
 
 
 if __name__ == "__main__":

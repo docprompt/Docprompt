@@ -346,11 +346,6 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
 
         return document_node
 
-    @classmethod
-    def from_storage_provider(cls, provider: Any):
-        """Load a document node from a storage provider."""
-        raise NotImplementedError("This method is not implemented yet")
-
     @property
     def file_hash(self):
         return self.document.document_hash
@@ -358,10 +353,6 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     @property
     def document_name(self):
         return self.document.name
-
-    def save(self, storage_provider: Any):
-        """Save the document node to a storage provider."""
-        raise NotImplementedError("This method is not implemented yet")
 
 
 class DocumentCollection(
