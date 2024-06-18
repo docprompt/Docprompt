@@ -1,9 +1,9 @@
-from pydantic import BaseModel, Field, PositiveInt, TypeAdapter
 from pathlib import Path
 from typing import Dict, Optional
 
-from docprompt.tasks.ocr.result import OcrPageResult
+from pydantic import BaseModel, Field, PositiveInt, TypeAdapter
 
+from docprompt.tasks.ocr.result import OcrPageResult
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures"
 

@@ -1,5 +1,6 @@
 import base64
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Generic,
@@ -9,16 +10,15 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
-    TYPE_CHECKING,
     Union,
 )
 
+from PIL import Image
 from pydantic import BaseModel, Field, PositiveInt, PrivateAttr
 
 from docprompt.rasterize import AspectRatioRule, ResizeModes, process_raster_image
 from docprompt.tasks.base import ResultContainer
 from docprompt.tasks.ocr.result import OcrPageResult
-from PIL import Image
 
 if TYPE_CHECKING:
     from docprompt.provenance.search import DocumentProvenanceLocator
@@ -100,8 +100,9 @@ class PageRasterizer:
             self.raster_cache[cache_key] = rastered
 
         if return_mode == "pil" and isinstance(rastered, bytes):
-            from PIL import Image
             import io
+
+            from PIL import Image
 
             return Image.open(io.BytesIO(rastered))
         elif return_mode == "bytes" and isinstance(rastered, bytes):
@@ -212,7 +213,7 @@ class DocumentRasterizer:
         for page_number, image in images.items():
             page_node = self.owner.page_nodes[page_number - 1]
 
-            page_node._raster_cache[name] = image
+            page_node._raster_cache[name] = image  # pylint: disable=protected-access
 
         return list(images.values())
 
@@ -223,7 +224,7 @@ class DocumentRasterizer:
         for page_number, raster in rasters.items():
             page_node = self.owner.page_nodes[page_number - 1]
 
-            page_node._raster_cache[name] = raster
+            page_node._raster_cache[name] = raster  # pylint: disable=protected-access
 
 
 class PageNode(BaseModel, Generic[PageNodeMetadata]):
@@ -345,6 +346,11 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
 
         return document_node
 
+    @classmethod
+    def from_storage_provider(cls, provider: Any):
+        """Load a document node from a storage provider."""
+        raise NotImplementedError("This method is not implemented yet")
+
     @property
     def file_hash(self):
         return self.document.document_hash
@@ -352,6 +358,10 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     @property
     def document_name(self):
         return self.document.name
+
+    def save(self, storage_provider: Any):
+        """Save the document node to a storage provider."""
+        raise NotImplementedError("This method is not implemented yet")
 
 
 class DocumentCollection(

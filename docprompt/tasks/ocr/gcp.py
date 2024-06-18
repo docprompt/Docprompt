@@ -1,28 +1,29 @@
-from typing import Optional, TYPE_CHECKING, Union, Literal, Dict, List
-from docprompt.schema.document import Document
+import logging
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from threading import Lock
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
 
+import tqdm
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from docprompt.schema.document import Document
+from docprompt.schema.layout import (
+    BoundingPoly,
+    DirectionChoices,
+    NormBBox,
+    Point,
+    SegmentLevels,
+    TextBlock,
+    TextBlockMetadata,
+    TextSpan,
+)
 from docprompt.schema.pipeline import DocumentNode
 from docprompt.tasks.base import AbstractTaskProvider
 from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
+
 from ..base import CAPABILITIES
 from .result import OcrPageResult
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
-import multiprocessing
-from threading import Lock
-
-from docprompt.schema.layout import (
-    DirectionChoices,
-    TextBlock,
-    NormBBox,
-    TextSpan,
-    BoundingPoly,
-    Point,
-    SegmentLevels,
-    TextBlockMetadata,
-)
-from tenacity import retry, stop_after_attempt, wait_exponential
-import tqdm
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -590,9 +591,9 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
                     for index, split in enumerate(document_byte_splits)
                 }
 
-                documents: List["documentai.Document"] = [None] * len(  # type: ignore
+                documents: List["documentai.Document"] = [None] * len(
                     document_byte_splits
-                )
+                )  # type: ignore
 
                 for future in as_completed(future_to_index):
                     index = future_to_index[future]

@@ -1,3 +1,3 @@
-from .source import ProvenanceSource, PageTextLocation
+from .source import PageTextLocation, ProvenanceSource
 
 __all__ = ["ProvenanceSource", "PageTextLocation"]

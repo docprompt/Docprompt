@@ -1,8 +1,10 @@
-from .fixtures import PDF_FIXTURES
+import pickle
+
+from pytest import raises
 
 from docprompt import DocumentNode, load_document
-from pytest import raises
-import pickle
+
+from .fixtures import PDF_FIXTURES
 
 
 def test_search():
