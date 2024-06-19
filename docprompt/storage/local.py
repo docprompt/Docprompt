@@ -5,12 +5,12 @@ It allows developers to easily save PDFs and metadata to the local file system.
 
 import os
 import json
-from typing import ClassVar
+from typing import Any, ClassVar, Optional
 from typing_extensions import Annotated
 
-from pydantic import BaseModel, Field, AfterValidator
+from pydantic import BaseModel, Field, AfterValidator, computed_field
 
-from docprompt.utils import load_document
+from docprompt.schema.document import Document
 
 from ._base import AbstractStorageProvider, DocumentNode
 
@@ -44,18 +44,20 @@ class FilePathSidecars(BaseModel):
 
     base_file_path: Annotated[str, AfterValidator(validate_file_path)] = Field(...)
 
+    @computed_field
     @property
     def pdf(self) -> str:
         """Get the file path for the pdf bytes."""
         return f"{self.base_file_path}.pdf"
 
+    @computed_field
     @property
     def metadata(self) -> str:
         """Get the file path for the metadata."""
         return f"{self.base_file_path}.json"
 
 
-class LocalFileSystemStorageProvider(AbstractStorageProvider):
+class LocalFileSystemStorageProvider(AbstractStorageProvider[FilePathSidecars]):
     """The concrete implementation of a local file system storage provider."""
 
     base_storage_path: ClassVar[str] = os.environ.get(
@@ -72,7 +74,7 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider):
             base_file_path=os.path.join(self.base_storage_path, file_hash)
         )
 
-    def store(self, document_node: DocumentNode) -> None:
+    def store(self, document_node: DocumentNode) -> FilePathSidecars:
         """Store the document node in the local file system.
 
         Args:
@@ -81,12 +83,14 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider):
 
         file_paths = self._file_path(document_node.file_hash)
 
-        with open(file_paths.pdf, "wb") as f:
-            f.write(document_node.document.get_bytes())
+        local_fs_write(file_paths.pdf, document_node.document.get_bytes(), mode="wb")
 
         if document_node.metadata is not None:
-            with open(file_paths.metadata, "w", encoding="utf-8") as f:
-                json.dump(document_node.metadata.model_dump(mode="json"), f)
+            local_fs_write(
+                file_paths.metadata,
+                json.dumps(document_node.metadata.model_dump(mode="json")),
+                encoding="utf-8",
+            )
 
     def retrieve(self, file_hash: str) -> DocumentNode:
         """Retrieve the document node from the local file system.
@@ -103,22 +107,58 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider):
 
         file_paths = self._file_path(file_hash)
 
-        # Assert that the PDF file exists
-        if not os.path.exists(file_paths.pdf):
-            raise FileNotFoundError(f"PDF file not found for hash: {file_hash}")
+        pdf_bytes = local_fs_read(file_paths.pdf, mode="rb")
+        document = Document.from_bytes(pdf_bytes, name=os.path.basename(file_paths.pdf))
 
-        # Load the Document Node Metadata, if the file exists
-        if os.path.exists(file_paths.metadata):
-            with open(file_paths.metadata, "r", encoding="utf-8") as f:
-                metadata = self.document_metadata_class.parse_obj(json.load(f))
-        # Otherwise, set the metadata to None
-        else:
+        try:
+            metadata_bytes = local_fs_read(
+                file_paths.metadata, mode="r", encoding="utf-8"
+            )
+            metadata = self.document_metadata_class.model_validate(
+                json.loads(metadata_bytes)
+            )
+        except FileNotFoundError:
             metadata = None
 
-        # Using the metadata, load the document node from the file path
-        document = load_document(file_paths.pdf)
-        document_node = self.document_node_class.from_document(  # pylint: disable=no-member
+        # Create our document node
+        return self.document_node_class.from_document(  # pylint: disable=no-member
             document=document, document_metadata=metadata
         )
 
-        return document_node
+
+def local_fs_write(
+    path: str, value: Any, mode: str = "w", encoding: Optional[str] = None
+) -> None:
+    """Store a document node to the local FS.
+
+    Args:
+        path: The path to store the value
+        value: The value to store
+        mode: The mode to open the file with
+        encoding: The encoding to use when writing the file
+    """
+
+    if not os.path.exists(os.path.dirname(path)):
+        raise ValueError(f"Invalid file path: {path} -- Directory does not exist.")
+
+    with open(path, mode, encoding=encoding) as f:
+        f.write(value)
+
+
+def local_fs_read(path: str, mode: str = "r", encoding: Optional[str] = None) -> bytes:
+    """Read a document node from the local FS.
+
+    Args:
+        path: The path to read the value from
+        mode: The mode to open the file with
+        encoding: The encoding to use when reading the file
+
+    Returns:
+        The value read from the file
+    """
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File not found: {path}")
+
+    with open(path, mode, encoding=encoding) as f:
+        return f.read()

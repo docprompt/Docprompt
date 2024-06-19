@@ -1,12 +1,14 @@
 """Test the storage provider implementations."""
 
 import os
+import json
 from unittest.mock import MagicMock, patch
 from typing import Union
 
 import pytest
 from pydantic import BaseModel
 
+from docprompt.schema.document import Document
 from docprompt.schema.pipeline import DocumentNode
 from docprompt.storage._base import (
     validate_document_metadata_class,
@@ -193,21 +195,100 @@ class TestLocalStorageProvider:
 
             side_car = provider._file_path(file_hash)  # pylint: disable=protected-access
 
-            with patch("builtins.open") as mock_open:
-                with patch("pydantic.BaseModel.model_dump") as mock_model_dump:
-                    mock_model_dump.return_value = {"title": "Test Title"}
-                    provider.store(mock_doc_node)
+            with patch("docprompt.storage.local.local_fs_write") as mock_write:
+                provider.store(mock_doc_node)
 
-            assert mock_open.call_count == 2
+            mock_write.assert_any_call(side_car.pdf, pdf_bytes, mode="wb")
+            mock_write.assert_any_call(
+                side_car.metadata,
+                json.dumps(mock_doc_node.metadata.model_dump(mode="json")),
+                encoding="utf-8",
+            )
+            assert mock_write.call_count == 2
 
-            # Assert the each file was saved appropriately
-            mock_open.assert_any_call(side_car.pdf, "wb")
-            mock_open.assert_any_call(side_car.metadata, "w", encoding="utf-8")
+        def test_store_method_no_metadata(self, provider, create_mock_doc_node):
+            """Test that the store method works as expected."""
 
-            # Assert that the document node's document bytes were retrieved
-            mock_doc_node.document.get_bytes.assert_called_once()
+            file_hash = "FILE-HASH"
+            pdf_bytes = b"PDF BYTES"
+            metadata_title = "Test Title"
+            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
+            mock_doc_node.metadata = None
 
-            # Assert that the metadata was retrieved as well
-            mock_model_dump.assert_called_once_with(mode="json")
+            side_car = provider._file_path(file_hash)  # pylint: disable=protected-access
 
-            self.teardown_directories(provider._file_path(file_hash))  # pylint: disable=protected-access
+            with patch("docprompt.storage.local.local_fs_write") as mock_write:
+                provider.store(mock_doc_node)
+
+            mock_write.assert_any_call(side_car.pdf, pdf_bytes, mode="wb")
+            assert mock_write.call_count == 1
+
+        def test_retrieve_method(self, provider, create_mock_doc_node):
+            """Retrieve the document node from the local file system."""
+
+            file_hash = "FILE-HASH"
+            pdf_bytes = b"PDF BYTES"
+            metadata_title = "Test Title"
+            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
+
+            side_car = provider._file_path(file_hash)  # pylint: disable=protected-access
+
+            # Store the document node first
+            provider.store(mock_doc_node)
+
+            with patch("docprompt.storage.local.local_fs_read") as mock_read:
+                with patch.object(Document, "from_bytes") as mock_from_bytes:
+                    with patch.object(
+                        DocumentNode, "from_document"
+                    ) as mock_from_document:
+                        mock_read.side_effect = [
+                            pdf_bytes,
+                            json.dumps(mock_doc_node.metadata.model_dump(mode="json")),
+                        ]
+                        mock_from_bytes.return_value = mock_doc_node.document
+                        provider.retrieve(file_hash)
+
+            mock_read.assert_any_call(side_car.pdf, mode="rb")
+            mock_read.assert_any_call(side_car.metadata, mode="r", encoding="utf-8")
+            mock_from_bytes.assert_called_once_with(
+                pdf_bytes, name=os.path.basename(side_car.pdf)
+            )
+            mock_from_document.assert_called_once_with(
+                document=mock_doc_node.document,
+                document_metadata=mock_doc_node.metadata,
+            )
+
+            assert mock_read.call_count == 2
+
+        def test_retrieve_method_no_metadata(self, provider, create_mock_doc_node):
+            """Retrieve the document node from the local file system."""
+
+            file_hash = "FILE-HASH"
+            pdf_bytes = b"PDF BYTES"
+            metadata_title = "Test Title"
+            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
+
+            side_car = provider._file_path(file_hash)  # pylint: disable=protected-access
+
+            # Store the document node first
+            provider.store(mock_doc_node)
+
+            with patch("docprompt.storage.local.local_fs_read") as mock_read:
+                with patch.object(Document, "from_bytes") as mock_from_bytes:
+                    with patch.object(
+                        DocumentNode, "from_document"
+                    ) as mock_from_document:
+                        mock_read.side_effect = [pdf_bytes, FileNotFoundError()]
+                        mock_from_bytes.return_value = mock_doc_node.document
+                        provider.retrieve(file_hash)
+
+            mock_read.assert_any_call(side_car.pdf, mode="rb")
+            mock_read.assert_any_call(side_car.metadata, mode="r", encoding="utf-8")
+            mock_from_bytes.assert_called_once_with(
+                pdf_bytes, name=os.path.basename(side_car.pdf)
+            )
+            mock_from_document.assert_called_once_with(
+                document=mock_doc_node.document, document_metadata=None
+            )
+
+            assert mock_read.call_count == 2

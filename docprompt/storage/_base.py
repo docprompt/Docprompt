@@ -3,7 +3,7 @@ basic S3 and local storage providers.
 """
 
 from abc import abstractmethod
-from typing import TypeVar, Type, Any
+from typing import TypeVar, Type, Any, Generic
 from typing_extensions import Annotated
 
 from pydantic import BaseModel, Field, AfterValidator
@@ -15,6 +15,7 @@ FALLBACK_LOCAL_STORAGE_PATH = "/tmp/.docprompt"
 
 DocumentNode = TypeVar("DocumentNode", bound=BaseDocumentNode)
 DocumentNodeMeatadata = TypeVar("DocumentNodeMeatadata", bound=BaseModel)
+StoragePathModel = TypeVar("StoragePathModel", bound=BaseModel)
 
 
 def validate_document_node_class(value: Type[Any]) -> Type[DocumentNode]:
@@ -55,7 +56,7 @@ def validate_document_metadata_class(value: Type[Any]) -> Type[DocumentNodeMeata
     return value
 
 
-class AbstractStorageProvider(BaseModel):
+class AbstractStorageProvider(BaseModel, Generic[StoragePathModel]):
     """The abstract class interface for a storage provider."""
 
     document_node_class: Annotated[
@@ -66,7 +67,7 @@ class AbstractStorageProvider(BaseModel):
     ] = Field(..., repr=False)
 
     @abstractmethod
-    def store(self, document_node: DocumentNode) -> None:
+    def store(self, document_node: DocumentNode, **kwargs) -> StoragePathModel:
         """Store the document node in the storage provider.
 
         Args:
@@ -74,7 +75,7 @@ class AbstractStorageProvider(BaseModel):
         """
 
     @abstractmethod
-    def retrieve(self, file_hash: str) -> DocumentNode:
+    def retrieve(self, file_hash: str, **kwargs) -> DocumentNode:
         """Retrieve the document node from the storage provider.
 
         Args:
