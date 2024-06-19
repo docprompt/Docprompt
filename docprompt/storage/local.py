@@ -1,6 +1,9 @@
 """The local storage provider implements a local storage solution for DocPrompt.
 
-It allows developers to easily save PDFs and metadata to the local file system.
+It allows developers to easily save PDFs and metadata to the local file system. To configure
+docprompt to use a particular local storage path, set the `DOCPROMPT_LOCAL_STORAGE_PATH`
+environment variable. If this environment variable is not set, the default path will be
+used.
 """
 
 import os
@@ -42,7 +45,9 @@ class FilePathSidecars(BaseModel):
         metadata: The file path for the metadata
     """
 
-    base_file_path: Annotated[str, AfterValidator(validate_file_path)] = Field(...)
+    base_file_path: Annotated[str, AfterValidator(validate_file_path)] = Field(
+        ..., repr=False
+    )
 
     @computed_field
     @property
@@ -58,7 +63,13 @@ class FilePathSidecars(BaseModel):
 
 
 class LocalFileSystemStorageProvider(AbstractStorageProvider[FilePathSidecars]):
-    """The concrete implementation of a local file system storage provider."""
+    """The concrete implementation of a local file system storage provider.
+
+    Attributes:
+        document_node_class: The document node class to store and retrieve
+        document_metadata_class: The document metadata class to store and retrieve
+        base_storage_path: The base storage path for the local file system
+    """
 
     base_storage_path: ClassVar[str] = os.environ.get(
         "DOCPROMPT_LOCAL_STORAGE_PATH", FALLBACK_LOCAL_STORAGE_PATH
@@ -67,7 +78,14 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider[FilePathSidecars]):
     def _file_path(self, file_hash: str) -> FilePathSidecars:
         """Get the base file path for a document node.
 
-        Will return a file path in the form of: {base_storage_path}/{file_hash}
+        Args:
+            file_hash: The hash of the document node
+
+        Returns:
+            FilePathSidecars: The file paths for the document node
+
+        Raises:
+            pydantic_core.ValidationError: If the file path is invalid
         """
         # This will run validation to ensure the fp exists and is valid
         return FilePathSidecars(
@@ -79,6 +97,9 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider[FilePathSidecars]):
 
         Args:
             document_node: The document node to store
+
+        Returns:
+            FilePathSidecars: The file paths for the document node
         """
 
         file_paths = self._file_path(document_node.file_hash)
@@ -91,6 +112,11 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider[FilePathSidecars]):
                 json.dumps(document_node.metadata.model_dump(mode="json")),
                 encoding="utf-8",
             )
+        else:
+            # If there is no metadata, then we should delete the metadata file
+            local_fs_delete(file_paths.metadata)
+
+        return file_paths
 
     def retrieve(self, file_hash: str) -> DocumentNode:
         """Retrieve the document node from the local file system.
@@ -136,6 +162,9 @@ def local_fs_write(
         value: The value to store
         mode: The mode to open the file with
         encoding: The encoding to use when writing the file
+
+    Raises:
+        ValueError: If the directory does not exist
     """
 
     if not os.path.exists(os.path.dirname(path)):
@@ -154,7 +183,10 @@ def local_fs_read(path: str, mode: str = "r", encoding: Optional[str] = None) ->
         encoding: The encoding to use when reading the file
 
     Returns:
-        The value read from the file
+        bytes: The value read from the file
+
+    Raises:
+        FileNotFoundError: If the file does not exist
     """
 
     if not os.path.exists(path):
@@ -162,3 +194,16 @@ def local_fs_read(path: str, mode: str = "r", encoding: Optional[str] = None) ->
 
     with open(path, mode, encoding=encoding) as f:
         return f.read()
+
+
+def local_fs_delete(path: str) -> None:
+    """Delete a file from the local FS.
+
+    Args:
+        path: The path to delete
+    """
+
+    if not os.path.exists(path):
+        return
+
+    os.remove(path)

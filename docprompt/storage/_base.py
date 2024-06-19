@@ -10,9 +10,6 @@ from pydantic import BaseModel, Field, AfterValidator
 
 from docprompt.schema.pipeline import DocumentNode as BaseDocumentNode
 
-FALLBACK_LOCAL_STORAGE_PATH = "/tmp/.docprompt"
-
-
 DocumentNode = TypeVar("DocumentNode", bound=BaseDocumentNode)
 DocumentNodeMeatadata = TypeVar("DocumentNodeMeatadata", bound=BaseModel)
 StoragePathModel = TypeVar("StoragePathModel", bound=BaseModel)
@@ -57,7 +54,12 @@ def validate_document_metadata_class(value: Type[Any]) -> Type[DocumentNodeMeata
 
 
 class AbstractStorageProvider(BaseModel, Generic[StoragePathModel]):
-    """The abstract class interface for a storage provider."""
+    """The abstract class interface for a storage provider.
+
+    Attributes:
+        document_node_class: The document node class to store and retrieve
+        document_metadata_class: The document metadata class to store and retrieve
+    """
 
     document_node_class: Annotated[
         Type[DocumentNode], AfterValidator(validate_document_node_class)
