@@ -1,4 +1,5 @@
 import base64
+import json
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -12,12 +13,15 @@ from typing import (
     TypeVar,
     Type,
     Union,
+    ForwardRef,
 )
+from typing_extensions import Self
 
 from PIL import Image
 from pydantic import BaseModel, Field, PositiveInt, PrivateAttr
 
 from docprompt.rasterize import AspectRatioRule, ResizeModes, process_raster_image
+from docprompt.storage import FileSystemManager
 from docprompt.tasks.base import ResultContainer
 from docprompt.tasks.ocr.result import OcrPageResult
 
@@ -26,13 +30,38 @@ if TYPE_CHECKING:
 
 from .document import Document
 
-DocumentCollectionMetadata = TypeVar("DocumentCollectionMetadata", bound=BaseModel)
-DocumentNodeMetadata = TypeVar("DocumentNodeMetadata", bound=BaseModel)
-PageNodeMetadata = TypeVar("PageNodeMetadata", bound=BaseModel)
+DefaultMetadata = TypeVar("DefaultMetadata", bound=Union[dict, BaseModel])
+
+DocumentCollectionMetadata = TypeVar(
+    "DocumentCollectionMetadata", bound=DefaultMetadata
+)
+DocumentNodeMetadata = TypeVar("DocumentNodeMetadata", bound=DefaultMetadata)
+PageNodeMetadata = TypeVar("PageNodeMetadata", bound=DefaultMetadata)
 
 # TODO: Is there a better way to bound these?
 FilePathResult = TypeVar("FilePathResult", bound=BaseModel)
 StorageProvider = TypeVar("StorageProvider", bound=BaseModel)
+
+
+def serialize_metadata(metadata: Union[BaseModel, dict]) -> str:
+    """A helper method for serializing metadata to a dictionary.
+
+    Args:
+        metadata (Union[BaseModel, dict]): The metadata to serialize.
+
+    Returns:
+        str: The serialized metadata.
+
+    Raises:
+        ValueError: If the metadata is not a BaseModel or a dictionary.
+    """
+
+    if isinstance(metadata, BaseModel):
+        return metadata.model_dump_json()
+    elif isinstance(metadata, dict):
+        return json.dumps(metadata)
+
+    raise ValueError("Metadata must be a BaseModel or a dictionary.")
 
 
 class PageRasterizer:
@@ -239,8 +268,8 @@ class PageNode(BaseModel, Generic[PageNodeMetadata]):
 
     document: "DocumentNode" = Field(exclude=True, repr=False)
     page_number: PositiveInt = Field(description="The page number")
-    metadata: Optional[PageNodeMetadata] = Field(
-        description="Application-specific metadata for the page", default=None
+    metadata: Union[dict, PageNodeMetadata] = Field(
+        description="Application-specific metadata for the page", default_factory=dict
     )
     extra: Dict[str, Any] = Field(
         description="Extra data that can be stored on the page node",
@@ -293,19 +322,14 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     page_nodes: List[PageNode[PageNodeMetadata]] = Field(
         description="The pages in the document", default_factory=list, repr=False
     )
-    metadata: Optional[DocumentNodeMetadata] = Field(
-        description="Application-specific metadata for the document", default=None
+    metadata: Union[dict, DocumentNodeMetadata] = Field(
+        description="Application-specific metadata for the document",
+        default_factory=dict,
     )
 
     _locator: Optional["DocumentProvenanceLocator"] = PrivateAttr(default=None)
 
-    _storage_provider = PrivateAttr(default_factory=default_provider)
-
-    def __init__(self, storage_provider_class: Optional[Any] = None, **data):
-        super().__init__(**data)
-
-        if storage_provider_class is not None:
-            self._storage_provider = storage_provider_class
+    _persistance_path: Optional[str] = PrivateAttr(default=None)
 
     def __getstate__(self):
         state = super().__getstate__()
@@ -354,20 +378,31 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         cls,
         document: Document,
         document_metadata: Optional[DocumentNodeMetadata] = None,
-        storage_provider_class: Optional[Any] = None,
+        page_metadata: Optional[List[PageNodeMetadata]] = None,
     ):
         document_node: "DocumentNode[DocumentNodeMetadata, PageNodeMetadata]" = (
             DocumentNode(
                 document=document,
-                metadata=document_metadata,
-                storage_provider_class=storage_provider_class,
+                metadata=document_metadata or {},
             )
         )
 
-        for page_number in range(1, len(document) + 1):
-            document_node.page_nodes.append(
-                PageNode(document=document_node, page_number=page_number)
+        if page_metadata is not None and len(page_metadata) != len(document):
+            raise ValueError(
+                "The number of page metadata items must match the number of pages in the document."
             )
+
+        for page_number in range(1, len(document) + 1):
+            if page_metadata is not None:
+                page_node = PageNode(
+                    document=document_node,
+                    page_number=page_number,
+                    metadata=page_metadata[page_number - 1],
+                )
+            else:
+                page_node = PageNode(document=document_node, page_number=page_number)
+
+            document_node.page_nodes.append(page_node)
 
         return document_node
 
@@ -379,75 +414,145 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     def document_name(self):
         return self.document.name
 
-    @property
-    def storage_provider(self):
-        """Create the storage provider instance.
+    @classmethod
+    def metadata_class(cls) -> Type[Union[dict, BaseModel]]:
+        """Get the metadata class for instantiating metadata from the model."""
 
-        We set this as a property (non-cached), so that a new storage provider can be instantiated
-        everytime the property is accessed. This is useful as we want to make sure that the storage
-        provider is always up-to-date with the lastest metadata model.
-        """
-        return self._storage_provider.from_document_node(self)
+        fields = cls.model_fields
+
+        # NOTE: The indexing is important here, and relies on the generic type being
+        # the SECOND of the two arguments in the `Union` annotation
+        metadata_field_annotation = fields["metadata"].annotation.__args__[1]
+
+        # If no override has been provided to the metadata model, we want to retrieve
+        # it as a TypedDict
+        if metadata_field_annotation == DocumentNodeMetadata:
+            return dict
+
+        if isinstance(metadata_field_annotation, ForwardRef):
+            raise ValueError(
+                "You cannot define DocumentNode with a ForwardRef for Generic metadata model types."
+            )
+
+        # Get the overriden Generic type of th DocumentNodeMetadata
+        return metadata_field_annotation
 
     @classmethod
-    def from_storage(
-        cls,
-        file_hash: str,
-        metadata_class: Optional[Type[DocumentNodeMetadata]] = None,
-        storage_provider_class: Optional[Type[StorageProvider]] = None,
-        **kwargs,
-    ):
-        """Load a DocumentNode from a specified storage provider.
+    def page_metadata_class(cls) -> Type[Union[dict, BaseModel]]:
+        """Get the metadata class for the page nodes in the document."""
+        fields = cls.model_fields
+
+        # NOTE: The indexing is important here, and it allows us to get the type of each
+        # page node in the `List` annotation
+        page_nodes_field_class = fields["page_nodes"].annotation.__args__[0]
+
+        # NOTE: The indexing is important here, and relies on the generic type being
+        # the SECOND of the two arguments in the `Union` annotation
+        page_node_metadata_field_annotation = page_nodes_field_class.model_fields[
+            "metadata"
+        ].annotation.__args__[1]
+
+        if page_node_metadata_field_annotation == PageNodeMetadata:
+            return dict
+
+        if isinstance(page_node_metadata_field_annotation, ForwardRef):
+            raise ValueError(
+                "You cannot define PageNode with a ForwardRef for Generic metadata model types."
+            )
+
+        return page_node_metadata_field_annotation
+
+    @property
+    def persistance_path(self):
+        """The base path to storage location."""
+        return self._persistance_path
+
+    @persistance_path.setter
+    def persistance_path(self, path: str):
+        """Set the base path to storage location."""
+        self._persistance_path = path
+
+    @classmethod
+    def from_storage(cls, path: str, file_hash: str, **kwargs) -> Self:
+        """Load the document node from storage.
 
         Args:
-            file_hash (str): The hash of the document to retrieve (used as the primary key)
-            metadata_class (Optional[Type[DocumentNodeMetadata]]): The metadata class to use for the document
-                - Defaults to None.
-                NOTE: If no override is provided, the metadata will not be loaded!
-            storage_provider_class (Optional[Type[StorageProvider]]): The storage provider class to use
-                - Defaults to the LocalFileSystemStorageProvider
+            path (str): The base path to storage location.
+                - Example (S3): "s3://bucket-name/key/to/folder"
+                - Example (Local FS): "/tmp/docprompt/storage"
+            file_hash (str): The hash of the document.
+            **kwargs: Additional keyword arguments for fsspec FileSystem
 
         Returns:
-            DocumentNode: The document node
+            DocumentNode: The loaded document node.
         """
-        # Get the defaul storage provider if None is provided
-        storage_provider_class = storage_provider_class or default_provider()
 
-        provider = storage_provider_class(
-            document_node_class=cls,
-            document_metadata_class=metadata_class,
+        fs_manager = FileSystemManager(path, **kwargs)
+
+        pdf_bytes, metadata_bytes, page_metadata_bytes = fs_manager.read(
+            file_hash, **kwargs
         )
 
-        document_node = provider.retrieve(file_hash, **kwargs)
+        doc = Document.from_bytes(pdf_bytes, name=fs_manager.get_pdf_name(file_hash))
 
-        # Store the file path in the document node
-        document_node.document.file_path = provider.paths(file_hash).pdf
-        return document_node
+        if metadata_bytes:
+            metadata_json = json.loads(metadata_bytes.decode("utf-8"))
+            metadata = cls.metadata_class()(**metadata_json)
+        else:
+            metadata = cls.metadata_class()()
 
-    def store(
-        self, storage_provider_class: Optional[Type[StorageProvider]] = None, **kwargs
-    ) -> FilePathResult:
-        """Store the document using the configured storage provider.
+        if page_metadata_bytes:
+            page_metadata_json = [
+                json.loads(page_str)
+                for page_str in json.loads(page_metadata_bytes.decode("utf-8"))
+            ]
+            page_metadata = [
+                cls.page_metadata_class()(**page) for page in page_metadata_json
+            ]
+        else:
+            page_metadata = [cls.page_metadata_class()() for _ in range(len(doc))]
+
+        node = cls.from_document(
+            doc, document_metadata=metadata, page_metadata=page_metadata
+        )
+
+        # Make sure to set the persistance path on the node
+        node.persistance_path = path
+
+        return node
+
+    def persist(self, path: Optional[str] = None, **kwargs):
+        """Persist a document node to storage.
 
         Args:
-            storage_provider_class: The storage provider class to use
-                - Defaults to None
-                NOTE: If no override is provided, the current storage provider class of the document
-                node will be utilized. If an override is provided, that class will be used and the
-                document node will be updated to use that class for future storage operations.
-            **kwargs: Additional keyword arguments to pass to the storage provider
+            **kwargs: Additional keyword arguments for fsspec FileSystem
 
         Returns:
-            FilePathResult: The file paths for the document node, which is a pydantic model.
-            NOTE: See the AbstractStorageProvider for more details on the model structure.
+            FilePathManager: The file path manager for the persisted document node.
         """
 
-        # If an override is provided for the storage provider class, update the document node
-        if storage_provider_class is not None:
-            self._storage_provider = storage_provider_class
+        path = path or self.persistance_path
 
-        # Store the document using the storage provider
-        return self.storage_provider.store(self, **kwargs)
+        if path is None:
+            raise ValueError("The path must be provided to persist the document node.")
+
+        # Make sure to update the persistance path
+        self.persistance_path = path
+
+        fs_manager = FileSystemManager(path, **kwargs)
+
+        pdf_bytes = self.document.get_bytes()
+        metadata_bytes = bytes(serialize_metadata(self.metadata), encoding="utf-8")
+        page_metadata_bytes = bytes(
+            json.dumps(
+                [(serialize_metadata(page.metadata)) for page in self.page_nodes]
+            ),
+            encoding="utf-8",
+        )
+
+        return fs_manager.write(
+            pdf_bytes, metadata_bytes, page_metadata_bytes, **kwargs
+        )
 
 
 class DocumentCollection(
@@ -459,4 +564,4 @@ class DocumentCollection(
     """
 
     document_nodes: List[DocumentNode[DocumentNodeMetadata, PageNodeMetadata]]
-    metadata: DocumentCollectionMetadata
+    metadata: DocumentCollectionMetadata = Field(..., default_factory=dict)

@@ -1,774 +1,273 @@
-"""Test the storage provider implementations."""
-
-import os
-import json
-from unittest.mock import MagicMock, patch
-from typing import Union
+"""Test the storage wrapper for fsspec."""
 
 import pytest
-from botocore.exceptions import ClientError
-from pydantic import BaseModel
+from unittest.mock import patch, MagicMock
 
-from docprompt.schema.document import Document
-from docprompt.schema.pipeline import DocumentNode
-from docprompt.storage._base import (
-    AbstractStorageProvider,
-    validate_document_metadata_class,
-    validate_document_node_class,
+import fsspec
+from fsspec import AbstractFileSystem
+from fsspec.implementations.local import LocalFileSystem
+
+from docprompt.storage import (
+    FileSidecarsPathManager,
+    FileSystemAnnotation,
+    FileSystemManager,
 )
-from docprompt.storage import local, s3
+from docprompt.utils import hash_from_bytes
 
 
-class TestAbstractStorageProviderValidation:
-    """Test the model validation functions of the base storage provider."""
+def test_file_sidecar_manager_paths():
+    """Test that the storage file sidecar manager paths are correct."""
 
-    def test_validate_document_node_class_valid(self):
-        """Test that the document node class validation function returns the class if it is valid."""
+    base_path = "s3://example-bucket/"
+    file_hash = "example-hash"
 
-        assert validate_document_node_class(DocumentNode) == DocumentNode
+    manager = FileSidecarsPathManager(base_path=base_path, file_hash=file_hash)
 
-    def test_validate_document_node_class_on_child(self):
-        """Test that the model validation allows for a child of the document node class."""
+    assert manager.base_path == base_path
+    assert manager.file_hash == file_hash
+    assert manager.pdf == f"{base_path}/{file_hash}/base.pdf"
+    assert manager.metadata == f"{base_path}/{file_hash}/base.json"
+    assert manager.page_metadata == f"{base_path}/{file_hash}/pages.json"
 
-        class ChildDocumentNode(DocumentNode):  # pylint: disable=too-few-public-methods,missing-class-docstring
-            pass
 
-        assert validate_document_node_class(ChildDocumentNode) == ChildDocumentNode
+def test_file_system_annotation_validation():
+    """Ensure that the file system custom annotation validates correctly."""
 
-    def test_validate_document_node_invalid(self):
-        """Test that the model validation raises an error for an invalid document node class."""
+    validator_generator = FileSystemAnnotation.__get_validators__()
 
-        with pytest.raises(ValueError):
-            validate_document_node_class(dict)
+    validator = next(validator_generator)
 
-    def test_validate_document_node_metadata_class_valid(self):
-        """Test that the document metadata class validation function returns the class if it is valid."""
+    # Assert that there is only one validator
+    with pytest.raises(StopIteration):
+        next(validator_generator)
 
-        assert validate_document_metadata_class(BaseModel) == BaseModel
+    # Test that the validator raises an error when the input is not an fsspec file system
+    fsspec_file_system = fsspec.filesystem("file")
+    result = validator(fsspec_file_system)
+    assert result == fsspec_file_system
 
-    def test_validate_document_node_metadata_class_on_child(self):
-        """Test that the model validation allows for a child of the document metadata class."""
+    # Ensure that another object raises a TypeError
+    with pytest.raises(TypeError):
+        validator("not a file system")
 
-        class ChildDocumentMetadata(BaseModel):  # pylint: disable=too-few-public-methods,missing-class-docstring
-            pass
 
-        assert (
-            validate_document_metadata_class(ChildDocumentMetadata)
-            == ChildDocumentMetadata
-        )
+class TestFileSystemManager:
+    """Unit tests for the file system manager."""
 
-    def test_validate_document_node_metadata_invalid(self):
-        """Test that the model validation raises an error for an invalid document metadata class."""
+    class TestValidation:
+        """Test the validation logic of the file system manager."""
 
-        with pytest.raises(ValueError):
-            validate_document_metadata_class(dict)
+        def test_before_model_validator(self):
+            """We want to make sure that the before validator properly updates
+            the data that is passed to the model."""
 
-    def test_from_document_node_with_metadata(self):
-        """Test that the class method for creating a provider from a document node with metadata
-        works as expected.
-        """
+            path = "/tmp/data"
+            kwargs = {"example": "kwarg"}
 
-        class ConcreteProvider(AbstractStorageProvider[BaseModel]):  # pylint: disable=missing-class-docstring
-            def paths(self, file_hash: str) -> BaseModel:
-                """Generate the paths for the document node."""
-
-            def store(self, document_node: DocumentNode) -> BaseModel:
-                """Store the document node from the storage provider."""
-
-            def retrieve(self, file_hash: str) -> DocumentNode:
-                """Retrieve the document node from the storage provider."""
-
-        class ExampleMetadata(BaseModel):  # pylint: disable=too-few-public-methods
-            """Sample Metadata container"""
-
-            title: str
-
-        document_node = MagicMock(spec=DocumentNode)
-        document_node.metadata = ExampleMetadata(title="Test Title")
-
-        provider = ConcreteProvider.from_document_node(document_node=document_node)
-
-        assert provider.document_metadata_class == ExampleMetadata
-        assert provider.document_node_class == DocumentNode
-
-    def test_from_document_node_wo_metadata(self):
-        """Test that the class method for creating a provider from a document node without metadata"""
-
-        class ConcreteProvider(AbstractStorageProvider[BaseModel]):
-            """Concrete provider for testing."""
-
-            def paths(self, file_hash: str) -> BaseModel:
-                """Generate the paths for the document node."""
-
-            def store(self, document_node: DocumentNode) -> BaseModel:
-                """Store the document node from the storage provider."""
-
-            def retrieve(self, file_hash: str) -> DocumentNode:
-                """Retrieve the document node from the storage provider."""
-
-        document_node = MagicMock(spec=DocumentNode)
-
-        provider = ConcreteProvider.from_document_node(document_node=document_node)
-
-        assert provider.document_metadata_class is None
-        assert provider.document_node_class == DocumentNode
-
-
-class TestLocalStorageProvider:
-    """Test that the local storage provider works as expected."""
-
-    class TestFilePathSidecars:
-        """Test that the pydantic model for fp sidecars works as expected."""
-
-        def teardown_path(self, path: str):
-            """Remove the path if it exists."""
-
-            if os.path.exists(path):
-                os.removedirs(path)
-
-        def test_validate_file_path_exists(self):
-            """Test that the file path sidecars model works as expected."""
-
-            path = "/tmp/.docprompt/test"
-
-            # Ensure that the path exists BEFORE we validate it
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-
-            # Validate the path
-            assert local.validate_file_path(path) == path
-
-            # Ensure that the parent directory of the path exists now
-            assert os.path.exists(os.path.dirname(path))
-
-            self.teardown_path(path)
-
-        def test_validate_path_does_not_exist(self):
-            """We want to ensure that the validator properly creates a path if necessary."""
-
-            # Create a path that we know does not exist
-            path = "/tmp/.docprompt/test"
-
-            # Ensure that the path does not exist before we validate it
-            self.teardown_path(path)
-
-            # Validate the path
-            assert local.validate_file_path(path) == path
-
-            # Ensure that the parent directory of the path exists now
-            assert os.path.exists(os.path.dirname(path))
-
-            self.teardown_path(path)
-
-        def test_sidecars_properties(self):
-            """Ensure that the properties of the sidecars model work as expected."""
-
-            path = "/tmp/.docprompt/test"
-
-            sidecars = local.FilePathSidecars(base_file_path=path)
-
-            assert sidecars.pdf == f"{path}.pdf"
-            assert sidecars.metadata == f"{path}.json"
-
-            self.teardown_path(path)
-
-    def test_local_storage_provider_default_path(self):
-        """Test that the local storage provider uses the default path if no environment variable is set."""
-
-        value = os.environ.get(
-            "DOCPROMPT_LOCAL_STORAGE_PATH", local.FALLBACK_LOCAL_STORAGE_PATH
-        )
-
-        assert local.LocalFileSystemStorageProvider.base_storage_path == value
-
-    class TestFileSystemMethods:
-        """Test the functions that operate directly on the FS."""
-
-        def test_local_fs_write(self):
-            """Ensure that the local file system write function works as expected."""
-
-            path = "/test/path/test.txt"
-            data = b"TEST DATA"
-
-            with patch("builtins.open") as mock_open:
-                with patch("os.path.exists") as mock_exists:
-                    mock_exists.return_value = True
-
-                    local.local_fs_write(path, data, mode="mode", encoding="encoding")
-
-            mock_open.assert_called_once_with(path, "mode", encoding="encoding")
-
-        def test_local_fs_write_dir_doesnot_exist(self):
-            """Ensure that the local file system writer throws a ValueError if the
-            directory does not exist."""
-
-            path = "/test/path/test.txt"
-            data = b"TEST DATA"
-
-            with patch("builtins.open", create=True):
-                with patch("os.path.exists") as mock_exists:
-                    mock_exists.return_value = False
-
-                    with pytest.raises(ValueError):
-                        local.local_fs_write(
-                            path, data, mode="mode", encoding="encoding"
-                        )
-
-        def test_local_fs_read(self):
-            """Ensure that the local file system read function works as expected."""
-
-            path = "/test/path/test.txt"
-
-            with patch("builtins.open") as mock_open:
-                with patch("os.path.exists") as mock_exists:
-                    mock_exists.return_value = True
-
-                    local.local_fs_read(path, mode="mode", encoding="encoding")
-
-            mock_open.assert_called_once_with(path, "mode", encoding="encoding")
-
-        def test_local_fs_read_file_not_found(self):
-            """Ensure that the local file system reader throws a FileNotFoundError if the
-            file does not exist."""
-
-            path = "/test/path/test.txt"
-
-            with patch("builtins.open", create=True):
-                with patch("os.path.exists") as mock_exists:
-                    mock_exists.return_value = False
-
-                    with pytest.raises(FileNotFoundError):
-                        local.local_fs_read(path, mode="mode", encoding="encoding")
-
-        def test_local_fs_delete(self):
-            """Ensure that the local file system delete function works as expected."""
-
-            path = "/test/path/test.txt"
-
-            with patch("os.path.exists") as mock_exists:
-                with patch("os.remove") as mock_remove:
-                    mock_exists.return_value = True
-
-                    local.local_fs_delete(path)
-
-            mock_remove.assert_called_once_with(path)
-
-        def test_local_fs_delete_does_not_exist(self):
-            """Ensure that the local file system delete function does not raise an error if the
-            file does not exist."""
-
-            path = "/test/path/test.txt"
-
-            with patch("os.path.exists") as mock_exists:
-                with patch("os.remove") as mock_remove:
-                    mock_exists.return_value = False
-
-                    local.local_fs_delete(path)
-
-            mock_remove.assert_not_called()
-
-    class TestLocalFileSystemStorageProviderImplementation:
-        """Test the implementation methods of the local storage provider."""
-
-        def teardown_directories(self, sidecar: local.FilePathSidecars):
-            """Teardown the file path directories if they exist."""
-
-            if os.path.exists(sidecar.base_file_path):
-                os.removedirs(sidecar.base_file_path)
-
-        @pytest.fixture
-        def provider(self):
-            """A fixture for setting up the provider."""
-
-            class ExampleMetadata(BaseModel):  # pylint: disable=missing-class-docstring,too-few-public-methods
-                title: str
-
-            return local.LocalFileSystemStorageProvider(
-                document_node_class=DocumentNode,
-                document_metadata_class=ExampleMetadata,
+            data = {"path": path, "fs_kwargs": kwargs}
+            parsed_data = FileSystemManager.validate_filesystem_protocol_and_kwargs(
+                data
             )
 
-        @pytest.fixture(scope="function")
-        def create_mock_doc_node(self, provider):
-            """A fixture for creating a mock document node."""
+            assert parsed_data.get("path") == path
+            assert isinstance(parsed_data.get("fs"), LocalFileSystem)
+            assert parsed_data.get("fs_kwargs") == kwargs
 
-            def factory(_hash: str, _bytes: bytes, title: Union[None, str]):
-                mock_doc_node = MagicMock(spec=DocumentNode)
-                mock_doc_node.file_hash = _hash
-                mock_doc_node.document = MagicMock()
-                mock_doc_node.document.get_bytes.return_value = _bytes
+        def test_before_model_validator_proper_fs_instantiation(self):
+            """We want to make sure that the fsspec FileSystem is properly instantiated."""
 
-                if title is not None:
-                    metadata = provider.document_metadata_class(title=title)
-                    mock_doc_node.metadata = metadata
+            path = "/tmp/data"
+            kwargs = {"example": "kwarg"}
 
-                return mock_doc_node
+            data = {"path": path, "fs_kwargs": kwargs}
+            with patch.object(fsspec, "url_to_fs") as mock_proto_res:
+                FileSystemManager.validate_filesystem_protocol_and_kwargs(data)
 
-            return factory
+                mock_proto_res.assert_called_once_with(path, **kwargs)
 
-        def test_file_path_helper(self, provider):
-            """Test that the file path helper method works as expected."""
+    class TestImplementationMethods:
+        """Test the implementation methods of the File System manager"""
 
-            file_hash = "FILE-HASH"
+        @pytest.fixture(scope="class")
+        def mock_manager(self):
+            """Setup a mock manager to use for testing."""
 
-            sidecar = provider.paths(file_hash)  # pylint: disable=protected-access
+            mock_fs = MagicMock(spec=AbstractFileSystem)
 
-            assert sidecar.base_file_path == os.path.join(
-                provider.base_storage_path, file_hash
+            with patch.object(
+                FileSystemManager, "validate_filesystem_protocol_and_kwargs"
+            ) as mock_validator:
+                mock_validator.return_value = {
+                    "path": "/tmp/data",
+                    "fs": mock_fs,
+                    "fs_kwargs": {},
+                }
+                manager = FileSystemManager(url="/tmp/data")
+                return manager
+
+            return mock_fs
+
+        def test_pdf_name_getter(self, mock_manager):
+            """Test that the `get_pdf_name` method returns the correct file name."""
+
+            file_hash = "example-hash"
+
+            result_pdf_name = mock_manager.get_pdf_name(file_hash)
+
+            assert result_pdf_name == "base.pdf"
+
+        def test__write_method(self, mock_manager):
+            """Test that the `_write` implementation method works correctly."""
+
+            with patch.object(mock_manager.fs, "open") as mock_open:
+                mock_file = MagicMock()
+                mock_open.return_value.__enter__.return_value = mock_file
+
+                mock_manager._write(  # pylint: disable=protected-access
+                    b"example-value", "example-path", "wb", example="kwarg"
+                )
+
+            mock_open.assert_called_once_with("example-path", "wb", example="kwarg")
+            mock_file.write.assert_called_once_with(b"example-value")
+
+        def test__read_method(self, mock_manager):
+            """Test that the `_read` implementation method works correctly."""
+
+            with patch.object(mock_manager.fs, "open") as mock_open:
+                mock_file = MagicMock()
+                mock_file.read.return_value = b"example-value"
+                mock_open.return_value.__enter__.return_value = mock_file
+
+                result = mock_manager._read("example-path", "rb", example="kwarg")  # pylint: disable=protected-access
+
+            mock_open.assert_called_once_with("example-path", "rb", example="kwarg")
+            mock_file.read.assert_called_once()
+            assert result == b"example-value"
+
+        @pytest.mark.parametrize("exists", [True, False])
+        def test__delete_method(self, mock_manager, exists):
+            """Test that the `_delete` implementation method works correctly."""
+
+            with patch.object(mock_manager.fs, "exists") as mock_exists:
+                with patch.object(mock_manager.fs, "rm") as mock_rm:
+                    mock_exists.return_value = exists
+                    mock_manager._delete("example-path", example="kwarg")  # pylint: disable=protected-access
+
+                    mock_exists.assert_called_once_with("example-path")
+                    if exists:
+                        mock_rm.assert_called_once_with("example-path", example="kwarg")
+
+        def test_write_method_no_metadata(self, mock_manager):
+            """Test that the write method works correclty when no metadata is provided."""
+
+            example_bytes = b"example-value"
+            example_hash = hash_from_bytes(example_bytes)
+            expected_path = f"/tmp/data/{example_hash}/base.pdf"
+
+            with patch.object(mock_manager, "_write") as mock_write:
+                result = mock_manager.write(b"example-value", example="kwarg")
+
+            mock_write.assert_called_once_with(
+                example_bytes, expected_path, "wb", example="kwarg"
             )
+            assert result.pdf == expected_path
 
-            self.teardown_directories(sidecar)
+        def test_write_method_with_metadata(self, mock_manager):
+            """Test that the write method works correctly when metadata is provided."""
 
-        def test_store_method(self, provider, create_mock_doc_node):
-            """Test that the store method works as expected."""
+            example_bytes = b"example-value"
+            example_metadata_bytes = b"example-metadata"
+            example_page_metadata_bytes = b"example-page-metadata"
+            example_hash = hash_from_bytes(example_bytes)
 
-            file_hash = "FILE-HASH"
-            pdf_bytes = b"PDF BYTES"
-            metadata_title = "Test Title"
-            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
+            expected_path = f"/tmp/data/{example_hash}/base.pdf"
+            expected_metadata_path = f"/tmp/data/{example_hash}/base.json"
+            expected_page_metadata_path = f"/tmp/data/{example_hash}/pages.json"
 
-            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
+            with patch.object(mock_manager, "_write") as mock_write:
+                result = mock_manager.write(
+                    example_bytes,
+                    example_metadata_bytes,
+                    example_page_metadata_bytes,
+                    example="kwarg",
+                )
 
-            with patch("docprompt.storage.local.local_fs_write") as mock_write:
-                provider.store(mock_doc_node)
-
-            mock_write.assert_any_call(side_car.pdf, pdf_bytes, mode="wb")
             mock_write.assert_any_call(
-                side_car.metadata,
-                json.dumps(mock_doc_node.metadata.model_dump(mode="json")),
-                encoding="utf-8",
+                example_bytes, expected_path, "wb", example="kwarg"
             )
-            assert mock_write.call_count == 2
-
-        def test_store_method_no_metadata(self, provider, create_mock_doc_node):
-            """Test that the store method works as expected."""
-
-            file_hash = "FILE-HASH"
-            pdf_bytes = b"PDF BYTES"
-            metadata_title = "Test Title"
-            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
-            mock_doc_node.metadata = None
-
-            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
-
-            with patch("docprompt.storage.local.local_fs_write") as mock_write:
-                with patch("docprompt.storage.local.local_fs_delete") as mock_delete:
-                    provider.store(mock_doc_node)
-
-            mock_write.assert_called_once_with(side_car.pdf, pdf_bytes, mode="wb")
-            mock_delete.assert_called_once_with(side_car.metadata)
-            assert mock_write.call_count == 1
-
-        def test_retrieve_method(self, provider, create_mock_doc_node):
-            """Retrieve the document node from the local file system."""
-
-            file_hash = "FILE-HASH"
-            pdf_bytes = b"PDF BYTES"
-            metadata_title = "Test Title"
-            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
-
-            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
-
-            with patch("docprompt.storage.local.local_fs_read") as mock_read:
-                with patch.object(Document, "from_bytes") as mock_from_bytes:
-                    with patch.object(
-                        DocumentNode, "from_document"
-                    ) as mock_from_document:
-                        mock_read.side_effect = [
-                            pdf_bytes,
-                            json.dumps(mock_doc_node.metadata.model_dump(mode="json")),
-                        ]
-                        mock_from_bytes.return_value = mock_doc_node.document
-                        provider.retrieve(file_hash)
-
-            mock_read.assert_any_call(side_car.pdf, mode="rb")
-            mock_read.assert_any_call(side_car.metadata, mode="r", encoding="utf-8")
-            mock_from_bytes.assert_called_once_with(
-                pdf_bytes, name=os.path.basename(side_car.pdf)
-            )
-            mock_from_document.assert_called_once_with(
-                document=mock_doc_node.document,
-                document_metadata=mock_doc_node.metadata,
-                storage_provider_class=type(provider),
-            )
-
-            assert mock_read.call_count == 2
-
-        def test_retrieve_method_no_metadata(self, provider, create_mock_doc_node):
-            """Retrieve the document node from the local file system."""
-
-            file_hash = "FILE-HASH"
-            pdf_bytes = b"PDF BYTES"
-            metadata_title = "Test Title"
-            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
-
-            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
-
-            with patch("docprompt.storage.local.local_fs_read") as mock_read:
-                with patch.object(Document, "from_bytes") as mock_from_bytes:
-                    with patch.object(
-                        DocumentNode, "from_document"
-                    ) as mock_from_document:
-                        mock_read.side_effect = [pdf_bytes, FileNotFoundError()]
-                        mock_from_bytes.return_value = mock_doc_node.document
-                        provider.retrieve(file_hash)
-
-            mock_read.assert_any_call(side_car.pdf, mode="rb")
-            mock_read.assert_any_call(side_car.metadata, mode="r", encoding="utf-8")
-            mock_from_bytes.assert_called_once_with(
-                pdf_bytes, name=os.path.basename(side_car.pdf)
-            )
-            mock_from_document.assert_called_once_with(
-                document=mock_doc_node.document,
-                document_metadata=None,
-                storage_provider_class=type(provider),
-            )
-
-            assert mock_read.call_count == 2
-
-
-MOCK_AWS_ACCESS_KEY_ID = "FAKE-ACCESS-KEY-ID"
-MOCK_AWS_SECRET_ACCESS_KEY = "FAKE-SECRET-ACCESS-KEY"
-MOCK_AWS_BUCKET_KEY = "s3://FAKE-BUCKET-KEY"
-MOCK_AWS_REGION = "FAKE-REGION"
-
-
-class TestS3StorageProvider:
-    """Test the S3 storage provider implementation."""
-
-    @pytest.fixture(scope="class", autouse=True)
-    def mock_aws_credentials(self):
-        """Setup the AWS credentials for the test class."""
-
-        os.environ["DOCPROMPT_AWS_ACCESS_KEY_ID"] = MOCK_AWS_ACCESS_KEY_ID
-        os.environ["DOCPROMPT_AWS_SECRET_ACCESS_KEY"] = MOCK_AWS_SECRET_ACCESS_KEY
-        os.environ["DOCPROMPT_AWS_BUCKET_KEY"] = MOCK_AWS_BUCKET_KEY
-        os.environ["DOCPROMPT_AWS_REGION"] = MOCK_AWS_REGION
-
-        yield
-
-        del os.environ["DOCPROMPT_AWS_ACCESS_KEY_ID"]
-        del os.environ["DOCPROMPT_AWS_SECRET_ACCESS_KEY"]
-        del os.environ["DOCPROMPT_AWS_BUCKET_KEY"]
-        del os.environ["DOCPROMPT_AWS_REGION"]
-
-    def test_aws_s3_credentials(self):
-        """Ensure that the AWS S3 credentials model works as expected."""
-
-        credentials = s3.S3Credentials()
-
-        assert (
-            credentials.AWS_ACCESS_KEY_ID.get_secret_value() == MOCK_AWS_ACCESS_KEY_ID
-        )  # pylint: disable=no-member
-        assert (
-            credentials.AWS_SECRET_ACCESS_KEY.get_secret_value()  # pylint: disable=no-member
-            == MOCK_AWS_SECRET_ACCESS_KEY
-        )
-        assert credentials.AWS_BUCKET_KEY == MOCK_AWS_BUCKET_KEY
-        assert credentials.AWS_DEFAULT_REGION == MOCK_AWS_REGION
-
-    class TestBucketURISidecars:
-        """Test the bucket URI sidecars model."""
-
-        @pytest.mark.parametrize(
-            "uri,raises",
-            [
-                ("s3://bucket/key", False),
-                ("s3://bucket/key/", False),
-                ("s3://bucket/", False),
-                ("s3://bucket", False),
-                ("bucket/key", True),
-                ("s3://", True),
-            ],
-        )
-        def test_validate_s3_uri(self, uri, raises):
-            """Ensure that the validation of the S3 URI works as expected."""
-
-            if raises:
-                with pytest.raises(ValueError):
-                    s3.validate_s3_uri(uri)
-            else:
-                assert s3.validate_s3_uri(uri) == uri.rstrip("/")
-
-        def test_bucket_uri_sidecars(self):
-            """Ensure that the bucket URI sidecars model works as expected."""
-
-            base_uri = "s3://bucket/key"
-
-            sidecars = s3.S3BucketURISidecars(base_s3_uri=base_uri)
-
-            assert sidecars.pdf == f"{base_uri}.pdf"
-            assert sidecars.metadata == f"{base_uri}.json"
-
-    class TestS3NetworkLayer:
-        """Test that the network layer functions work as expected."""
-
-        def test_s3_read(self):
-            """Ensure that we can read from and S3 bucket."""
-            uri = "s3://bucket/key"
-
-            with patch("boto3.client") as mock_client:
-                with patch("docprompt.storage.s3.urlparse") as mock_urlparse:
-                    mock_urlparse.return_value.path = "/key"
-                    mock_urlparse.return_value.netloc = "bucket"
-                    s3.aws_s3_read(uri)
-
-            mock_client.assert_called_once_with(
-                "s3",
-                region_name=MOCK_AWS_REGION,
-                aws_access_key_id=MOCK_AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=MOCK_AWS_SECRET_ACCESS_KEY,
-            )
-            mock_urlparse.assert_called_once_with(
-                uri,
-                allow_fragments=False,
-            )
-            mock_client.return_value.get_object.assert_called_once_with(
-                Bucket="bucket",
-                Key="key",
-            )
-
-        def test_s3_read_no_such_key(self):
-            """Ensure that a no such key error is properly handled."""
-
-            uri = "s3://bucket/key"
-
-            with patch("boto3.client") as mock_client:
-                with patch("docprompt.storage.s3.urlparse") as mock_urlparse:
-                    mock_urlparse.return_value.path = "/key"
-                    mock_urlparse.return_value.netloc = "bucket"
-
-                    # Configure the mock client to raise a NoSuchKey exception
-                    mock_client.return_value.get_object.side_effect = ClientError(
-                        error_response={
-                            "Error": {
-                                "Code": "NoSuchKey",
-                                "Message": "The specified key does not exist.",
-                            }
-                        },
-                        operation_name="GetObject",
-                    )
-
-                    with pytest.raises(FileNotFoundError):
-                        s3.aws_s3_read(uri)
-
-        def test_s3_read_other_error(self):
-            """Check the other boto3 errors are propageted correctly."""
-
-            uri = "s3://bucket/key"
-
-            with patch("boto3.client") as mock_client:
-                with patch("docprompt.storage.s3.urlparse") as mock_urlparse:
-                    mock_urlparse.return_value.path = "/key"
-                    mock_urlparse.return_value.netloc = "bucket"
-
-                    # Configure the mock client to raise a NoSuchKey exception
-                    mock_client.return_value.get_object.side_effect = ClientError(
-                        error_response={
-                            "Error": {
-                                "Code": "OtherError",
-                                "Message": "Some other error.",
-                            }
-                        },
-                        operation_name="GetObject",
-                    )
-
-                    with pytest.raises(ClientError):
-                        s3.aws_s3_read(uri)
-
-        def test_s3_write(self):
-            """Ensure that the write function works as expected."""
-
-            uri = "s3://bucket/key"
-            data = b"DATA"
-
-            with patch("boto3.client") as mock_client:
-                with patch("docprompt.storage.s3.urlparse") as mock_urlparse:
-                    mock_urlparse.return_value.path = "/key"
-                    mock_urlparse.return_value.netloc = "bucket"
-                    s3.aws_s3_write(uri, data)
-
-            mock_client.assert_called_once_with(
-                "s3",
-                region_name=MOCK_AWS_REGION,
-                aws_access_key_id=MOCK_AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=MOCK_AWS_SECRET_ACCESS_KEY,
-            )
-            mock_urlparse.assert_called_once_with(
-                uri,
-                allow_fragments=False,
-            )
-            mock_client.return_value.put_object.assert_called_once_with(
-                Bucket="bucket",
-                Key="key",
-                Body=data,
-            )
-
-        def test_s3_delete(self):
-            """Ensure that the delete function works as expected."""
-
-            uri = "s3://bucket/key"
-
-            with patch("boto3.client") as mock_client:
-                with patch("docprompt.storage.s3.urlparse") as mock_urlparse:
-                    mock_urlparse.return_value.path = "/key"
-                    mock_urlparse.return_value.netloc = "bucket"
-                    s3.aws_s3_delete(uri)
-
-            mock_client.assert_called_once_with(
-                "s3",
-                region_name=MOCK_AWS_REGION,
-                aws_access_key_id=MOCK_AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=MOCK_AWS_SECRET_ACCESS_KEY,
-            )
-            mock_urlparse.assert_called_once_with(
-                uri,
-                allow_fragments=False,
-            )
-            mock_client.return_value.delete_object.assert_called_once_with(
-                Bucket="bucket",
-                Key="key",
-            )
-
-    class TestS3StorageProviderImplementation:
-        """Test the implementation methods of the S3 storage provider."""
-
-        def teardown_directories(self, sidecar: s3.S3BucketURISidecars):
-            """Teardown the file path directories if they exist."""
-
-            if os.path.exists(sidecar.base_s3_uri):
-                os.removedirs(sidecar.base_s3_uri)
-
-        @pytest.fixture
-        def provider(self):
-            """A fixture for setting up the provider."""
-
-            class ExampleMetadata(BaseModel):  # pylint: disable=missing-class-docstring,too-few-public-methods
-                title: str
-
-            return s3.S3StorageProvider(
-                document_node_class=DocumentNode,
-                document_metadata_class=ExampleMetadata,
-            )
-
-        @pytest.fixture(scope="function")
-        def create_mock_doc_node(self, provider):
-            """A fixture for creating a mock document node."""
-
-            def factory(_hash: str, _bytes: bytes, title: Union[None, str]):
-                mock_doc_node = MagicMock(spec=DocumentNode)
-                mock_doc_node.file_hash = _hash
-                mock_doc_node.document = MagicMock()
-                mock_doc_node.document.get_bytes.return_value = _bytes
-
-                if title is not None:
-                    metadata = provider.document_metadata_class(title=title)
-                    mock_doc_node.metadata = metadata
-
-                return mock_doc_node
-
-            return factory
-
-        def test_store_method(self, provider, create_mock_doc_node):
-            """Test that the store method works as expected."""
-
-            file_hash = "FILE-HASH"
-            pdf_bytes = b"PDF BYTES"
-            metadata_title = "Test Title"
-            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
-
-            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
-
-            with patch("docprompt.storage.s3.aws_s3_write") as mock_write:
-                result = provider.store(mock_doc_node)
-
-            mock_write.assert_any_call(side_car.pdf, pdf_bytes)
             mock_write.assert_any_call(
-                side_car.metadata,
-                json.dumps(mock_doc_node.metadata.model_dump(mode="json")),
+                example_metadata_bytes, expected_metadata_path, "wb", example="kwarg"
             )
-            assert mock_write.call_count == 2
-            assert result == side_car
-
-        def test_store_method_no_metadata(self, provider, create_mock_doc_node):
-            """Test that the store method works as expected without metdata."""
-
-            file_hash = "FILE-HASH"
-            pdf_bytes = b"PDF BYTES"
-            metadata_title = "Test Title"
-            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
-            mock_doc_node.metadata = None
-
-            side_car = provider.paths(file_hash)
-
-            with patch("docprompt.storage.s3.aws_s3_write") as mock_write:
-                with patch("docprompt.storage.s3.aws_s3_delete") as mock_delete:
-                    result = provider.store(mock_doc_node)
-
-            mock_write.assert_called_once_with(side_car.pdf, pdf_bytes)
-            mock_delete.assert_called_once_with(side_car.metadata)
-
-            assert result == side_car
-
-        def test_retrieve_method(self, provider, create_mock_doc_node):
-            """Test that the retrieve method works as expected."""
-
-            file_hash = "FILE-HASH"
-            pdf_bytes = b"PDF BYTES"
-            metadata_title = "Test Title"
-            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
-
-            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
-
-            with patch("docprompt.storage.s3.aws_s3_read") as mock_read:
-                with patch.object(Document, "from_bytes") as mock_from_bytes:
-                    with patch.object(
-                        DocumentNode, "from_document"
-                    ) as mock_from_document:
-                        mock_read.side_effect = [
-                            pdf_bytes,
-                            json.dumps(mock_doc_node.metadata.model_dump(mode="json")),
-                        ]
-                        mock_from_bytes.return_value = mock_doc_node.document
-                        provider.retrieve(file_hash)
-
-            mock_read.assert_any_call(side_car.pdf)
-            mock_read.assert_any_call(side_car.metadata)
-            mock_from_bytes.assert_called_once_with(
-                pdf_bytes, name=os.path.basename(side_car.pdf)
+            mock_write.assert_any_call(
+                example_page_metadata_bytes,
+                expected_page_metadata_path,
+                "wb",
+                example="kwarg",
             )
-            mock_from_document.assert_called_once_with(
-                document=mock_doc_node.document,
-                document_metadata=mock_doc_node.metadata,
-                storage_provider_class=type(provider),
+            assert result.pdf == expected_path
+            assert result.metadata == expected_metadata_path
+            assert result.page_metadata == expected_page_metadata_path
+
+        def test_read_method_no_metadata(self, mock_manager):
+            """Test that the read method works correctly when no metadata is provided."""
+
+            example_bytes = b"example-value"
+            example_hash = hash_from_bytes(example_bytes)
+            expected_path = f"/tmp/data/{example_hash}/base.pdf"
+            expected_metadata_path = f"/tmp/data/{example_hash}/base.json"
+            expected_page_metadata_path = f"/tmp/data/{example_hash}/pages.json"
+
+            with patch.object(mock_manager, "_read") as mock_read:
+                mock_read.side_effect = [
+                    example_bytes,
+                    FileNotFoundError,
+                    FileNotFoundError,
+                ]
+
+                mock_read.return_value = example_bytes
+                pdf, metadata, page_metadata = mock_manager.read(
+                    example_hash, example="kwarg"
+                )
+
+            mock_read.assert_any_call(expected_path, "rb", example="kwarg")
+            mock_read.assert_any_call(expected_metadata_path, "rb", example="kwarg")
+            mock_read.assert_any_call(
+                expected_page_metadata_path, "rb", example="kwarg"
             )
 
-        def test_retrieve_method_no_metadata(self, provider, create_mock_doc_node):
-            """Ensure that the retrieve method works as expected without metadata."""
+            assert pdf == example_bytes
+            assert metadata is None
+            assert page_metadata is None
 
-            file_hash = "FILE-HASH"
-            pdf_bytes = b"PDF BYTES"
-            mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, None)
+        def test_read_method_w_metadata(self, mock_manager):
+            """Test that the read method works correctly when metadata is provided."""
 
-            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
+            example_bytes = b"example-value"
+            example_metadata_bytes = b"example-metadata"
+            example_page_metadata_bytes = b"example-page-metadata"
+            example_hash = hash_from_bytes(example_bytes)
 
-            with patch("docprompt.storage.s3.aws_s3_read") as mock_read:
-                with patch.object(Document, "from_bytes") as mock_from_bytes:
-                    with patch.object(
-                        DocumentNode, "from_document"
-                    ) as mock_from_document:
-                        mock_read.side_effect = [pdf_bytes, FileNotFoundError()]
-                        mock_from_bytes.return_value = mock_doc_node.document
-                        provider.retrieve(file_hash)
+            expected_path = f"/tmp/data/{example_hash}/base.pdf"
+            expected_metadata_path = f"/tmp/data/{example_hash}/base.json"
+            expected_page_metadata_path = f"/tmp/data/{example_hash}/pages.json"
 
-            mock_read.assert_any_call(side_car.pdf)
-            mock_read.assert_any_call(side_car.metadata)
-            mock_from_bytes.assert_called_once_with(
-                pdf_bytes, name=os.path.basename(side_car.pdf)
+            with patch.object(mock_manager, "_read") as mock_read:
+                mock_read.side_effect = [
+                    example_bytes,
+                    example_metadata_bytes,
+                    example_page_metadata_bytes,
+                ]
+
+                pdf, metadata, page_metadata = mock_manager.read(
+                    example_hash, example="kwarg"
+                )
+
+            mock_read.assert_any_call(expected_path, "rb", example="kwarg")
+            mock_read.assert_any_call(expected_metadata_path, "rb", example="kwarg")
+            mock_read.assert_any_call(
+                expected_page_metadata_path, "rb", example="kwarg"
             )
-            mock_from_document.assert_called_once_with(
-                document=mock_doc_node.document,
-                document_metadata=None,
-                storage_provider_class=type(provider),
-            )
 
-            assert mock_read.call_count == 2
+            assert pdf == example_bytes
+            assert metadata == example_metadata_bytes
+            assert page_metadata == example_page_metadata_bytes

@@ -7,8 +7,8 @@ selection of file system.
 """
 
 import warnings
+import os
 from typing import Dict, Any, Optional, Tuple, Union
-from typing_extensions import Self
 
 import fsspec
 from pydantic import BaseModel, Field, model_validator, computed_field
@@ -18,6 +18,13 @@ from pydantic_core import core_schema
 class FileSidecarsPathManager(BaseModel):
     """The FileSidecarsPathManager provides a wrapper around fsspec to provide a clean interface for
     reading and writing sidecar directories for storing document nodes.
+
+    Attributes:
+        base_path (str): The base path for the sidecar files.
+        file_hash (str): The hash of the file to be stored.
+        pdf (str): The path for the PDF file.
+        metadata (str): The path for the metadata file.
+        page_metadata (str): The path for the page metadata file.
     """
 
     base_path: str = Field(...)
@@ -33,7 +40,13 @@ class FileSidecarsPathManager(BaseModel):
     @property
     def metadata(self) -> str:
         """The path for the metadata file."""
-        return f"{self.base_path}/{self.file_hash}/metadata.json"
+        return f"{self.base_path}/{self.file_hash}/base.json"
+
+    @computed_field
+    @property
+    def page_metadata(self) -> str:
+        """The path for the page metadata file."""
+        return f"{self.base_path}/{self.file_hash}/pages.json"
 
 
 class FileSystemAnnotation:
@@ -72,8 +85,6 @@ class FileSystemManager(BaseModel):
     """
 
     path: str = Field(...)
-
-    # Validate that the path is a valid filesystem path here
     fs: FileSystemAnnotation = Field(...)
     fs_kwargs: Dict[str, Any] = Field(...)
 
@@ -91,7 +102,6 @@ class FileSystemManager(BaseModel):
 
         # Validate that the path is a valid filesystem path
         file_system = fsspec.url_to_fs(path, **fs_kwargs)
-        file_system[0].mkdir(path, create_parents=True)
 
         # Set the data values on the model
         data["fs"] = file_system[0]
@@ -100,23 +110,56 @@ class FileSystemManager(BaseModel):
 
         return data
 
-    @model_validator(mode="after")
-    def validate_base_path(self) -> Self:
-        """Validate that the base_path exists."""
+    def get_pdf_name(self, file_hash: str) -> FileSidecarsPathManager:
+        """Get the file manager for a specific file hash."""
+        path_manager = FileSidecarsPathManager(base_path=self.path, file_hash=file_hash)
+        return os.path.basename(path_manager.pdf)
 
-        # Check if the base path exists
-        if not self.fs.exists(self.path):  # pylint: disable=not-a-mapping,no-member
-            self.fs.mkdir(self.path, create_parents=True, **self.fs_kwargs)  # pylint: disable=not-a-mapping,no-member
+    def _write(self, value: bytes, *args, **kwargs) -> None:
+        """A wrapper for writing with fsspec.
 
-        return self
+        Args:
+            value: The value to write.
+            *args: `fsspec.open` positional arguments.
+            **kwargs: `fsspec.open` keyword arguments.
+        """
+
+        with self.fs.open(*args, **kwargs) as f:  # pylint: disable=no-member
+            f.write(value)
+
+    def _read(self, *args, **kwargs) -> bytes:
+        """A wrapper for reading with fsspec.
+
+        Args:
+            *args: `fsspec.open` positional arguments.
+            **kwargs: `fsspec.open` keyword arguments.
+
+        Returns:
+            bytes: The read value.
+        """
+
+        with self.fs.open(*args, **kwargs) as f:  # pylint: disable=no-member
+            return f.read()
+
+    def _delete(self, path: str, **kwargs):
+        """Delete a file from the file system.
+
+        Args:
+            path (str): The path to the file to delete.
+            **kwargs: Additional keyword arguments to pass to the file system.
+        """
+
+        if self.fs.exists(path):  # pylint: disable=no-member
+            self.fs.rm(path, **kwargs)  # pylint: disable=not-a-mapping,no-member
 
     def write(
         self,
         pdf_bytes: bytes,
         metadata_bytes: Optional[bytes] = None,
-        *,
+        page_metadata_bytes: Optional[bytes] = None,
         encrypt: bool = False,  # pylint: disable=unused-argument
         compress: bool = False,  # pylint: disable=unused-argument
+        **kwargs,
     ) -> FileSidecarsPathManager:
         """Write a sidecar to the filesystem."""
         from docprompt.utils.util import hash_from_bytes  # pylint: disable=import-outside-toplevel
@@ -132,56 +175,50 @@ class FileSystemManager(BaseModel):
         if compress:
             warnings.warn("Compression is not yet supported for the FileSystemManager.")
 
+        kwargs = {**self.fs_kwargs, **kwargs}
+
         # Write the file
-        with self.fs.open(  # pylint: disable=no-member
-            path_manager.pdf,
-            "wb",
-            **self.fs_kwargs,  # pylint: disable=not-a-mapping
-        ) as f:
-            f.write(pdf_bytes)
+        self._write(pdf_bytes, path_manager.pdf, "wb", **kwargs)
 
         # If the metadata is provided, we want to write it
         if metadata_bytes is not None:
-            # Write the metadata file
-            with self.fs.open(  # pylint: disable=no-member
-                path_manager.metadata,
-                "wb",
-                **self.fs_kwargs,  # pylint: disable=not-a-mapping
-            ) as f:
-                f.write(metadata_bytes)
+            self._write(metadata_bytes, path_manager.metadata, "wb", **kwargs)
 
         # Otherwise, we need to clear the metadata file, so that the node is read
         # without any metadata (overwriting any existing metadata)
         else:
             # Check if a metadata file exists
-            if self.fs.exists(path_manager.metadata):  # pylint: disable=no-member
-                self.fs.rm(path_manager.metadata, **self.fs_kwargs)  # pylint: disable=not-a-mapping,no-member
+            self._delete(path_manager.metadata, **kwargs)
+
+        if page_metadata_bytes is not None:
+            self._write(page_metadata_bytes, path_manager.page_metadata, "wb", **kwargs)
+
+        # Otherwise, we need to clear the page metadata file, so that the node is read
+        # without any metadata (overwriting any existing metadata)
+        else:
+            self._delete(path_manager.page_metadata, **kwargs)
 
         return path_manager
 
-    def read(self, file_hash: str) -> Tuple[bytes, Union[bytes, None]]:
+    def read(
+        self, file_hash: str, **kwargs
+    ) -> Tuple[bytes, Union[bytes, None], Union[bytes, None]]:
         """Read a pair of sidecar files from the filesystem."""
 
         # Craete the sidecar manager
         path_manager = FileSidecarsPathManager(base_path=self.path, file_hash=file_hash)
 
         # Read the PDF file
-        with self.fs.open(  # pylint: disable=no-member
-            path_manager.pdf,
-            "rb",
-            **self.fs_kwargs,  # pylint: disable=not-a-mapping
-        ) as f:
-            pdf_bytes = f.read()
+        pdf_bytes = self._read(path_manager.pdf, "rb", **kwargs)
 
-        # Check if a metadata file exists
-        if self.fs.exists(path_manager.metadata):  # pylint: disable=no-member
-            with self.fs.open(  # pylint: disable=no-member
-                path_manager.metadata,
-                "rb",
-                **self.fs_kwargs,  # pylint: disable=not-a-mapping
-            ) as f:
-                metadata_bytes = f.read()
-        else:
+        try:
+            metadata_bytes = self._read(path_manager.metadata, "rb", **kwargs)
+        except FileNotFoundError:
             metadata_bytes = None
 
-        return pdf_bytes, metadata_bytes
+        try:
+            page_metadata_bytes = self._read(path_manager.page_metadata, "rb", **kwargs)
+        except FileNotFoundError:
+            page_metadata_bytes = None
+
+        return pdf_bytes, metadata_bytes, page_metadata_bytes
