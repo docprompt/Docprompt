@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from docprompt.schema.document import Document
 from docprompt.schema.pipeline import DocumentNode
 from docprompt.storage._base import (
+    AbstractStorageProvider,
     validate_document_metadata_class,
     validate_document_node_class,
 )
@@ -61,6 +62,56 @@ class TestAbstractStorageProviderValidation:
 
         with pytest.raises(ValueError):
             validate_document_metadata_class(dict)
+
+    def test_from_document_node_with_metadata(self):
+        """Test that the class method for creating a provider from a document node with metadata
+        works as expected.
+        """
+
+        class ConcreteProvider(AbstractStorageProvider[BaseModel]):  # pylint: disable=missing-class-docstring
+            def paths(self, file_hash: str) -> BaseModel:
+                """Generate the paths for the document node."""
+
+            def store(self, document_node: DocumentNode) -> BaseModel:
+                """Store the document node from the storage provider."""
+
+            def retrieve(self, file_hash: str) -> DocumentNode:
+                """Retrieve the document node from the storage provider."""
+
+        class ExampleMetadata(BaseModel):  # pylint: disable=too-few-public-methods
+            """Sample Metadata container"""
+
+            title: str
+
+        document_node = MagicMock(spec=DocumentNode)
+        document_node.metadata = ExampleMetadata(title="Test Title")
+
+        provider = ConcreteProvider.from_document_node(document_node=document_node)
+
+        assert provider.document_metadata_class == ExampleMetadata
+        assert provider.document_node_class == DocumentNode
+
+    def test_from_document_node_wo_metadata(self):
+        """Test that the class method for creating a provider from a document node without metadata"""
+
+        class ConcreteProvider(AbstractStorageProvider[BaseModel]):
+            """Concrete provider for testing."""
+
+            def paths(self, file_hash: str) -> BaseModel:
+                """Generate the paths for the document node."""
+
+            def store(self, document_node: DocumentNode) -> BaseModel:
+                """Store the document node from the storage provider."""
+
+            def retrieve(self, file_hash: str) -> DocumentNode:
+                """Retrieve the document node from the storage provider."""
+
+        document_node = MagicMock(spec=DocumentNode)
+
+        provider = ConcreteProvider.from_document_node(document_node=document_node)
+
+        assert provider.document_metadata_class is None
+        assert provider.document_node_class == DocumentNode
 
 
 class TestLocalStorageProvider:
@@ -259,7 +310,7 @@ class TestLocalStorageProvider:
 
             file_hash = "FILE-HASH"
 
-            sidecar = provider._file_path(file_hash)  # pylint: disable=protected-access
+            sidecar = provider.paths(file_hash)  # pylint: disable=protected-access
 
             assert sidecar.base_file_path == os.path.join(
                 provider.base_storage_path, file_hash
@@ -275,7 +326,7 @@ class TestLocalStorageProvider:
             metadata_title = "Test Title"
             mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
 
-            side_car = provider._file_path(file_hash)  # pylint: disable=protected-access
+            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
 
             with patch("docprompt.storage.local.local_fs_write") as mock_write:
                 provider.store(mock_doc_node)
@@ -297,7 +348,7 @@ class TestLocalStorageProvider:
             mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
             mock_doc_node.metadata = None
 
-            side_car = provider._file_path(file_hash)  # pylint: disable=protected-access
+            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
 
             with patch("docprompt.storage.local.local_fs_write") as mock_write:
                 with patch("docprompt.storage.local.local_fs_delete") as mock_delete:
@@ -315,7 +366,7 @@ class TestLocalStorageProvider:
             metadata_title = "Test Title"
             mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
 
-            side_car = provider._file_path(file_hash)  # pylint: disable=protected-access
+            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
 
             with patch("docprompt.storage.local.local_fs_read") as mock_read:
                 with patch.object(Document, "from_bytes") as mock_from_bytes:
@@ -337,6 +388,7 @@ class TestLocalStorageProvider:
             mock_from_document.assert_called_once_with(
                 document=mock_doc_node.document,
                 document_metadata=mock_doc_node.metadata,
+                storage_provider_class=type(provider),
             )
 
             assert mock_read.call_count == 2
@@ -349,7 +401,7 @@ class TestLocalStorageProvider:
             metadata_title = "Test Title"
             mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
 
-            side_car = provider._file_path(file_hash)  # pylint: disable=protected-access
+            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
 
             with patch("docprompt.storage.local.local_fs_read") as mock_read:
                 with patch.object(Document, "from_bytes") as mock_from_bytes:
@@ -366,7 +418,9 @@ class TestLocalStorageProvider:
                 pdf_bytes, name=os.path.basename(side_car.pdf)
             )
             mock_from_document.assert_called_once_with(
-                document=mock_doc_node.document, document_metadata=None
+                document=mock_doc_node.document,
+                document_metadata=None,
+                storage_provider_class=type(provider),
             )
 
             assert mock_read.call_count == 2
@@ -402,8 +456,13 @@ class TestS3StorageProvider:
 
         credentials = s3.S3Credentials()
 
-        assert credentials.AWS_ACCESS_KEY_ID == MOCK_AWS_ACCESS_KEY_ID
-        assert credentials.AWS_SECRET_ACCESS_KEY == MOCK_AWS_SECRET_ACCESS_KEY
+        assert (
+            credentials.AWS_ACCESS_KEY_ID.get_secret_value() == MOCK_AWS_ACCESS_KEY_ID
+        )  # pylint: disable=no-member
+        assert (
+            credentials.AWS_SECRET_ACCESS_KEY.get_secret_value()  # pylint: disable=no-member
+            == MOCK_AWS_SECRET_ACCESS_KEY
+        )
         assert credentials.AWS_BUCKET_KEY == MOCK_AWS_BUCKET_KEY
         assert credentials.AWS_DEFAULT_REGION == MOCK_AWS_REGION
 
@@ -617,7 +676,7 @@ class TestS3StorageProvider:
             metadata_title = "Test Title"
             mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
 
-            side_car = provider._file_paths(file_hash)  # pylint: disable=protected-access
+            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
 
             with patch("docprompt.storage.s3.aws_s3_write") as mock_write:
                 result = provider.store(mock_doc_node)
@@ -639,7 +698,7 @@ class TestS3StorageProvider:
             mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
             mock_doc_node.metadata = None
 
-            side_car = provider._file_paths(file_hash)  # pylint: disable=protected-access
+            side_car = provider.paths(file_hash)
 
             with patch("docprompt.storage.s3.aws_s3_write") as mock_write:
                 with patch("docprompt.storage.s3.aws_s3_delete") as mock_delete:
@@ -658,7 +717,7 @@ class TestS3StorageProvider:
             metadata_title = "Test Title"
             mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, metadata_title)
 
-            side_car = provider._file_paths(file_hash)  # pylint: disable=protected-access
+            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
 
             with patch("docprompt.storage.s3.aws_s3_read") as mock_read:
                 with patch.object(Document, "from_bytes") as mock_from_bytes:
@@ -680,6 +739,7 @@ class TestS3StorageProvider:
             mock_from_document.assert_called_once_with(
                 document=mock_doc_node.document,
                 document_metadata=mock_doc_node.metadata,
+                storage_provider_class=type(provider),
             )
 
         def test_retrieve_method_no_metadata(self, provider, create_mock_doc_node):
@@ -689,7 +749,7 @@ class TestS3StorageProvider:
             pdf_bytes = b"PDF BYTES"
             mock_doc_node = create_mock_doc_node(file_hash, pdf_bytes, None)
 
-            side_car = provider._file_paths(file_hash)  # pylint: disable=protected-access
+            side_car = provider.paths(file_hash)  # pylint: disable=protected-access
 
             with patch("docprompt.storage.s3.aws_s3_read") as mock_read:
                 with patch.object(Document, "from_bytes") as mock_from_bytes:
@@ -706,7 +766,9 @@ class TestS3StorageProvider:
                 pdf_bytes, name=os.path.basename(side_car.pdf)
             )
             mock_from_document.assert_called_once_with(
-                document=mock_doc_node.document, document_metadata=None
+                document=mock_doc_node.document,
+                document_metadata=None,
+                storage_provider_class=type(provider),
             )
 
             assert mock_read.call_count == 2

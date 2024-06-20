@@ -3,7 +3,7 @@ basic S3 and local storage providers.
 """
 
 from abc import abstractmethod
-from typing import TypeVar, Type, Any, Generic
+from typing import TypeVar, Type, Any, Generic, Optional
 from typing_extensions import Annotated
 
 from pydantic import BaseModel, Field, AfterValidator
@@ -46,6 +46,9 @@ def validate_document_metadata_class(value: Type[Any]) -> Type[DocumentNodeMeata
         ValueError: If the document metadata class is not a subclass of Pydantic BaseModel
     """
 
+    if value is None:
+        return value
+
     if not issubclass(value, BaseModel):
         raise ValueError(
             "The document metadata class must be a subclass of Pydantic BaseModel"
@@ -64,9 +67,16 @@ class AbstractStorageProvider(BaseModel, Generic[StoragePathModel]):
     document_node_class: Annotated[
         Type[DocumentNode], AfterValidator(validate_document_node_class)
     ] = Field(..., repr=False)
-    document_metadata_class: Annotated[
-        Type[DocumentNodeMeatadata], AfterValidator(validate_document_metadata_class)
-    ] = Field(..., repr=False)
+    document_metadata_class: Optional[
+        Annotated[
+            Type[DocumentNodeMeatadata],
+            AfterValidator(validate_document_metadata_class),
+        ]
+    ] = Field(None, repr=False)
+
+    @abstractmethod
+    def paths(self, file_hash: str) -> StoragePathModel:
+        """Get the paths object for the storage provider."""
 
     @abstractmethod
     def store(self, document_node: DocumentNode, **kwargs) -> StoragePathModel:
@@ -89,3 +99,26 @@ class AbstractStorageProvider(BaseModel, Generic[StoragePathModel]):
         Raises:
             FileNotFoundError: If the document node is not found
         """
+
+    @classmethod
+    def from_document_node(
+        cls, document_node: DocumentNode
+    ) -> "AbstractStorageProvider[StoragePathModel]":
+        """Get the storage path model from a document node.
+
+        Args:
+            document_node: The document node to get the storage path model from
+
+        Returns:
+            LocalFileSystemStorageProvider: The storage provider
+        """
+
+        if hasattr(document_node, "metadata") and document_node.metadata is not None:
+            document_metadata_class = document_node.metadata.__class__
+        else:
+            document_metadata_class = None
+
+        return cls(
+            document_node_class=document_node.__class__,
+            document_metadata_class=document_metadata_class,
+        )

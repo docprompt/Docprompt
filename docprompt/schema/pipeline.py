@@ -10,6 +10,7 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
+    Type,
     Union,
 )
 
@@ -28,6 +29,10 @@ from .document import Document
 DocumentCollectionMetadata = TypeVar("DocumentCollectionMetadata", bound=BaseModel)
 DocumentNodeMetadata = TypeVar("DocumentNodeMetadata", bound=BaseModel)
 PageNodeMetadata = TypeVar("PageNodeMetadata", bound=BaseModel)
+
+# TODO: Is there a better way to bound these?
+FilePathResult = TypeVar("FilePathResult", bound=BaseModel)
+StorageProvider = TypeVar("StorageProvider", bound=BaseModel)
 
 
 class PageRasterizer:
@@ -272,6 +277,13 @@ class PageNode(BaseModel, Generic[PageNodeMetadata]):
         )
 
 
+def default_provider():
+    """A factory function to get the default storage provider."""
+    from docprompt.storage.local import LocalFileSystemStorageProvider
+
+    return LocalFileSystemStorageProvider
+
+
 class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     """
     Represents a single document, with some metadata
@@ -286,6 +298,14 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     )
 
     _locator: Optional["DocumentProvenanceLocator"] = PrivateAttr(default=None)
+
+    _storage_provider = PrivateAttr(default_factory=default_provider)
+
+    def __init__(self, storage_provider_class: Optional[Any] = None, **data):
+        super().__init__(**data)
+
+        if storage_provider_class is not None:
+            self._storage_provider = storage_provider_class
 
     def __getstate__(self):
         state = super().__getstate__()
@@ -334,9 +354,14 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         cls,
         document: Document,
         document_metadata: Optional[DocumentNodeMetadata] = None,
+        storage_provider_class: Optional[Any] = None,
     ):
         document_node: "DocumentNode[DocumentNodeMetadata, PageNodeMetadata]" = (
-            DocumentNode(document=document, metadata=document_metadata)
+            DocumentNode(
+                document=document,
+                metadata=document_metadata,
+                storage_provider_class=storage_provider_class,
+            )
         )
 
         for page_number in range(1, len(document) + 1):
@@ -353,6 +378,76 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     @property
     def document_name(self):
         return self.document.name
+
+    @property
+    def storage_provider(self):
+        """Create the storage provider instance.
+
+        We set this as a property (non-cached), so that a new storage provider can be instantiated
+        everytime the property is accessed. This is useful as we want to make sure that the storage
+        provider is always up-to-date with the lastest metadata model.
+        """
+        return self._storage_provider.from_document_node(self)
+
+    @classmethod
+    def from_storage(
+        cls,
+        file_hash: str,
+        metadata_class: Optional[Type[DocumentNodeMetadata]] = None,
+        storage_provider_class: Optional[Type[StorageProvider]] = None,
+        **kwargs,
+    ):
+        """Load a DocumentNode from a specified storage provider.
+
+        Args:
+            file_hash (str): The hash of the document to retrieve (used as the primary key)
+            metadata_class (Optional[Type[DocumentNodeMetadata]]): The metadata class to use for the document
+                - Defaults to None.
+                NOTE: If no override is provided, the metadata will not be loaded!
+            storage_provider_class (Optional[Type[StorageProvider]]): The storage provider class to use
+                - Defaults to the LocalFileSystemStorageProvider
+
+        Returns:
+            DocumentNode: The document node
+        """
+        # Get the defaul storage provider if None is provided
+        storage_provider_class = storage_provider_class or default_provider()
+
+        provider = storage_provider_class(
+            document_node_class=cls,
+            document_metadata_class=metadata_class,
+        )
+
+        document_node = provider.retrieve(file_hash, **kwargs)
+
+        # Store the file path in the document node
+        document_node.document.file_path = provider.paths(file_hash).pdf
+        return document_node
+
+    def store(
+        self, storage_provider_class: Optional[Type[StorageProvider]] = None, **kwargs
+    ) -> FilePathResult:
+        """Store the document using the configured storage provider.
+
+        Args:
+            storage_provider_class: The storage provider class to use
+                - Defaults to None
+                NOTE: If no override is provided, the current storage provider class of the document
+                node will be utilized. If an override is provided, that class will be used and the
+                document node will be updated to use that class for future storage operations.
+            **kwargs: Additional keyword arguments to pass to the storage provider
+
+        Returns:
+            FilePathResult: The file paths for the document node, which is a pydantic model.
+            NOTE: See the AbstractStorageProvider for more details on the model structure.
+        """
+
+        # If an override is provided for the storage provider class, update the document node
+        if storage_provider_class is not None:
+            self._storage_provider = storage_provider_class
+
+        # Store the document using the storage provider
+        return self.storage_provider.store(self, **kwargs)
 
 
 class DocumentCollection(

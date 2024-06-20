@@ -15,7 +15,7 @@ from typing_extensions import Annotated
 
 import boto3
 from botocore import exceptions as boto_exceptions
-from pydantic import BaseModel, Field, AfterValidator, computed_field
+from pydantic import BaseModel, Field, AfterValidator, computed_field, SecretStr
 from pydantic_settings import BaseSettings
 
 from docprompt.schema.document import Document
@@ -34,9 +34,9 @@ class S3Credentials(BaseSettings):
         AWS_BUCKET_KEY: The key to the base S3 folder for storing documents
     """
 
-    AWS_ACCESS_KEY_ID: str = Field(..., alias="DOCPROMPT_AWS_ACCESS_KEY_ID", repr=False)
-    AWS_SECRET_ACCESS_KEY: str = Field(
-        ..., alias="DOCPROMPT_AWS_SECRET_ACCESS_KEY", repr=False
+    AWS_ACCESS_KEY_ID: SecretStr = Field(..., alias="DOCPROMPT_AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY: SecretStr = Field(
+        ..., alias="DOCPROMPT_AWS_SECRET_ACCESS_KEY"
     )
     AWS_DEFAULT_REGION: str = Field(..., alias="DOCPROMPT_AWS_REGION")
     AWS_BUCKET_KEY: str = Field(..., alias="DOCPROMPT_AWS_BUCKET_KEY")
@@ -96,7 +96,7 @@ class S3StorageProvider(AbstractStorageProvider[S3BucketURISidecars]):
         document_metadata_class: The document metadata class to store and retrieve
     """
 
-    def _file_paths(self, file_hash: str) -> S3BucketURISidecars:
+    def paths(self, file_hash: str) -> S3BucketURISidecars:
         """Get the S3 bucket URIs for a document node.
 
         Args:
@@ -128,7 +128,7 @@ class S3StorageProvider(AbstractStorageProvider[S3BucketURISidecars]):
             S3BucketURISidecars: The S3 bucket URIs for the document
         """
 
-        file_paths = self._file_paths(document_node.file_hash)
+        file_paths = self.paths(document_node.file_hash)
 
         aws_s3_write(file_paths.pdf, document_node.document.get_bytes())
 
@@ -151,7 +151,7 @@ class S3StorageProvider(AbstractStorageProvider[S3BucketURISidecars]):
         Returns:
             DocumentNode: The document node
         """
-        file_paths = self._file_paths(file_hash)
+        file_paths = self.paths(file_hash)
 
         pdf_bytes = aws_s3_read(file_paths.pdf)
         document = Document.from_bytes(
@@ -167,7 +167,9 @@ class S3StorageProvider(AbstractStorageProvider[S3BucketURISidecars]):
             metadata = None
 
         return self.document_node_class.from_document(
-            document=document, document_metadata=metadata
+            document=document,
+            document_metadata=metadata,
+            storage_provider_class=type(self),
         )
 
 
@@ -189,8 +191,8 @@ def aws_s3_read(uri: str) -> bytes:
     s3_client = boto3.client(
         "s3",
         region_name=s3_credentials.AWS_DEFAULT_REGION,
-        aws_access_key_id=s3_credentials.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=s3_credentials.AWS_SECRET_ACCESS_KEY,
+        aws_access_key_id=s3_credentials.AWS_ACCESS_KEY_ID.get_secret_value(),  # pylint: disable=no-member
+        aws_secret_access_key=s3_credentials.AWS_SECRET_ACCESS_KEY.get_secret_value(),  # pylint: disable=no-member
     )
 
     s3_uri = urlparse(uri, allow_fragments=False)
@@ -221,8 +223,8 @@ def aws_s3_write(uri: str, data: bytes) -> None:
     s3_client = boto3.client(
         "s3",
         region_name=s3_credentials.AWS_DEFAULT_REGION,
-        aws_access_key_id=s3_credentials.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=s3_credentials.AWS_SECRET_ACCESS_KEY,
+        aws_access_key_id=s3_credentials.AWS_ACCESS_KEY_ID.get_secret_value(),  # pylint: disable=no-member
+        aws_secret_access_key=s3_credentials.AWS_SECRET_ACCESS_KEY.get_secret_value(),  # pylint: disable=no-member
     )
 
     s3_uri = urlparse(uri, allow_fragments=False)
@@ -239,8 +241,8 @@ def aws_s3_delete(uri: str) -> None:
     s3_client = boto3.client(
         "s3",
         region_name=s3_credentials.AWS_DEFAULT_REGION,
-        aws_access_key_id=s3_credentials.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=s3_credentials.AWS_SECRET_ACCESS_KEY,
+        aws_access_key_id=s3_credentials.AWS_ACCESS_KEY_ID.get_secret_value(),  # pylint: disable=no-member
+        aws_secret_access_key=s3_credentials.AWS_SECRET_ACCESS_KEY.get_secret_value(),  # pylint: disable=no-member
     )
 
     s3_uri = urlparse(uri, allow_fragments=False)

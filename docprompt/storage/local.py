@@ -75,7 +75,7 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider[FilePathSidecars]):
         "DOCPROMPT_LOCAL_STORAGE_PATH", FALLBACK_LOCAL_STORAGE_PATH
     )
 
-    def _file_path(self, file_hash: str) -> FilePathSidecars:
+    def paths(self, file_hash: str) -> FilePathSidecars:
         """Get the base file path for a document node.
 
         Args:
@@ -102,7 +102,7 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider[FilePathSidecars]):
             FilePathSidecars: The file paths for the document node
         """
 
-        file_paths = self._file_path(document_node.file_hash)
+        file_paths = self.paths(document_node.file_hash)
 
         local_fs_write(file_paths.pdf, document_node.document.get_bytes(), mode="wb")
 
@@ -131,7 +131,7 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider[FilePathSidecars]):
             FileNotFoundError: If the document node is not found
         """
 
-        file_paths = self._file_path(file_hash)
+        file_paths = self.paths(file_hash)
 
         pdf_bytes = local_fs_read(file_paths.pdf, mode="rb")
         document = Document.from_bytes(pdf_bytes, name=os.path.basename(file_paths.pdf))
@@ -148,7 +148,9 @@ class LocalFileSystemStorageProvider(AbstractStorageProvider[FilePathSidecars]):
 
         # Create our document node
         return self.document_node_class.from_document(  # pylint: disable=no-member
-            document=document, document_metadata=metadata
+            document=document,
+            document_metadata=metadata,
+            storage_provider_class=type(self),
         )
 
 
