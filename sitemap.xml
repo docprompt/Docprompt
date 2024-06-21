@@ -16,7 +16,47 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docprompt.dev/blogs/</loc>
+         <loc>https://docprompt.dev/community/contributing/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/community/versioning/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/concepts/nodes/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/concepts/primatives/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/concepts/provenance/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/concepts/providers/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/guide/classify/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/guide/extract_tables/</loc>
+         <lastmod>2024-06-21</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/guide/ocr/</loc>
          <lastmod>2024-06-21</lastmod>
          <changefreq>daily</changefreq>
     </url>

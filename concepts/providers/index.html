@@ -8,23 +8,25 @@
       
       
       
-        <link rel="canonical" href="https://docprompt.dev/">
+        <link rel="canonical" href="https://docprompt.dev/concepts/providers/">
       
       
+        <link rel="prev" href="../nodes/">
       
-        <link rel="next" href="guide/ocr/">
+      
+        <link rel="next" href="../provenance/">
       
       
-      <link rel="icon" href="assets/static/img/logo.png">
+      <link rel="icon" href="../../assets/static/img/logo.png">
       <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
     
     
       
-        <title>Docprompt</title>
+        <title>Providers - Docprompt</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.6543a935.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6543a935.min.css">
       
       
 
@@ -43,9 +45,9 @@
       
     
     
-      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -64,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#docprompt-getting-started" class="md-skip">
+        <a href="#providers-in-docprompt" class="md-skip">
           Skip to content
         </a>
       
@@ -80,9 +82,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="Docprompt" class="md-header__button md-logo" aria-label="Docprompt" data-md-component="logo">
+    <a href="../.." title="Docprompt" class="md-header__button md-logo" aria-label="Docprompt" data-md-component="logo">
       
-  <img src="assets/static/img/logo.png" alt="logo">
+  <img src="../../assets/static/img/logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -99,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Getting Started
+              Providers
             
           </span>
         </div>
@@ -186,9 +188,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="Docprompt" class="md-nav__button md-logo" aria-label="Docprompt" data-md-component="logo">
+    <a href="../.." title="Docprompt" class="md-nav__button md-logo" aria-label="Docprompt" data-md-component="logo">
       
-  <img src="assets/static/img/logo.png" alt="logo">
+  <img src="../../assets/static/img/logo.png" alt="logo">
 
     </a>
     Docprompt
@@ -212,30 +214,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Getting Started
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -244,92 +226,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#supercharged-document-analysis" class="md-nav__link">
-    <span class="md-ellipsis">
-      Supercharged Document Analysis
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Supercharged Document Analysis">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Installation
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      Usage
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Usage">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#simple-operations" class="md-nav__link">
-    <span class="md-ellipsis">
-      Simple Operations
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#performing-ocr" class="md-nav__link">
-    <span class="md-ellipsis">
-      Performing OCR
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#document-search" class="md-nav__link">
-    <span class="md-ellipsis">
-      Document Search
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -376,7 +272,7 @@
   
   
     <li class="md-nav__item">
-      <a href="guide/ocr/" class="md-nav__link">
+      <a href="../../guide/ocr/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -397,7 +293,7 @@
   
   
     <li class="md-nav__item">
-      <a href="guide/classify/" class="md-nav__link">
+      <a href="../../guide/classify/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -418,7 +314,7 @@
   
   
     <li class="md-nav__item">
-      <a href="guide/extract_tables/" class="md-nav__link">
+      <a href="../../guide/extract_tables/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -443,17 +339,19 @@
       
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -467,7 +365,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Concepts
@@ -481,7 +379,7 @@
   
   
     <li class="md-nav__item">
-      <a href="concepts/primatives/" class="md-nav__link">
+      <a href="../primatives/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -502,7 +400,7 @@
   
   
     <li class="md-nav__item">
-      <a href="concepts/nodes/" class="md-nav__link">
+      <a href="../nodes/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -520,10 +418,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="concepts/providers/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Providers
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -532,6 +450,104 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Concepts
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#abstracttaskprovider" class="md-nav__link">
+    <span class="md-ellipsis">
+      AbstractTaskProvider
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      CAPABILITIES
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resultcontainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      ResultContainer
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-custom-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating Custom Providers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits-of-using-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benefits of Using Providers
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -544,7 +560,7 @@
   
   
     <li class="md-nav__item">
-      <a href="concepts/provenance/" class="md-nav__link">
+      <a href="../provenance/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -572,7 +588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="enterprise/" class="md-nav__link">
+      <a href="../../enterprise/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -629,7 +645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="blog/" class="md-nav__link">
+      <a href="../../blog/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -650,7 +666,7 @@
   
   
     <li class="md-nav__item">
-      <a href="." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -783,7 +799,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/_exec/" class="md-nav__link">
+      <a href="../../reference/_exec/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -804,7 +820,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/_exec/ghostscript/" class="md-nav__link">
+      <a href="../../reference/_exec/ghostscript/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -833,7 +849,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/_pdfium/" class="md-nav__link">
+      <a href="../../reference/_pdfium/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -889,7 +905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/contrib/" class="md-nav__link">
+      <a href="../../reference/contrib/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -910,7 +926,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/contrib/parser_bot/" class="md-nav__link">
+      <a href="../../reference/contrib/parser_bot/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -974,7 +990,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/provenance/" class="md-nav__link">
+      <a href="../../reference/provenance/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -995,7 +1011,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/provenance/search/" class="md-nav__link">
+      <a href="../../reference/provenance/search/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1016,7 +1032,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/provenance/source/" class="md-nav__link">
+      <a href="../../reference/provenance/source/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1037,7 +1053,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/provenance/util/" class="md-nav__link">
+      <a href="../../reference/provenance/util/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1066,7 +1082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/rasterize/" class="md-nav__link">
+      <a href="../../reference/rasterize/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1122,7 +1138,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/schema/" class="md-nav__link">
+      <a href="../../reference/schema/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1143,7 +1159,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/schema/document/" class="md-nav__link">
+      <a href="../../reference/schema/document/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1164,7 +1180,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/schema/layout/" class="md-nav__link">
+      <a href="../../reference/schema/layout/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1185,7 +1201,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/schema/pipeline/" class="md-nav__link">
+      <a href="../../reference/schema/pipeline/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1249,7 +1265,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/" class="md-nav__link">
+      <a href="../../reference/tasks/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1270,7 +1286,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/base/" class="md-nav__link">
+      <a href="../../reference/tasks/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1291,7 +1307,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/classification/" class="md-nav__link">
+      <a href="../../reference/tasks/classification/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1312,7 +1328,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/message/" class="md-nav__link">
+      <a href="../../reference/tasks/message/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1368,7 +1384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/ocr/" class="md-nav__link">
+      <a href="../../reference/tasks/ocr/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1389,7 +1405,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/ocr/gcp/" class="md-nav__link">
+      <a href="../../reference/tasks/ocr/gcp/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1410,7 +1426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/ocr/result/" class="md-nav__link">
+      <a href="../../reference/tasks/ocr/result/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1474,7 +1490,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/table_extraction/" class="md-nav__link">
+      <a href="../../reference/tasks/table_extraction/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1495,7 +1511,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/table_extraction/base/" class="md-nav__link">
+      <a href="../../reference/tasks/table_extraction/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1516,7 +1532,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/tasks/table_extraction/schema/" class="md-nav__link">
+      <a href="../../reference/tasks/table_extraction/schema/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1588,7 +1604,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/utils/" class="md-nav__link">
+      <a href="../../reference/utils/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1609,7 +1625,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/utils/compressor/" class="md-nav__link">
+      <a href="../../reference/utils/compressor/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1630,7 +1646,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/utils/date_extraction/" class="md-nav__link">
+      <a href="../../reference/utils/date_extraction/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1686,7 +1702,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/utils/masking/" class="md-nav__link">
+      <a href="../../reference/utils/masking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1707,7 +1723,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/utils/masking/image/" class="md-nav__link">
+      <a href="../../reference/utils/masking/image/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1736,7 +1752,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/utils/splitter/" class="md-nav__link">
+      <a href="../../reference/utils/splitter/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1757,7 +1773,7 @@
   
   
     <li class="md-nav__item">
-      <a href="reference/utils/util/" class="md-nav__link">
+      <a href="../../reference/utils/util/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1794,7 +1810,7 @@
   
   
     <li class="md-nav__item">
-      <a href="enterprise" class="md-nav__link">
+      <a href="../../enterprise" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1857,7 +1873,7 @@
   
   
     <li class="md-nav__item">
-      <a href="community/contributing/" class="md-nav__link">
+      <a href="../../community/contributing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1878,7 +1894,7 @@
   
   
     <li class="md-nav__item">
-      <a href="community/versioning/" class="md-nav__link">
+      <a href="../../community/versioning/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1926,19 +1942,46 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#supercharged-document-analysis" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
-      Supercharged Document Analysis
+      Overview
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Supercharged Document Analysis">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Concepts
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Concepts">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#abstracttaskprovider" class="md-nav__link">
     <span class="md-ellipsis">
-      Installation
+      AbstractTaskProvider
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#capabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      CAPABILITIES
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resultcontainer" class="md-nav__link">
+    <span class="md-ellipsis">
+      ResultContainer
     </span>
   </a>
   
@@ -1950,44 +1993,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#creating-custom-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating Custom Providers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
       Usage
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Usage">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#simple-operations" class="md-nav__link">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits-of-using-providers" class="md-nav__link">
     <span class="md-ellipsis">
-      Simple Operations
+      Benefits of Using Providers
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#performing-ocr" class="md-nav__link">
-    <span class="md-ellipsis">
-      Performing OCR
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#document-search" class="md-nav__link">
-    <span class="md-ellipsis">
-      Document Search
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2009,85 +2037,136 @@
   
 
 
-<h1 id="docprompt-getting-started">Docprompt - Getting Started</h1>
-<h2 id="supercharged-document-analysis">Supercharged Document Analysis</h2>
-<ul>
-<li>Common utilities for interacting with PDFs</li>
-<li>PDF loading and serialization</li>
-<li>PDF byte compression using Ghostscript <img alt="👻" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f47b.svg" title=":ghost:" /></li>
-<li>Fast rasterization <img alt="🔥" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f525.svg" title=":fire:" /> <img alt="🚀" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f680.svg" title=":rocket:" /></li>
-<li>Page splitting, re-export with PDFium</li>
-<li>Support for most OCR providers with batched inference</li>
-<li>Google <img alt="✅" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/2705.svg" title=":white_check_mark:" /></li>
-<li>Azure Document Intelligence <img alt="🔴" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f534.svg" title=":red_circle:" /></li>
-<li>Amazon Textract <img alt="🔴" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f534.svg" title=":red_circle:" /></li>
-<li>Tesseract <img alt="🔴" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f534.svg" title=":red_circle:" /></li>
-</ul>
-<h3 id="installation">Installation</h3>
-<p>Base installation</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>docprompt
+<h1 id="providers-in-docprompt">Providers in Docprompt</h1>
+<h2 id="overview">Overview</h2>
+<p>Providers in Docprompt are abstract interfaces that define how to add data to document nodes. They encapsulate various tasks such as OCR, classification, and more. The provider system is designed to be extensible, allowing users to create custom providers to add new functionality to Docprompt.</p>
+<h2 id="key-concepts">Key Concepts</h2>
+<h3 id="abstracttaskprovider">AbstractTaskProvider</h3>
+<p>The <code>AbstractTaskProvider</code> is the base class for all providers in Docprompt. It defines the interface that all task providers must implement.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span> <span class="nc">AbstractTaskProvider</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">PageTaskResult</span><span class="p">]):</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">capabilities</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="k">def</span> <span class="nf">process_document_pages</span><span class="p">(</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>        <span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>        <span class="n">start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="n">stop</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">PageTaskResult</span><span class="p">]:</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="k">def</span> <span class="nf">contribute_to_document_node</span><span class="p">(</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>        <span class="n">document_node</span><span class="p">:</span> <span class="s2">&quot;DocumentNode&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>        <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">PageTaskResult</span><span class="p">],</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>        <span class="k">pass</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    <span class="k">def</span> <span class="nf">process_document_node</span><span class="p">(</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        <span class="n">document_node</span><span class="p">:</span> <span class="s2">&quot;DocumentNode&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>        <span class="n">start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        <span class="n">stop</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        <span class="n">contribute_to_document</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">PageTaskResult</span><span class="p">]:</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>        <span class="c1"># ... implementation ...</span>
 </code></pre></div>
-<p>With an OCR provider</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;docprompt[google]</span>
+<p>Key features:
+- Generic type <code>PageTaskResult</code> allows for type-safe results
+- <code>capabilities</code> list defines what the provider can do
+- <code>process_document_pages</code> method processes pages of a document
+- <code>contribute_to_document_node</code> method adds results to a <code>DocumentNode</code>
+- <code>process_document_node</code> method combines processing and contributing results</p>
+<h3 id="capabilities">CAPABILITIES</h3>
+<p>The <code>CAPABILITIES</code> enum defines the various capabilities that a provider can have:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">class</span> <span class="nc">CAPABILITIES</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">PAGE_RASTERIZATION</span> <span class="o">=</span> <span class="s2">&quot;page-rasterization&quot;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">PAGE_LAYOUT_OCR</span> <span class="o">=</span> <span class="s2">&quot;page-layout-ocr&quot;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">PAGE_TEXT_OCR</span> <span class="o">=</span> <span class="s2">&quot;page-text-ocr&quot;</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">PAGE_CLASSIFICATION</span> <span class="o">=</span> <span class="s2">&quot;page-classification&quot;</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">PAGE_SEGMENTATION</span> <span class="o">=</span> <span class="s2">&quot;page-segmentation&quot;</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">PAGE_VQA</span> <span class="o">=</span> <span class="s2">&quot;page-vqa&quot;</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">PAGE_TABLE_IDENTIFICATION</span> <span class="o">=</span> <span class="s2">&quot;page-table-identification&quot;</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">PAGE_TABLE_EXTRACTION</span> <span class="o">=</span> <span class="s2">&quot;page-table-extraction&quot;</span>
+</code></pre></div>
+<h3 id="resultcontainer">ResultContainer</h3>
+<p>The <code>ResultContainer</code> is a generic class that holds the results of a task:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">class</span> <span class="nc">ResultContainer</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">PageOrDocumentTaskResult</span><span class="p">]):</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PageOrDocumentTaskResult</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The results of the task, keyed by provider&quot;</span><span class="p">,</span> <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="p">)</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="nd">@property</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="k">def</span> <span class="nf">result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="creating-custom-providers">Creating Custom Providers</h2>
+<p>To extend Docprompt's functionality, you can create custom providers. Here's an shortened example of a builtin OCR provider from GCP:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">docprompt.tasks.base</span> <span class="kn">import</span> <span class="n">AbstractTaskProvider</span><span class="p">,</span> <span class="n">CAPABILITIES</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span> <span class="nn">docprompt.schema.layout</span> <span class="kn">import</span> <span class="n">TextBlock</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">Field</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">class</span> <span class="nc">OcrPageResult</span><span class="p">(</span><span class="n">BasePageResult</span><span class="p">):</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">page_text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The text for the entire page in reading order&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">word_level_blocks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TextBlock</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">line_level_blocks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TextBlock</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">block_level_blocks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TextBlock</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">raster_image</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="k">class</span> <span class="nc">GoogleOcrProvider</span><span class="p">(</span><span class="n">AbstractTaskProvider</span><span class="p">[</span><span class="n">OcrPageResult</span><span class="p">]):</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Google Document AI&quot;</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="n">capabilities</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>        <span class="n">CAPABILITIES</span><span class="o">.</span><span class="n">PAGE_TEXT_OCR</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>        <span class="n">CAPABILITIES</span><span class="o">.</span><span class="n">PAGE_LAYOUT_OCR</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        <span class="n">CAPABILITIES</span><span class="o">.</span><span class="n">PAGE_RASTERIZATION</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="p">]</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    <span class="k">def</span> <span class="nf">process_document_pages</span><span class="p">(</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>        <span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">,</span>
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>        <span class="n">start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>        <span class="n">stop</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">OcrPageResult</span><span class="p">]:</span>
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>        <span class="c1"># Implement OCR logic here</span>
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>        <span class="k">pass</span>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>
+<a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    <span class="k">def</span> <span class="nf">contribute_to_document_node</span><span class="p">(</span>
+<a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>        <span class="n">document_node</span><span class="p">:</span> <span class="s2">&quot;DocumentNode&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>        <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">OcrPageResult</span><span class="p">],</span>
+<a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>        <span class="c1"># Add OCR results to document node</span>
+<a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>        <span class="k">pass</span>
 </code></pre></div>
 <h2 id="usage">Usage</h2>
-<h3 id="simple-operations">Simple Operations</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">docprompt</span> <span class="kn">import</span> <span class="n">load_document</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Load a document</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">document</span> <span class="o">=</span> <span class="n">load_document</span><span class="p">(</span><span class="s2">&quot;path/to/my.pdf&quot;</span><span class="p">)</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1"># Rasterize a single page using Ghostscript</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">page_number</span> <span class="o">=</span> <span class="mi">5</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">rastered</span> <span class="o">=</span> <span class="n">document</span><span class="o">.</span><span class="n">rasterize_page</span><span class="p">(</span><span class="n">page_number</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1"># Split a pdf based on a page range</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">document_2</span> <span class="o">=</span> <span class="n">document</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mi">125</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mi">130</span><span class="p">)</span>
-</code></pre></div>
-<h3 id="performing-ocr">Performing OCR</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">docprompt</span> <span class="kn">import</span> <span class="n">load_document</span><span class="p">,</span> <span class="n">DocumentNode</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span> <span class="nn">docprompt.tasks.ocr.gcp</span> <span class="kn">import</span> <span class="n">GoogleOcrProvider</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">GoogleOcrProvider</span><span class="o">.</span><span class="n">from_service_account_file</span><span class="p">(</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  <span class="n">project_id</span><span class="o">=</span><span class="n">my_project_id</span><span class="p">,</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  <span class="n">processor_id</span><span class="o">=</span><span class="n">my_processor_id</span><span class="p">,</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  <span class="n">service_account_file</span><span class="o">=</span><span class="n">path_to_service_file</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">)</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">document</span> <span class="o">=</span> <span class="n">load_document</span><span class="p">(</span><span class="s2">&quot;path/to/my.pdf&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="c1"># A container holds derived data for a document, like OCR or classification results</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="n">document_node</span> <span class="o">=</span> <span class="n">DocumentNode</span><span class="o">.</span><span class="n">from_document</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="n">provider</span><span class="o">.</span><span class="n">process_document_node</span><span class="p">(</span><span class="n">document_node</span><span class="p">)</span> <span class="c1"># Caches results on the document_node</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="n">document_node</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ocr_result</span> <span class="c1"># Access OCR results</span>
-</code></pre></div>
-<h3 id="document-search">Document Search</h3>
-<p>When a large language model returns a result, we might want to highlight that result for our users. However, language models return results as <strong>text</strong>, while what we need to show our users requires a page number and a bounding box.</p>
-<p>After extracting text from a PDF, we can support this pattern using <code>DocumentProvenanceLocator</code>, which lives on a <code>DocumentNode</code></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>from docprompt import load_document, DocumentNode
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>from docprompt.tasks.ocr.gcp import GoogleOcrProvider
+<p>Here's how you can use a provider in your Docprompt workflow:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">docprompt</span> <span class="kn">import</span> <span class="n">load_document</span><span class="p">,</span> <span class="n">DocumentNode</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span> <span class="nn">docprompt.providers.ocr</span> <span class="kn">import</span> <span class="n">GoogleOcrProvider</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>provider = GoogleOcrProvider.from_service_account_file(
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  project_id=my_project_id,
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  processor_id=my_processor_id,
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>  service_account_file=path_to_service_file
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>)
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>document = load_document(&quot;path/to/my.pdf&quot;)
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Load a document</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">document</span> <span class="o">=</span> <span class="n">load_document</span><span class="p">(</span><span class="s2">&quot;path/to/my.pdf&quot;</span><span class="p">)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">document_node</span> <span class="o">=</span> <span class="n">DocumentNode</span><span class="o">.</span><span class="n">from_document</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1"># Create and use the OCR provider</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">ocr_provider</span> <span class="o">=</span> <span class="n">GoogleOcrProvider</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">ocr_results</span> <span class="o">=</span> <span class="n">ocr_provider</span><span class="o">.</span><span class="n">process_document_node</span><span class="p">(</span><span class="n">document_node</span><span class="p">)</span>
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a># A container holds derived data for a document, like OCR or classification results
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>document_node = DocumentNode.from_document(document)
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>provider.process_document_node(document_node) # Caches results on the document_node
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>
-<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a># With OCR results available, we can now instantiate a locator and search through documents.
-<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>
-<a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>document_node.locator.search(&quot;John Doe&quot;) # This will return a list of all terms across the document that contain &quot;John Doe&quot;
-<a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>document_node.locator.search(&quot;Jane Doe&quot;, page_number=4) # Just return results a list of matching results from page 4
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="c1"># Access OCR results</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="k">for</span> <span class="n">page_number</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">ocr_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="n">page_number</span><span class="si">}</span><span class="s2"> text: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">page_text</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p>This functionality uses a combination of <code>rtree</code> and the Rust library <code>tantivy</code>, allowing you to perform thousands of searches in <strong>seconds</strong> <img alt="🔥" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f525.svg" title=":fire:" /> <img alt="🚀" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.0.3/assets/svg/1f680.svg" title=":rocket:" /></p>
+<h2 id="benefits-of-using-providers">Benefits of Using Providers</h2>
+<ol>
+<li><strong>Extensibility</strong>: Easily add new functionality to Docprompt by creating custom providers.</li>
+<li><strong>Modularity</strong>: Each provider encapsulates a specific task, making the codebase more organized and maintainable.</li>
+<li><strong>Type Safety</strong>: Generic types ensure that providers produce and consume the correct types of results.</li>
+<li><strong>Standardized Interface</strong>: All providers follow the same interface, making it easy to switch between different implementations.</li>
+<li><strong>Capability-based Design</strong>: Providers declare their capabilities, allowing for dynamic feature discovery and usage.</li>
+</ol>
+<p>By leveraging the provider system in Docprompt, you can create flexible and powerful document processing pipelines that can be easily extended and customized to meet your specific needs.</p>
 
 
 
@@ -2134,10 +2213,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.instant", "navigation.instant.prefetch"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.instant.prefetch"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.ad660dcc.min.js"></script>
+      <script src="../../assets/javascripts/bundle.ad660dcc.min.js"></script>
       
     
   </body>

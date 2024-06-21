@@ -17,10 +17,14 @@ python_files = list(root_path.rglob("*.py"))
 logger.debug(f"Found {len(python_files)} Python files")
 
 if not python_files:
-    logger.warning("No Python files found. Ensure the 'docprompt' directory exists and contains .py files.")
+    logger.warning(
+        "No Python files found. Ensure the 'docprompt' directory exists and contains .py files."
+    )
     nav["No modules found"] = "no_modules.md"
     with mkdocs_gen_files.open("reference/no_modules.md", "w") as fd:
-        fd.write("# No Modules Found\n\nNo Python modules were found in the 'docprompt' directory.")
+        fd.write(
+            "# No Modules Found\n\nNo Python modules were found in the 'docprompt' directory."
+        )
 else:
     for path in sorted(python_files):
         module_path = path.relative_to(root_path).with_suffix("")
@@ -54,4 +58,3 @@ else:
 
 with mkdocs_gen_files.open("reference/SUMMARY.md", "w") as nav_file:
     nav_file.writelines(nav.build_literate_nav())
-

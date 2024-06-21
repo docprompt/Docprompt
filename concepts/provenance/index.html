@@ -8,25 +8,25 @@
       
       
       
-        <link rel="canonical" href="https://docprompt.dev/reference/tasks/message/">
+        <link rel="canonical" href="https://docprompt.dev/concepts/provenance/">
       
       
-        <link rel="prev" href="../classification/">
+        <link rel="prev" href="../providers/">
       
       
-        <link rel="next" href="../ocr/">
+        <link rel="next" href="../../enterprise/">
       
       
-      <link rel="icon" href="../../../assets/static/img/logo.png">
+      <link rel="icon" href="../../assets/static/img/logo.png">
       <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
     
     
       
-        <title>message - Docprompt</title>
+        <title>Provenance - Docprompt</title>
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.6543a935.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6543a935.min.css">
       
       
 
@@ -45,9 +45,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#docprompt.tasks.message" class="md-skip">
+        <a href="#provenance-in-docprompt" class="md-skip">
           Skip to content
         </a>
       
@@ -82,9 +82,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="Docprompt" class="md-header__button md-logo" aria-label="Docprompt" data-md-component="logo">
+    <a href="../.." title="Docprompt" class="md-header__button md-logo" aria-label="Docprompt" data-md-component="logo">
       
-  <img src="../../../assets/static/img/logo.png" alt="logo">
+  <img src="../../assets/static/img/logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -101,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              message
+              Provenance
             
           </span>
         </div>
@@ -188,9 +188,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="Docprompt" class="md-nav__button md-logo" aria-label="Docprompt" data-md-component="logo">
+    <a href="../.." title="Docprompt" class="md-nav__button md-logo" aria-label="Docprompt" data-md-component="logo">
       
-  <img src="../../../assets/static/img/logo.png" alt="logo">
+  <img src="../../assets/static/img/logo.png" alt="logo">
 
     </a>
     Docprompt
@@ -217,7 +217,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -272,7 +272,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../guide/ocr/" class="md-nav__link">
+      <a href="../../guide/ocr/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -293,7 +293,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../guide/classify/" class="md-nav__link">
+      <a href="../../guide/classify/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -314,7 +314,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../guide/extract_tables/" class="md-nav__link">
+      <a href="../../guide/extract_tables/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -339,17 +339,19 @@
       
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -363,7 +365,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Concepts
@@ -377,7 +379,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/primatives/" class="md-nav__link">
+      <a href="../primatives/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -398,7 +400,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/nodes/" class="md-nav__link">
+      <a href="../nodes/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -419,7 +421,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../concepts/providers/" class="md-nav__link">
+      <a href="../providers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -437,10 +439,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../concepts/provenance/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Provenance
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -449,6 +471,152 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Concepts
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#documentprovenancelocator" class="md-nav__link">
+    <span class="md-ellipsis">
+      DocumentProvenanceLocator
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main-functionalities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Main Functionalities
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Main Functionalities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-text-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Text Search
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-spatial-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Spatial Queries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recommended-usage-through-documentnode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recommended Usage: Through DocumentNode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-standalone-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Alternative: Standalone Usage
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#searching-for-text" class="md-nav__link">
+    <span class="md-ellipsis">
+      Searching for Text
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performing-spatial-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performing Spatial Queries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits-of-using-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benefits of Using Provenance
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -468,7 +636,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../enterprise/" class="md-nav__link">
+      <a href="../../enterprise/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -525,7 +693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../blog/" class="md-nav__link">
+      <a href="../../blog/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -546,7 +714,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../.." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -571,19 +739,17 @@
       
   
   
-    
   
   
-  
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
         
           
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
@@ -597,7 +763,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             API Reference
@@ -608,19 +774,17 @@
                 
   
   
-    
   
   
-  
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1" >
         
           
           <label class="md-nav__link" for="__nav_6_1" id="__nav_6_1_label" tabindex="0">
@@ -634,7 +798,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6_1">
             <span class="md-nav__icon md-icon"></span>
             Docprompt SDK
@@ -683,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../_exec/" class="md-nav__link">
+      <a href="../../reference/_exec/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -704,7 +868,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../_exec/ghostscript/" class="md-nav__link">
+      <a href="../../reference/_exec/ghostscript/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -733,7 +897,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../_pdfium/" class="md-nav__link">
+      <a href="../../reference/_pdfium/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -789,7 +953,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contrib/" class="md-nav__link">
+      <a href="../../reference/contrib/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -810,7 +974,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contrib/parser_bot/" class="md-nav__link">
+      <a href="../../reference/contrib/parser_bot/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -874,7 +1038,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../provenance/" class="md-nav__link">
+      <a href="../../reference/provenance/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -895,7 +1059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../provenance/search/" class="md-nav__link">
+      <a href="../../reference/provenance/search/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -916,7 +1080,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../provenance/source/" class="md-nav__link">
+      <a href="../../reference/provenance/source/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -937,7 +1101,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../provenance/util/" class="md-nav__link">
+      <a href="../../reference/provenance/util/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -966,7 +1130,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../rasterize/" class="md-nav__link">
+      <a href="../../reference/rasterize/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1022,7 +1186,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schema/" class="md-nav__link">
+      <a href="../../reference/schema/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1043,7 +1207,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schema/document/" class="md-nav__link">
+      <a href="../../reference/schema/document/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1064,7 +1228,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schema/layout/" class="md-nav__link">
+      <a href="../../reference/schema/layout/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1085,7 +1249,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../schema/pipeline/" class="md-nav__link">
+      <a href="../../reference/schema/pipeline/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1111,19 +1275,17 @@
                 
   
   
-    
   
   
-  
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_7" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_7" >
         
           
           <label class="md-nav__link" for="__nav_6_1_7" id="__nav_6_1_7_label" tabindex="0">
@@ -1137,7 +1299,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6_1_7">
             <span class="md-nav__icon md-icon"></span>
             tasks
@@ -1151,7 +1313,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
+      <a href="../../reference/tasks/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1172,7 +1334,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../base/" class="md-nav__link">
+      <a href="../../reference/tasks/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1193,7 +1355,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../classification/" class="md-nav__link">
+      <a href="../../reference/tasks/classification/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1211,28 +1373,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    message
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../reference/tasks/message/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1241,33 +1385,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#docprompt.tasks.message" class="md-nav__link">
-    <span class="md-ellipsis">
-      message
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1315,7 +1432,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ocr/" class="md-nav__link">
+      <a href="../../reference/tasks/ocr/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1336,7 +1453,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ocr/gcp/" class="md-nav__link">
+      <a href="../../reference/tasks/ocr/gcp/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1357,7 +1474,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ocr/result/" class="md-nav__link">
+      <a href="../../reference/tasks/ocr/result/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1421,7 +1538,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../table_extraction/" class="md-nav__link">
+      <a href="../../reference/tasks/table_extraction/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1442,7 +1559,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../table_extraction/base/" class="md-nav__link">
+      <a href="../../reference/tasks/table_extraction/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1463,7 +1580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../table_extraction/schema/" class="md-nav__link">
+      <a href="../../reference/tasks/table_extraction/schema/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1535,7 +1652,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/" class="md-nav__link">
+      <a href="../../reference/utils/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1556,7 +1673,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/compressor/" class="md-nav__link">
+      <a href="../../reference/utils/compressor/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1577,7 +1694,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/date_extraction/" class="md-nav__link">
+      <a href="../../reference/utils/date_extraction/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1633,7 +1750,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/masking/" class="md-nav__link">
+      <a href="../../reference/utils/masking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1654,7 +1771,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/masking/image/" class="md-nav__link">
+      <a href="../../reference/utils/masking/image/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1683,7 +1800,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/splitter/" class="md-nav__link">
+      <a href="../../reference/utils/splitter/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1704,7 +1821,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utils/util/" class="md-nav__link">
+      <a href="../../reference/utils/util/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1741,7 +1858,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../enterprise" class="md-nav__link">
+      <a href="../../enterprise" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1804,7 +1921,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../community/contributing/" class="md-nav__link">
+      <a href="../../community/contributing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1825,7 +1942,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../community/versioning/" class="md-nav__link">
+      <a href="../../community/versioning/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1863,6 +1980,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1871,9 +1990,126 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#docprompt.tasks.message" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
-      message
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Concepts
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#documentprovenancelocator" class="md-nav__link">
+    <span class="md-ellipsis">
+      DocumentProvenanceLocator
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main-functionalities" class="md-nav__link">
+    <span class="md-ellipsis">
+      Main Functionalities
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Main Functionalities">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-text-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Text Search
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-spatial-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Spatial Queries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recommended-usage-through-documentnode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Recommended Usage: Through DocumentNode
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternative-standalone-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Alternative: Standalone Usage
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#searching-for-text" class="md-nav__link">
+    <span class="md-ellipsis">
+      Searching for Text
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performing-spatial-queries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performing Spatial Queries
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits-of-using-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      Benefits of Using Provenance
     </span>
   </a>
   
@@ -1897,37 +2133,118 @@
   
 
 
-  <h1>message</h1>
-
-<div class="doc doc-object doc-module">
-
-
-
-<a id="docprompt.tasks.message"></a>
-    <div class="doc doc-contents first">
-
-      <p>The core primatives for any language model interfacing. Docprompt uses these for the prompt garden, but
-supports free conversion to and from these types from other libaries.</p>
-
-
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-</div>
+<h1 id="provenance-in-docprompt">Provenance in Docprompt</h1>
+<h2 id="overview">Overview</h2>
+<p>Provenance in Docprompt refers to the ability to trace and locate specific pieces of text within a document. The <code>DocumentProvenanceLocator</code> class is a powerful tool that enables efficient text search, spatial queries, and fine-grained text location within documents that have been processed with OCR.</p>
+<h2 id="key-concepts">Key Concepts</h2>
+<h3 id="documentprovenancelocator">DocumentProvenanceLocator</h3>
+<p>The <code>DocumentProvenanceLocator</code> is a class that provides advanced search capabilities for documents in Docprompt. It combines full-text search with spatial indexing to offer fast and accurate text location services.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nd">@dataclass</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">class</span> <span class="nc">DocumentProvenanceLocator</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">document_name</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">search_index</span><span class="p">:</span> <span class="s2">&quot;tantivy.Index&quot;</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">block_mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">OcrPageResult</span><span class="p">]</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">geo_index</span><span class="p">:</span> <span class="n">DocumentProvenanceGeoMap</span>
+</code></pre></div>
+<p>Key features:
+- Full-text search using the Tantivy search engine
+- Spatial indexing using R-tree for efficient bounding box queries
+- Support for different granularity levels (word, line, block)
+- Ability to refine search results to word-level precision</p>
+<h2 id="main-functionalities">Main Functionalities</h2>
+<h3 id="1-text-search">1. Text Search</h3>
+<p>The <code>search</code> method allows you to find specific text within a document:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">def</span> <span class="nf">search</span><span class="p">(</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">page_number</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">refine_to_word</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">require_exact_match</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ProvenanceSource</span><span class="p">]:</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="c1"># ... implementation ...</span>
+</code></pre></div>
+<p>This method returns a list of <code>ProvenanceSource</code> objects, which contain detailed information about where the text was found, including page number, bounding box, and the surrounding context.</p>
+<h3 id="2-spatial-queries">2. Spatial Queries</h3>
+<p>The <code>DocumentProvenanceLocator</code> supports spatial queries to find text blocks based on their location on the page:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">def</span> <span class="nf">get_k_nearest_blocks</span><span class="p">(</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">bbox</span><span class="p">:</span> <span class="n">NormBBox</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">page_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">granularity</span><span class="p">:</span> <span class="n">BlockGranularity</span> <span class="o">=</span> <span class="s2">&quot;block&quot;</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TextBlock</span><span class="p">]:</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="c1"># ... implementation ...</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="k">def</span> <span class="nf">get_overlapping_blocks</span><span class="p">(</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="n">bbox</span><span class="p">:</span> <span class="n">NormBBox</span><span class="p">,</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="n">page_number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="n">granularity</span><span class="p">:</span> <span class="n">BlockGranularity</span> <span class="o">=</span> <span class="s2">&quot;block&quot;</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TextBlock</span><span class="p">]:</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    <span class="c1"># ... implementation ...</span>
+</code></pre></div>
+<p>These methods allow you to find text blocks that are near or overlapping with a given bounding box on a specific page.</p>
+<h2 id="usage">Usage</h2>
+<h3 id="recommended-usage-through-documentnode">Recommended Usage: Through DocumentNode</h3>
+<p>The recommended way to use the <code>DocumentProvenanceLocator</code> is through the <code>DocumentNode</code> class. The <code>DocumentNode</code> provides two methods for working with the locator:</p>
+<ol>
+<li><code>locator</code> property: Lazily creates and returns the <code>DocumentProvenanceLocator</code>.</li>
+<li><code>refresh_locator()</code> method: Explicitly refreshes the locator for the document node.</li>
+</ol>
+<p>Here's how to use these methods:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">docprompt</span> <span class="kn">import</span> <span class="n">load_document</span><span class="p">,</span> <span class="n">DocumentNode</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span> <span class="nn">docprompt.tasks.ocr.gcp</span> <span class="kn">import</span> <span class="n">GoogleOcrProvider</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Load and process the document</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">document</span> <span class="o">=</span> <span class="n">load_document</span><span class="p">(</span><span class="s2">&quot;path/to/my.pdf&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">document_node</span> <span class="o">=</span> <span class="n">DocumentNode</span><span class="o">.</span><span class="n">from_document</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="c1"># Process the document with OCR</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">GoogleOcrProvider</span><span class="o">.</span><span class="n">from_service_account_file</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="n">provider</span><span class="o">.</span><span class="n">process_document_node</span><span class="p">(</span><span class="n">document_node</span><span class="p">)</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="c1"># Access the locator (creates it if it doesn&#39;t exist)</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="n">locator</span> <span class="o">=</span> <span class="n">document_node</span><span class="o">.</span><span class="n">locator</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="c1"># Perform a search</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="n">results</span> <span class="o">=</span> <span class="n">locator</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;Docprompt&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="c1"># If you need to refresh the locator (e.g., after updating OCR results)</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="n">document_node</span><span class="o">.</span><span class="n">refresh_locator</span><span class="p">()</span>
+</code></pre></div>
+<p>Note: Attempting to access the locator before OCR results are available will raise a <code>ValueError</code>.</p>
+<h3 id="alternative-standalone-usage">Alternative: Standalone Usage</h3>
+<p>While the recommended approach is to use the locator through <code>DocumentNode</code>, you can also create and use a <code>DocumentProvenanceLocator</code> independently:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">docprompt.provenance.search</span> <span class="kn">import</span> <span class="n">DocumentProvenanceLocator</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="c1"># Assuming you have a processed DocumentNode</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">locator</span> <span class="o">=</span> <span class="n">DocumentProvenanceLocator</span><span class="o">.</span><span class="n">from_document_node</span><span class="p">(</span><span class="n">document_node</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1"># Now you can use the locator directly</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">results</span> <span class="o">=</span> <span class="n">locator</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;Docprompt&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="searching-for-text">Searching for Text</h3>
+<p>To search for text within the document:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">results</span> <span class="o">=</span> <span class="n">locator</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;Docprompt&quot;</span><span class="p">)</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found on page </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">page_number</span><span class="si">}</span><span class="s2">, bbox: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">text_location</span><span class="o">.</span><span class="n">merged_source_block</span><span class="o">.</span><span class="n">bounding_box</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="performing-spatial-queries">Performing Spatial Queries</h3>
+<p>To find text blocks near a specific location:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">bbox</span> <span class="o">=</span> <span class="n">NormBBox</span><span class="p">(</span><span class="n">x0</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">y0</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">x1</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">nearby_blocks</span> <span class="o">=</span> <span class="n">locator</span><span class="o">.</span><span class="n">get_k_nearest_blocks</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">page_number</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="benefits-of-using-provenance">Benefits of Using Provenance</h2>
+<ol>
+<li><strong>Accurate Text Location</strong>: Quickly find the exact location of text within a document, including page number and bounding box.</li>
+<li><strong>Efficient Searching</strong>: Combine full-text search with spatial indexing for fast and accurate results.</li>
+<li><strong>Flexible Granularity</strong>: Search and retrieve results at different levels of granularity (word, line, block).</li>
+<li><strong>Integration with OCR</strong>: Seamlessly works with OCR results to provide comprehensive document analysis capabilities.</li>
+<li><strong>Support for Complex Queries</strong>: Perform spatial queries to find text based on location within pages.</li>
+<li><strong>Easy Access</strong>: Conveniently access the locator through the <code>DocumentNode</code> class, ensuring it's always available when needed.</li>
+</ol>
+<p>By leveraging the provenance functionality in Docprompt, you can build sophisticated document analysis workflows that require precise text location and contextual information retrieval.</p>
 
 
 
@@ -1974,10 +2291,10 @@ supports free conversion to and from these types from other libaries.</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.prefetch"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.instant.prefetch"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.ad660dcc.min.js"></script>
+      <script src="../../assets/javascripts/bundle.ad660dcc.min.js"></script>
       
     
   </body>
