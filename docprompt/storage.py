@@ -6,13 +6,14 @@ additional environment and credential kwargs you must provide, based on your spe
 selection of file system.
 """
 
-import warnings
 import os
-from typing import Dict, Any, Optional, Tuple, Union
+import warnings
+from typing import Any, Dict, Optional, Tuple, Union
 
 import fsspec
-from pydantic import BaseModel, Field, model_validator, computed_field
+from pydantic import BaseModel, Field, computed_field, model_validator
 from pydantic_core import core_schema
+from typing_extensions import Self
 
 
 class FileSidecarsPathManager(BaseModel):
@@ -110,21 +111,34 @@ class FileSystemManager(BaseModel):
 
         return data
 
+    @model_validator(mode="after")
+    def validate_base_path_exists(self) -> Self:
+        """Validate that the base path exists after instantiating the file system."""
+        if not self.fs.exists(self.path, **self.fs_kwargs):
+            self.fs.mkdirs(self.path, **self.fs_kwargs)
+
     def get_pdf_name(self, file_hash: str) -> FileSidecarsPathManager:
         """Get the file manager for a specific file hash."""
         path_manager = FileSidecarsPathManager(base_path=self.path, file_hash=file_hash)
         return os.path.basename(path_manager.pdf)
 
     def _write(self, value: bytes, *args, **kwargs) -> None:
-        """A wrapper for writing with fsspec.
+        """Write a value to the file system.
 
         Args:
             value: The value to write.
             *args: `fsspec.open` positional arguments.
             **kwargs: `fsspec.open` keyword arguments.
         """
+        # Make sure the path exists
+        parent_dir = os.path.dirname(args[0])
 
-        with self.fs.open(*args, **kwargs) as f:  # pylint: disable=no-member
+        kwargs = {**self.fs_kwargs, **kwargs}
+
+        if not self.fs.exists(parent_dir, **kwargs):
+            self.fs.mkdirs(parent_dir, **kwargs)
+
+        with self.fs.open(*args, **kwargs) as f:
             f.write(value)
 
     def _read(self, *args, **kwargs) -> bytes:
@@ -138,7 +152,9 @@ class FileSystemManager(BaseModel):
             bytes: The read value.
         """
 
-        with self.fs.open(*args, **kwargs) as f:  # pylint: disable=no-member
+        kwargs = {**self.fs_kwargs, **kwargs}
+
+        with self.fs.open(*args, **kwargs) as f:
             return f.read()
 
     def _delete(self, path: str, **kwargs):
@@ -149,20 +165,22 @@ class FileSystemManager(BaseModel):
             **kwargs: Additional keyword arguments to pass to the file system.
         """
 
-        if self.fs.exists(path):  # pylint: disable=no-member
-            self.fs.rm(path, **kwargs)  # pylint: disable=not-a-mapping,no-member
+        kwargs = {**self.fs_kwargs, **kwargs}
+
+        if self.fs.exists(path, **kwargs):
+            self.fs.rm(path, **kwargs)
 
     def write(
         self,
         pdf_bytes: bytes,
         metadata_bytes: Optional[bytes] = None,
         page_metadata_bytes: Optional[bytes] = None,
-        encrypt: bool = False,  # pylint: disable=unused-argument
-        compress: bool = False,  # pylint: disable=unused-argument
+        encrypt: bool = False,
+        compress: bool = False,
         **kwargs,
     ) -> FileSidecarsPathManager:
         """Write a sidecar to the filesystem."""
-        from docprompt.utils.util import hash_from_bytes  # pylint: disable=import-outside-toplevel
+        from docprompt.utils.util import hash_from_bytes
 
         file_hash = hash_from_bytes(pdf_bytes)
 

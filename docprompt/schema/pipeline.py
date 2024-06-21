@@ -4,21 +4,21 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
+    ForwardRef,
     Generic,
     Iterable,
     List,
     Literal,
     Optional,
     Tuple,
-    TypeVar,
     Type,
+    TypeVar,
     Union,
-    ForwardRef,
 )
-from typing_extensions import Self
 
 from PIL import Image
 from pydantic import BaseModel, Field, PositiveInt, PrivateAttr
+from typing_extensions import Self
 
 from docprompt.rasterize import AspectRatioRule, ResizeModes, process_raster_image
 from docprompt.storage import FileSystemManager
@@ -247,7 +247,7 @@ class DocumentRasterizer:
         for page_number, image in images.items():
             page_node = self.owner.page_nodes[page_number - 1]
 
-            page_node._raster_cache[name] = image  # pylint: disable=protected-access
+            page_node._raster_cache[name] = image
 
         return list(images.values())
 
@@ -258,7 +258,7 @@ class DocumentRasterizer:
         for page_number, raster in rasters.items():
             page_node = self.owner.page_nodes[page_number - 1]
 
-            page_node._raster_cache[name] = raster  # pylint: disable=protected-access
+            page_node._raster_cache[name] = raster
 
 
 class PageNode(BaseModel, Generic[PageNodeMetadata]):
