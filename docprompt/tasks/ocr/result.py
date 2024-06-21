@@ -1,11 +1,13 @@
-from typing import List, Optional
+from typing import List, Optional, TypeVar, Generic
 from pydantic import Field
 from docprompt.schema.layout import TextBlock
 from docprompt.tasks.base import BasePageResult
 from io import BytesIO
 
+T = TypeVar("T")
 
-class OcrPageResult(BasePageResult):
+
+class OcrPageResult(BasePageResult, Generic[T]):
     page_text: str = Field(description="The text for the entire page in reading order")
 
     word_level_blocks: List[TextBlock] = Field(
@@ -29,6 +31,8 @@ class OcrPageResult(BasePageResult):
         description="The rasterized image of the page used in OCR",
         repr=False,
     )
+
+    extra: Optional[T] = Field(default_factory=dict)
 
     @property
     def pil_image(self):
