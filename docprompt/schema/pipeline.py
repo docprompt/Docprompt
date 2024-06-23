@@ -29,39 +29,15 @@ if TYPE_CHECKING:
     from docprompt.provenance.search import DocumentProvenanceLocator
 
 from .document import Document
+from .metadata import BaseMetadata  # TODO: Implement this instead of DefaultMetadata
 
-DefaultMetadata = TypeVar("DefaultMetadata", bound=Union[dict, BaseModel])
+DocumentCollectionMetadata = TypeVar("DocumentCollectionMetadata", bound=BaseMetadata)
+DocumentNodeMetadata = TypeVar("DocumentNodeMetadata", bound=BaseMetadata)
+PageNodeMetadata = TypeVar("PageNodeMetadata", bound=BaseMetadata)
 
-DocumentCollectionMetadata = TypeVar(
-    "DocumentCollectionMetadata", bound=DefaultMetadata
-)
-DocumentNodeMetadata = TypeVar("DocumentNodeMetadata", bound=DefaultMetadata)
-PageNodeMetadata = TypeVar("PageNodeMetadata", bound=DefaultMetadata)
-
-# TODO: Is there a better way to bound these?
+# TODO: Is there a better way to bound these types?
 FilePathResult = TypeVar("FilePathResult", bound=BaseModel)
 StorageProvider = TypeVar("StorageProvider", bound=BaseModel)
-
-
-def serialize_metadata(metadata: Union[BaseModel, dict]) -> str:
-    """A helper method for serializing metadata to a dictionary.
-
-    Args:
-        metadata (Union[BaseModel, dict]): The metadata to serialize.
-
-    Returns:
-        str: The serialized metadata.
-
-    Raises:
-        ValueError: If the metadata is not a BaseModel or a dictionary.
-    """
-
-    if isinstance(metadata, BaseModel):
-        return metadata.model_dump_json()
-    elif isinstance(metadata, dict):
-        return json.dumps(metadata)
-
-    raise ValueError("Metadata must be a BaseModel or a dictionary.")
 
 
 class PageRasterizer:
@@ -268,8 +244,9 @@ class PageNode(BaseModel, Generic[PageNodeMetadata]):
 
     document: "DocumentNode" = Field(exclude=True, repr=False)
     page_number: PositiveInt = Field(description="The page number")
-    metadata: Union[dict, PageNodeMetadata] = Field(
-        description="Application-specific metadata for the page", default_factory=dict
+    metadata: PageNodeMetadata = Field(
+        description="Application-specific metadata for the page",
+        default_factory=BaseMetadata,
     )
     extra: Dict[str, Any] = Field(
         description="Extra data that can be stored on the page node",
@@ -322,9 +299,9 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     page_nodes: List[PageNode[PageNodeMetadata]] = Field(
         description="The pages in the document", default_factory=list, repr=False
     )
-    metadata: Union[dict, DocumentNodeMetadata] = Field(
+    metadata: DocumentNodeMetadata = Field(
         description="Application-specific metadata for the document",
-        default_factory=dict,
+        default_factory=BaseMetadata,
     )
 
     _locator: Optional["DocumentProvenanceLocator"] = PrivateAttr(default=None)
@@ -380,11 +357,11 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         document_metadata: Optional[DocumentNodeMetadata] = None,
         page_metadata: Optional[List[PageNodeMetadata]] = None,
     ):
-        document_node: "DocumentNode[DocumentNodeMetadata, PageNodeMetadata]" = (
-            DocumentNode(
-                document=document,
-                metadata=document_metadata or {},
-            )
+        document_node: "DocumentNode[DocumentNodeMetadata, PageNodeMetadata]" = cls(
+            document=document,
+        )
+        document_node.metadata = document_metadata or cls.metadata_class().from_owner(
+            document_node, **{}
         )
 
         if page_metadata is not None and len(page_metadata) != len(document):
@@ -422,12 +399,12 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
 
         # NOTE: The indexing is important here, and relies on the generic type being
         # the SECOND of the two arguments in the `Union` annotation
-        metadata_field_annotation = fields["metadata"].annotation.__args__[1]
+        metadata_field_annotation = fields["metadata"].annotation
 
         # If no override has been provided to the metadata model, we want to retrieve
         # it as a TypedDict
         if metadata_field_annotation == DocumentNodeMetadata:
-            return dict
+            return BaseMetadata
 
         if isinstance(metadata_field_annotation, ForwardRef):
             raise ValueError(
@@ -450,10 +427,10 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         # the SECOND of the two arguments in the `Union` annotation
         page_node_metadata_field_annotation = page_nodes_field_class.model_fields[
             "metadata"
-        ].annotation.__args__[1]
+        ].annotation
 
         if page_node_metadata_field_annotation == PageNodeMetadata:
-            return dict
+            return BaseMetadata
 
         if isinstance(page_node_metadata_field_annotation, ForwardRef):
             raise ValueError(
@@ -494,12 +471,13 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         )
 
         doc = Document.from_bytes(pdf_bytes, name=fs_manager.get_pdf_name(file_hash))
+        node = cls.from_document(doc)
 
         if metadata_bytes:
             metadata_json = json.loads(metadata_bytes.decode("utf-8"))
-            metadata = cls.metadata_class()(**metadata_json)
+            metadata = cls.metadata_class().from_owner(node, **metadata_json)
         else:
-            metadata = cls.metadata_class()()
+            metadata = cls.metadata_class().from_owner(node, **{})
 
         if page_metadata_bytes:
             page_metadata_json = [
@@ -507,14 +485,19 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
                 for page_str in json.loads(page_metadata_bytes.decode("utf-8"))
             ]
             page_metadata = [
-                cls.page_metadata_class()(**page) for page in page_metadata_json
+                cls.page_metadata_class().from_owner(node, **page)
+                for page in page_metadata_json
             ]
         else:
-            page_metadata = [cls.page_metadata_class()() for _ in range(len(doc))]
+            page_metadata = [
+                cls.page_metadata_class().from_owner(node, **{})
+                for _ in range(len(doc))
+            ]
 
-        node = cls.from_document(
-            doc, document_metadata=metadata, page_metadata=page_metadata
-        )
+        # Store the metadata on the node and page nodes
+        node.metadata = metadata
+        for page, meta in zip(node.page_nodes, page_metadata):
+            page.metadata = meta
 
         # Make sure to set the persistance path on the node
         node.persistance_path = path
@@ -542,11 +525,9 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         fs_manager = FileSystemManager(path, **kwargs)
 
         pdf_bytes = self.document.get_bytes()
-        metadata_bytes = bytes(serialize_metadata(self.metadata), encoding="utf-8")
+        metadata_bytes = bytes(self.metadata.model_dump_json(), encoding="utf-8")
         page_metadata_bytes = bytes(
-            json.dumps(
-                [(serialize_metadata(page.metadata)) for page in self.page_nodes]
-            ),
+            json.dumps([page.metadata.model_dump_json() for page in self.page_nodes]),
             encoding="utf-8",
         )
 
@@ -563,5 +544,5 @@ class DocumentCollection(
     Represents a collection of documents with some common metadata
     """
 
-    document_nodes: List[DocumentNode[DocumentNodeMetadata, PageNodeMetadata]]
+    document_nodes: list[DocumentNode[DocumentNodeMetadata, PageNodeMetadata]]
     metadata: DocumentCollectionMetadata = Field(..., default_factory=dict)

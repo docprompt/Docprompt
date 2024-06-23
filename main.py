@@ -2,19 +2,19 @@
 
 from typing import Optional
 
-import fsspec
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from docprompt import Document, DocumentNode
+from docprompt import DocumentNode, load_document
+from docprompt.schema.metadata import BaseMetadata
 
 
-class SamplePageMetadata(BaseModel):
+class SamplePageMetadata(BaseMetadata):
     """Must have defaults set."""
 
     page_number: Optional[int] = Field(None)
 
 
-class SampleMetadata(BaseModel):
+class SampleMetadata(BaseMetadata):
     """Must have defaults set."""
 
     title: Optional[str] = Field(None)
@@ -24,21 +24,37 @@ CustomDocumentNode = DocumentNode[SampleMetadata, SamplePageMetadata]
 
 
 def main():
-    with fsspec.open("data/example-1.pdf", "rb") as f:
-        pdf_bytes = f.read()
+    # TODO: Fix recursive creating of metadata
 
-    _doc = Document.from_bytes(pdf_bytes, name="data/example-1.pdf")
+    document = load_document("data/example-1.pdf")
+    node = CustomDocumentNode.from_document(document)
 
-    node = CustomDocumentNode.from_storage(
-        "s3://docprompt-test-storage/TEST", "191e8a7d232bfdc773858c39a8ff6ac7"
-    )
+    node[0].metadata = SamplePageMetadata(page_number=1)
+    node.metadata = SampleMetadata(title="Example Document")
+
     print(node)
     print(node[0])
     print(node[1])
     print(node[2])
     print("---")
 
-    node.persist()
+    node.persist("s3://docprompt-test-storage/TEST")
+
+    node = DocumentNode.from_storage(
+        "s3://docprompt-test-storage/TEST", "191e8a7d232bfdc773858c39a8ff6ac7"
+    )
+
+    print(node)
+    print(node[0])
+    print(node[1])
+    print(node[2])
+    print("---")
+
+    node.persist("s3://docprompt-test-storage/TEST")
+
+    node = CustomDocumentNode.from_storage(
+        "s3://docprompt-test-storage/TEST", "191e8a7d232bfdc773858c39a8ff6ac7"
+    )
 
     print(node)
     print(node[0])
