@@ -31,7 +31,8 @@ class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
 
     _owner: TMetadataOwner = PrivateAttr()
 
-    def get_owner(self) -> TMetadataOwner:
+    @property
+    def owner(self) -> TMetadataOwner:
         """Return the owner of the metadata.
 
         NOTE: We avoid using a standard property here, due to conflicts with the custom
@@ -135,9 +136,16 @@ class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
         if name.startswith("_"):
             return super().__getattr__(name)
 
-        return self.extra.get(name)
+        # Attempt to retreieve the attr from the `extra` field
+        try:
+            return self.extra.get(name)
 
-    def __setattr__(self, name: str, value) -> None:
+        # If the key is not set, we should resort back to just getting
+        # the attribute as normal.
+        except KeyError:
+            return super().__getattr__(name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
         if self._is_field_typed():
             return super().__setattr__(name, value)
 
