@@ -475,18 +475,15 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
                 for page_str in json.loads(page_metadata_bytes.decode("utf-8"))
             ]
             page_metadata = [
-                cls.page_metadata_class().from_owner(node, **page)
-                for page in page_metadata_json
+                cls.page_metadata_class()(**page) for page in page_metadata_json
             ]
         else:
-            page_metadata = [
-                cls.page_metadata_class().from_owner(node, **{})
-                for _ in range(len(doc))
-            ]
+            page_metadata = [cls.page_metadata_class()(**{}) for _ in range(len(doc))]
 
         # Store the metadata on the node and page nodes
         node.metadata = metadata
         for page, meta in zip(node.page_nodes, page_metadata):
+            meta.set_owner(page)
             page.metadata = meta
 
         # Make sure to set the persistance path on the node

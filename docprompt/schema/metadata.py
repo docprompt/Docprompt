@@ -9,36 +9,49 @@ from __future__ import annotations
 
 import json
 from collections.abc import MutableMapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 if TYPE_CHECKING:
-    from docprompt.schema.pipeline import DocumentNode
+    from docprompt.schema.pipeline import DocumentNode, PageNode
+
 DocumentNode = TypeVar("DocumentNode", bound="DocumentNode")
+PageNode = TypeVar("PageNode", bound="PageNode")
+
+TMetadataOwner = TypeVar("TMetadataOwner", bound=Union[DocumentNode, PageNode])
 
 
-class BaseMetadata(BaseModel, MutableMapping):
+class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
     """The base metadata class is utilized for defining a basic yet flexible interface
     for metadata attached to various fields.
     """
 
     extra: dict[str, Any] = Field(..., default_factory=dict, repr=False)
 
-    _document: DocumentNode = (
-        PrivateAttr()
-    )  # TODO: Implement automated setting of this value
+    _owner: TMetadataOwner = PrivateAttr()
 
-    @property
-    def owner(self) -> DocumentNode:
-        """Return the owner of the metadata."""
-        return self._document
+    def get_owner(self) -> TMetadataOwner:
+        """Return the owner of the metadata.
+
+        NOTE: We avoid using a standard property here, due to conflicts with the custom
+        __getattr__ implementation.
+        """
+        return self._owner
+
+    def set_owner(self, owner: TMetadataOwner) -> None:
+        """Return the owner of the metadata.
+
+        NOTE: We avoid using a standard setter here, due to conflicts with the custom
+        __setattr__ implementation.
+        """
+        self._owner = owner
 
     @classmethod
-    def from_owner(cls, owner: DocumentNode, **data: Any) -> BaseMetadata:
+    def from_owner(cls, owner: TMetadataOwner, **data: Any) -> BaseMetadata:
         """Create a new instance of the metadata class with the owner set."""
         metadata = cls(**data)
-        metadata._document = owner
+        metadata.set_owner(owner)
         return metadata
 
     @model_validator(mode="before")
@@ -118,16 +131,19 @@ class BaseMetadata(BaseModel, MutableMapping):
     def __getattr__(self, name):
         if self._is_field_typed():
             return super().__getattr__(name)
-        else:
-            return self.extra.get(name)
+
+        if name.startswith("_"):
+            return super().__getattr__(name)
+
+        return self.extra.get(name)
 
     def __setattr__(self, name: str, value) -> None:
         if self._is_field_typed():
             return super().__setattr__(name, value)
-        else:
-            # We want to avoid setting any private attributes in the extra
-            # dictionary
-            if name.startswith("_"):
-                return super().__setattr__(name, value)
 
-            self.extra[name] = value
+        # We want to avoid setting any private attributes in the extra
+        # dictionary
+        if name.startswith("_"):
+            return super().__setattr__(name, value)
+
+        self.extra[name] = value
