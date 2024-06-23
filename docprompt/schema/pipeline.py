@@ -21,23 +21,20 @@ from pydantic import BaseModel, Field, PositiveInt, PrivateAttr
 from typing_extensions import Self
 
 from docprompt.rasterize import AspectRatioRule, ResizeModes, process_raster_image
-from docprompt.storage import FileSystemManager
+from docprompt.storage import FileSidecarsPathManager, FileSystemManager
 from docprompt.tasks.base import ResultContainer
 from docprompt.tasks.ocr.result import OcrPageResult
 
 if TYPE_CHECKING:
     from docprompt.provenance.search import DocumentProvenanceLocator
 
+
 from .document import Document
-from .metadata import BaseMetadata  # TODO: Implement this instead of DefaultMetadata
+from .metadata import BaseMetadata
 
 DocumentCollectionMetadata = TypeVar("DocumentCollectionMetadata", bound=BaseMetadata)
 DocumentNodeMetadata = TypeVar("DocumentNodeMetadata", bound=BaseMetadata)
 PageNodeMetadata = TypeVar("PageNodeMetadata", bound=BaseMetadata)
-
-# TODO: Is there a better way to bound these types?
-FilePathResult = TypeVar("FilePathResult", bound=BaseModel)
-StorageProvider = TypeVar("StorageProvider", bound=BaseModel)
 
 
 class PageRasterizer:
@@ -283,13 +280,6 @@ class PageNode(BaseModel, Generic[PageNodeMetadata]):
         )
 
 
-def default_provider():
-    """A factory function to get the default storage provider."""
-    from docprompt.storage.local import LocalFileSystemStorageProvider
-
-    return LocalFileSystemStorageProvider
-
-
 class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     """
     Represents a single document, with some metadata
@@ -392,7 +382,7 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         return self.document.name
 
     @classmethod
-    def metadata_class(cls) -> Type[Union[dict, BaseModel]]:
+    def metadata_class(cls) -> Type[BaseMetadata]:
         """Get the metadata class for instantiating metadata from the model."""
 
         fields = cls.model_fields
@@ -504,14 +494,16 @@ class DocumentNode(BaseModel, Generic[DocumentNodeMetadata, PageNodeMetadata]):
 
         return node
 
-    def persist(self, path: Optional[str] = None, **kwargs):
+    def persist(self, path: Optional[str] = None, **kwargs) -> FileSidecarsPathManager:
         """Persist a document node to storage.
 
         Args:
+            path (Optional[str]): Overwrites the current `persistance_path` property
+                - If `persistance_path` is not currently set, path must be provided.
             **kwargs: Additional keyword arguments for fsspec FileSystem
 
         Returns:
-            FilePathManager: The file path manager for the persisted document node.
+            FileSidecarsPathManager: The file path manager for the persisted document node.
         """
 
         path = path or self.persistance_path
@@ -544,5 +536,5 @@ class DocumentCollection(
     Represents a collection of documents with some common metadata
     """
 
-    document_nodes: list[DocumentNode[DocumentNodeMetadata, PageNodeMetadata]]
+    document_nodes: List[DocumentNode[DocumentNodeMetadata, PageNodeMetadata]]
     metadata: DocumentCollectionMetadata = Field(..., default_factory=dict)

@@ -131,10 +131,3 @@ class BaseMetadata(BaseModel, MutableMapping):
                 return super().__setattr__(name, value)
 
             self.extra[name] = value
-
-
-class Metadata(BaseMetadata):
-    """Concrete metadata test."""
-
-    title: str = Field(..., title="The title of the document.")
-    description: str = Field(..., title="The description of the document.")

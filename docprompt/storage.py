@@ -13,7 +13,6 @@ from typing import Any, Dict, Optional, Tuple, Union
 import fsspec
 from pydantic import BaseModel, Field, computed_field, model_validator
 from pydantic_core import core_schema
-from typing_extensions import Self
 
 
 class FileSidecarsPathManager(BaseModel):
@@ -110,12 +109,6 @@ class FileSystemManager(BaseModel):
         data["fs_kwargs"] = fs_kwargs
 
         return data
-
-    @model_validator(mode="after")
-    def validate_base_path_exists(self) -> Self:
-        """Validate that the base path exists after instantiating the file system."""
-        if not self.fs.exists(self.path, **self.fs_kwargs):
-            self.fs.mkdirs(self.path, **self.fs_kwargs)
 
     def get_pdf_name(self, file_hash: str) -> FileSidecarsPathManager:
         """Get the file manager for a specific file hash."""
