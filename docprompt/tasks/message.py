@@ -3,7 +3,8 @@ The core primatives for any language model interfacing. Docprompt uses these for
 supports free conversion to and from these types from other libaries.
 """
 
-from typing import List, Literal, Union, Optional
+from typing import List, Literal, Optional, Union
+
 from pydantic import BaseModel, model_validator
 
 
@@ -37,7 +38,7 @@ class OpenAIMessage(BaseModel):
 
     def to_langchain_message(self):
         try:
-            from langchain.schema import SystemMessage, HumanMessage, AIMessage
+            from langchain.schema import AIMessage, HumanMessage, SystemMessage
         except ImportError:
             raise ImportError(
                 "Could not import langchain.schema. Install with `docprompt[langchain]`"

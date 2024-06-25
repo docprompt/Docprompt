@@ -1,8 +1,10 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+
+import pytest
+
 from docprompt import load_document
 from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
-import pytest
 
 
 def do_split(document):

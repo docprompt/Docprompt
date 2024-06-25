@@ -1,5 +1,7 @@
+from typing import List, Literal, Optional
+
 from pydantic import BaseModel, Field, PositiveInt, computed_field
-from typing import Optional, List, Literal
+
 from docprompt.schema.layout import TextBlock
 
 

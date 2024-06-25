@@ -1,7 +1,7 @@
 from typing import List, Literal, Optional
-from typing_extensions import Annotated
 
 from pydantic import BaseModel, Field, PlainSerializer
+from typing_extensions import Annotated
 
 SegmentLevels = Literal["word", "line", "block"]
 TextblockSource = Literal["ocr", "derived"]

@@ -1,9 +1,11 @@
-from collections import defaultdict
 import re
-from docprompt.schema.layout import NormBBox, TextBlock
+from collections import defaultdict
 from typing import Any, Iterable, List, Optional
+
 from rapidfuzz import fuzz
 from rapidfuzz.utils import default_process
+
+from docprompt.schema.layout import NormBBox, TextBlock
 
 try:
     import tantivy
