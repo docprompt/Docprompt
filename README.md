@@ -1,7 +1,7 @@
 [![pypi](https://img.shields.io/pypi/v/docprompt.svg)](https://pypi.org/project/docprompt/)
 [![python](https://img.shields.io/pypi/pyversions/docprompt.svg)](https://pypi.org/project/docprompt/)
-[![Build Status](https://github.com/Page-Leaf/Docprompt/actions/workflows/dev.yml/badge.svg)](https://github.com/Page-Leaf/docprompt/actions/workflows/dev.yml)
-[![codecov](https://codecov.io/gh/Page-Leaf/Docprompt/branch/main/graphs/badge.svg)](https://codecov.io/github/Page-Leaf/Docprompt)
+[![Build Status](https://github.com/docprompt/Docprompt/actions/workflows/dev.yml/badge.svg)](https://github.com/docprompt/docprompt/actions/workflows/dev.yml)
+[![codecov](https://codecov.io/gh/docprompt/Docprompt/branch/main/graphs/badge.svg)](https://codecov.io/github/docprompt/Docprompt)
 [![pdm-managed](https://img.shields.io/badge/pdm-managed-blueviolet)](https://pdm-project.org)
 
 <br />
