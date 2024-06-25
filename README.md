@@ -19,9 +19,9 @@
     <br />
     <br />
     ·
-    <a href="https://github.com/Page-Leaf/Docprompt">Report Bug</a>
+    <a href="https://github.com/docprompt/Docprompt">Report Bug</a>
     ·
-    <a href="https://github.com/Page-Leaf/Docprompt">Request Feature</a>
+    <a href="https://github.com/docprompt/Docprompt">Request Feature</a>
   </p>
 </div>
 
@@ -52,8 +52,8 @@ Docprompt is a library for Document AI. It aims to make enterprise-level documen
 Documents and large language models
 
 
-* Documentation: <https://docprompt.dev>
-* GitHub: <https://github.com/Page-Leaf/docprompt>
+* Documentation: <https://docprompt.github.io/Docprompt/>
+* GitHub: <https://github.com/docprompt/docprompt>
 * PyPI: <https://pypi.org/project/docprompt/>
 * Free software: Apache-2.0
 
