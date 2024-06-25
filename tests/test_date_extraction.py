@@ -1,6 +1,6 @@
-from docprompt.utils.date_extraction import extract_dates_from_text
 from datetime import date
 
+from docprompt.utils.date_extraction import extract_dates_from_text
 
 STRING_A = """
 There was a meeting on 2021-01-01 and another on 2021-01-02.

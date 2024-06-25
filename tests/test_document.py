@@ -1,13 +1,14 @@
-import pytest
-from docprompt import load_document, load_documents
-from PIL import Image
 import io
 
-from .fixtures import PDF_FIXTURES
+import pytest
+from PIL import Image
 
-from docprompt.utils.splitter import pdf_split_iter_fast, pdf_split_iter_with_max_bytes
-from docprompt.utils import is_pdf, hash_from_bytes
+from docprompt import load_document, load_documents
 from docprompt.rasterize import ProviderResizeRatios
+from docprompt.utils import hash_from_bytes, is_pdf
+from docprompt.utils.splitter import pdf_split_iter_fast, pdf_split_iter_with_max_bytes
+
+from .fixtures import PDF_FIXTURES
 
 
 def test_load_document():

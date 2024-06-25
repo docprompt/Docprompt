@@ -1,14 +1,15 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Literal, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional
 
 from docprompt.schema.layout import NormBBox, TextBlock
 from docprompt.tasks.ocr.result import OcrPageResult
+
 from .source import PageTextLocation, ProvenanceSource
 from .util import (
-    create_tantivy_document_wise_block_index,
-    preprocess_query_text,
-    insert_generator,
     construct_valid_rtree_tuple,
+    create_tantivy_document_wise_block_index,
+    insert_generator,
+    preprocess_query_text,
     refine_block_to_word_level,
 )
 

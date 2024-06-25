@@ -1,10 +1,12 @@
+import base64
 import pickle
-from docprompt import load_document, DocumentNode
-from docprompt._pdfium import rasterize_pdfs_with_pdfium
-from .fixtures import PDF_FIXTURES
 
 from PIL import Image
-import base64
+
+from docprompt import DocumentNode, load_document
+from docprompt._pdfium import rasterize_pdfs_with_pdfium
+
+from .fixtures import PDF_FIXTURES
 
 
 def test_rasterize_via_page_node():

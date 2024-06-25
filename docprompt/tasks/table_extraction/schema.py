@@ -1,7 +1,9 @@
-from docprompt.tasks.base import BasePageResult
-from pydantic import BaseModel, Field
 from typing import List, Optional
+
+from pydantic import BaseModel, Field
+
 from docprompt.schema.layout import NormBBox
+from docprompt.tasks.base import BasePageResult
 
 
 class TableHeader(BaseModel):

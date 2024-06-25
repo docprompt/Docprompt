@@ -1,9 +1,10 @@
-from typing import Literal, Iterable, Optional, Union
-from pydantic import BaseModel
-from PIL import Image, ImageDraw
-from io import BytesIO
 import logging
 from enum import Enum
+from io import BytesIO
+from typing import Iterable, Literal, Optional, Union
+
+from PIL import Image, ImageDraw
+from pydantic import BaseModel
 
 from docprompt.schema.layout import NormBBox
 
