@@ -1,11 +1,7 @@
 # Enterprise
 For companies looking to unlock data, build custom language models, or for general professional support
 
-:::info
-
 [Talk to founders](https://calendly.com/pageleaf/meet-with-the-founders)
-
-:::
 
 This covers:
 

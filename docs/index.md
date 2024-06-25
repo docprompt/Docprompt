@@ -1,10 +1,4 @@
----
-sidebar_position: 1
----
-
 # Docprompt - Getting Started
-
-https://github.com/Page-Leaf/Docprompt
 
 ## Supercharged Document Analysis
 

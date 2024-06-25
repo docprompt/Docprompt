@@ -91,6 +91,14 @@ dev = [
   "ipython>=8.12.3",
   "python-dotenv>=1.0.1"
 ]
+docs = [
+  "mkdocs>=1.6.0",
+  "mkdocs-material>=9.5.27",
+  "mkdocstrings[python]>=0.25.1",
+  "mkdocs-blog-plugin>=0.25",
+  "mkdocs-gen-files>=0.5.0",
+  "mkdocs-literate-nav>=0.6.1"
+]
 
 [tool.ruff]
 target-version = "py38"
