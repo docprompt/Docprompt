@@ -1,10 +1,12 @@
 import logging
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from enum import Enum
 from threading import Lock
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
 
 import tqdm
+from pydantic import BaseModel, Field
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from docprompt.schema.document import Document
@@ -66,6 +68,34 @@ service_account_file_read_lock = Lock()
 default_retry_decorator = retry(
     wait=wait_exponential(multiplier=1, max=60), stop=stop_after_attempt(10)
 )
+
+
+class GCPDefectTypes(str, Enum):
+    BLURRY = "BLURRY"
+    NOISY = "NOISY"
+    DARK = "DARK"
+    FAINT = "FAINT"
+    TOO_SMALL = "TOO_SMALL"
+    DOCUMENT_CUTOFF = "CUTOFF"
+    TEXT_CUTOFF = "TEXT_CUTOFF"
+    GLARE = "GLARE"
+
+
+GCP_DEFECT_TYPE_MAPPING = {
+    "quality/defect_blurry": GCPDefectTypes.BLURRY,
+    "quality/defect_noisy": GCPDefectTypes.NOISY,
+    "quality/defect_dark": GCPDefectTypes.DARK,
+    "quality/defect_faint": GCPDefectTypes.FAINT,
+    "quality/defect_text_too_small": GCPDefectTypes.TOO_SMALL,
+    "quality/defect_document_cutoff": GCPDefectTypes.DOCUMENT_CUTOFF,
+    "quality/defect_text_cutoff": GCPDefectTypes.TEXT_CUTOFF,
+    "quality/defect_glare": GCPDefectTypes.GLARE,
+}
+
+
+class GCPPageMetadata(BaseModel):
+    quality_score: Optional[float] = None
+    defect_scores: Dict[GCPDefectTypes, float] = Field(default_factory=dict)
 
 
 def bounding_poly_from_layout(
@@ -194,6 +224,28 @@ def text_blocks_from_page(
     return text_blocks
 
 
+def metadata_from_page(page: "documentai.Document.Page") -> GCPPageMetadata:
+    if not hasattr(page, "image_quality_scores"):
+        return GCPPageMetadata()
+
+    scores = page.image_quality_scores
+
+    quality_score = scores.quality_score
+
+    defect_scores = {}
+
+    for defect in scores.detected_defects:
+        defect_type = GCP_DEFECT_TYPE_MAPPING.get(defect.type_)
+
+        if defect_type is not None:
+            defect_scores[defect_type] = round(defect.confidence, 5)
+
+    return GCPPageMetadata(
+        quality_score=round(quality_score, 5),
+        defect_scores=defect_scores,
+    )
+
+
 def process_page(
     document_text: str,
     page,
@@ -218,12 +270,14 @@ def process_page(
         page, document_text, "block", exclude_bounding_poly=exclude_bounding_poly
     )
 
+    metadata = metadata_from_page(page)
+
     if return_image:
         image = page.image.content
     else:
         image = None
 
-    return OcrPageResult(
+    return OcrPageResult[GCPPageMetadata](
         provider_name=provider_name,
         document_name=document_name,
         file_hash=file_hash,
@@ -233,6 +287,7 @@ def process_page(
         line_level_blocks=line_boxes,
         block_level_blocks=block_boxes,
         raster_image=image,
+        extra=metadata,
     )
 
 
@@ -316,8 +371,10 @@ def gcp_documents_to_result_multi(
 
     futures = []
 
+    ctx = multiprocessing.get_context("spawn")
+
     with tqdm.tqdm(total=len(documents), desc="Processing documents") as pbar:
-        with ProcessPoolExecutor(max_workers=worker_count) as executor:
+        with ProcessPoolExecutor(max_workers=worker_count, mp_context=ctx) as executor:
             for task in tasks:
                 future = executor.submit(multi_process_page, task)
                 future.add_done_callback(lambda x: pbar.update(1))
@@ -391,6 +448,7 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
         max_workers: int = multiprocessing.cpu_count() * 2,
         exclude_bounding_poly: bool = False,
         return_images: bool = False,
+        return_image_quality_scores: bool = False,
     ):
         if service_account_info is None and service_account_file is None:
             raise ValueError(
@@ -412,6 +470,7 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
 
         self.exclude_bounding_poly = exclude_bounding_poly
         self.return_images = return_images
+        self.return_image_quality_scores = return_image_quality_scores
 
         try:
             from google.cloud import documentai
@@ -464,6 +523,16 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
         else:
             raise ValueError("Missing account info and service file path.")
 
+    def _get_process_options(self):
+        if not self.return_image_quality_scores:
+            return None
+
+        return self.documentai.ProcessOptions(
+            ocr_config=self.documentai.OcrConfig(
+                enable_image_quality_scores=True,
+            )
+        )
+
     def _process_document_sync(self, document: Document):
         """
         Split the document into chunks of 15 pages or less, and process each chunk
@@ -494,8 +563,13 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
             if self.return_images:
                 field_mask += ",pages.image"
 
+            if self.return_image_quality_scores:
+                field_mask += ",image_quality_scores"
+
             request = self.documentai.ProcessRequest(
-                name=processor_name, raw_document=raw_document, field_mask=field_mask
+                name=processor_name,
+                raw_document=raw_document,
+                process_options=self._get_process_options(),
             )
 
             result = client.process_document(request=request)
@@ -571,8 +645,13 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
             if self.return_images:
                 field_mask += ",pages.image"
 
+            if self.return_image_quality_scores:
+                field_mask += ",image_quality_scores"
+
             request = self.documentai.ProcessRequest(
-                name=processor_name, raw_document=raw_document, field_mask=field_mask
+                name=processor_name,
+                raw_document=raw_document,
+                process_options=self._get_process_options(),
             )
 
             result = client.process_document(request=request)
