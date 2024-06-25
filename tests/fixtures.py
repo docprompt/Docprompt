@@ -1,6 +1,5 @@
 from .util import PdfFixture
 
-
 PDF_FIXTURES = [
     PdfFixture(
         name="1.pdf",

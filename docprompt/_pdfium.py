@@ -1,22 +1,32 @@
-from collections import defaultdict
-from io import BytesIO
-from math import ceil
-import os
-import random
-import tempfile
-import pypdfium2 as pdfium
-from contextlib import contextmanager
-from threading import Lock
-from typing import Any, Callable, Dict, List, Literal, Tuple, Union, Optional
-from os import PathLike
-from pathlib import Path
+import concurrent.futures as ft
 import logging
 import multiprocessing as mp
-import concurrent.futures as ft
-from PIL import Image
-from typing import TypeVar, Iterable
+import os
 import queue
+import random
+import tempfile
+from collections import defaultdict
+from contextlib import contextmanager
+from io import BytesIO
+from math import ceil
+from os import PathLike
+from pathlib import Path
+from threading import Lock
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
+import pypdfium2 as pdfium
+from PIL import Image
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)

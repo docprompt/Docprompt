@@ -1,17 +1,17 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
+import warnings
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
 from typing import List, Optional, Union
 from urllib.parse import unquote, urlparse
-import warnings
 
-import fsspec
 import filetype
+import fsspec
 
-from docprompt.schema.document import PdfDocument
 from docprompt._pdfium import get_pdfium_document
+from docprompt.schema.document import PdfDocument
 
 
 def is_pdf(fd: Union[Path, PathLike, bytes]) -> bool:

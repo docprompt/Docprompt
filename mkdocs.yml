@@ -1,0 +1,55 @@
+site_name: Docprompt
+site_url: https://docprompt.dev
+repo_url: https://github.com/Page-Leaf/Docprompt
+theme:
+  name: material
+  logo: assets/static/img/logo.png
+  favicon: assets/static/img/logo.png
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+plugins:
+  - search
+  - blog
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [docprompt]
+          options:
+            docstring_style: google
+            show_source: true
+            show_submodules: true
+
+nav:
+  - Getting Started: index.md
+  - How-to Guides:
+    - Perform OCR: guide/ocr.md
+    - Classify Pages: guide/classify.md
+    - Extract Tables: guide/extract_tables.md
+  - Concepts:
+    - Primatives: concepts/primatives.md
+    - Nodes: concepts/nodes.md
+    - Providers: concepts/providers.md
+    - Provenance: concepts/provenance.md
+  - Cloud: enterprise.md
+  - Blog:
+    - blog/index.md
+  - API Reference:
+    - Docprompt SDK: reference/
+    - Enterpise API: enterprise/
+  - Community:
+    - Contributing: community/contributing.md
+    - Versioning: community/versioning.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg

@@ -6,10 +6,8 @@ from typing import Iterator, Optional
 import pypdfium2 as pdfium
 
 from docprompt._exec.ghostscript import compress_pdf_to_bytes
-from docprompt.utils import get_page_count
-
 from docprompt._pdfium import get_pdfium_document, writable_temp_pdf
-
+from docprompt.utils import get_page_count
 
 logger = logging.getLogger(__name__)
 

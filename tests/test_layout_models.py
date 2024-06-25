@@ -1,6 +1,7 @@
+import pytest
+
 from docprompt import NormBBox
 from docprompt.schema.layout import BoundingPoly, Point
-import pytest
 
 
 def test_normbbox_utilities():

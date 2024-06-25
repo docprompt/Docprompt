@@ -1,6 +1,8 @@
 from typing import Literal
-from docprompt.schema.layout import NormBBox
+
 from PIL import Image
+
+from docprompt.schema.layout import NormBBox
 
 ImageMaskModes = Literal["color", "average", "alpha"]
 

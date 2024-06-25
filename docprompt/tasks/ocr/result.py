@@ -1,8 +1,10 @@
-from typing import List, Optional, TypeVar, Generic
+from io import BytesIO
+from typing import Generic, List, Optional, TypeVar
+
 from pydantic import Field
+
 from docprompt.schema.layout import TextBlock
 from docprompt.tasks.base import BasePageResult
-from io import BytesIO
 
 T = TypeVar("T")
 

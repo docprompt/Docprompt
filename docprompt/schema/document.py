@@ -1,34 +1,31 @@
 import base64
 import gzip
+import logging
 import tempfile
 from contextlib import contextmanager
 from datetime import datetime
-from functools import cached_property
+from functools import cached_property, partial
 from os import PathLike
 from pathlib import Path
-from typing import Dict, Generator, Literal, Optional, Tuple, Union, Iterable
-from pydantic import Field
-from functools import partial
-import filetype
+from typing import Dict, Generator, Iterable, Literal, Optional, Tuple, Union
 
+import filetype
 from pydantic import (
     BaseModel,
+    Field,
     PositiveInt,
     computed_field,
     field_serializer,
     field_validator,
 )
 
-from docprompt._exec.ghostscript import (
-    compress_pdf_to_bytes,
-)
-from docprompt.rasterize import process_raster_image, ResizeModes, AspectRatioRule
-import logging
+from docprompt._exec.ghostscript import compress_pdf_to_bytes
 from docprompt._pdfium import (
     get_pdfium_document,
     rasterize_page_with_pdfium,
     rasterize_pdf_with_pdfium,
 )
+from docprompt.rasterize import AspectRatioRule, ResizeModes, process_raster_image
 
 DEFAULT_DPI = 100
 

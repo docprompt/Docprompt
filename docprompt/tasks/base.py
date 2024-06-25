@@ -1,16 +1,26 @@
-from typing import Any, Dict, Generic, List, Literal, TypeVar, TYPE_CHECKING, Union
+import importlib
+from datetime import datetime
+from enum import Enum
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generic,
+    List,
+    Literal,
+    Optional,
+    TypeVar,
+    Union,
+)
+
 from pydantic import BaseModel, Field
 
 from docprompt.schema.document import Document
-from typing import Optional
-from enum import Enum
-from datetime import datetime
-import importlib
-
 
 if TYPE_CHECKING:
+    from langchain.schema import HumanMessage, SystemMessage
+
     from docprompt.schema.pipeline import DocumentNode
-    from langchain.schema import SystemMessage, HumanMessage
 
 
 class CAPABILITIES(Enum):

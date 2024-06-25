@@ -1,6 +1,8 @@
 from typing import Dict
+
 from docprompt.schema.pipeline import DocumentNode
-from docprompt.tasks.base import AbstractLanguageModelTaskProvider, CAPABILITIES
+from docprompt.tasks.base import CAPABILITIES, AbstractLanguageModelTaskProvider
+
 from .schema import TableExtractionPageResult
 
 
