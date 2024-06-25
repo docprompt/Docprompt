@@ -6,7 +6,7 @@
 
 <br />
 <div align="center">
-  <a href="https://github.com/Page-Leaf/Docprompt">
+  <a href="https://github.com/docprompt/Docprompt">
     <img src="docs/docprompt/static/img/logo.png" alt="Logo" width="120" height="120">
   </a>
 
