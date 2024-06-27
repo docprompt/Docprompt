@@ -1,8 +1,9 @@
 """Generate the code reference pages and navigation."""
 
-from pathlib import Path
-import mkdocs_gen_files
 import logging
+from pathlib import Path
+
+import mkdocs_gen_files
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
