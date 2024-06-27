@@ -76,3 +76,16 @@ class OpenAIMessage(BaseModel):
         return ChatMessage.from_str(
             content=dumped["content"], role=role_mapping[self.role]
         )
+
+    @classmethod
+    def from_image_uri(cls, image_uri: str) -> "OpenAIMessage":
+        """Create an image message from a URI.
+
+        Args:
+            role: The role of the message.
+            image_uri: The URI of the image.
+        """
+        image_url = OpenAIImageURL(url=image_uri)
+        content = OpenAIComplexContent(type="image_url", image_url=image_url)
+        message = cls(role="user", content=[content])
+        return message
