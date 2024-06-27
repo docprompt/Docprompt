@@ -32,6 +32,9 @@ classifiers = ["Development Status :: 2 - Pre-Alpha", "Intended Audience :: Deve
 google = ["google-cloud-documentai>=2.20.0"]
 azure = ["azure-ai-formrecognizer>=3.3.0"]
 search = ["tantivy<1.0.0,>=0.21.0", "rtree<3.0.0,>=1.2.0", "networkx<4.0.0,>=2.8.8"]
+anthropic = [
+  "anthropic>=0.26.0"
+]
 
 [project.scripts]
 docprompt = "docprompt.cli:main"
@@ -51,7 +54,7 @@ exclude = '''
   | \.hg
   | \.mypy_cache
   | \.tox
-  | \.venv
+  | \.venv`
   | _build
   | buck-out
   | build

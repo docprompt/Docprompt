@@ -121,7 +121,7 @@ class BaseClassificationProvider(
 ):
     # NOTE: We override the method here for more accurate type-hinting
     @override
-    def process_document_node(
+    async def aprocess_document_node(
         self,
         document_node: DocumentNode,
         task_input: ClassificationInput,
@@ -137,7 +137,7 @@ class BaseClassificationProvider(
 
         # Essentially an identical implementation as the `AbstractPageTaskProvider` class, but with
         # `DocumentNode` instead of `Document` as the first argument to `process_document_pages`
-        results = self.process_document_pages(
+        results = await self.aprocess_document_pages(
             document_node,
             task_input,
             start=start,

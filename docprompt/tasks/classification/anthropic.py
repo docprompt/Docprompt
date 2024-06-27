@@ -9,6 +9,7 @@ from pydantic import Field
 from docprompt.schema.pipeline import DocumentNode
 from docprompt.tasks.message import OpenAIMessage
 from docprompt.tasks.parser import BaseOutputParser
+from docprompt.utils import inference
 
 from .base import (
     BaseClassificationProvider,
@@ -138,7 +139,7 @@ class PageClassificationOutputParser(
 class AnthropicClassificationProvider(BaseClassificationProvider):
     """The Anthropic implementation of unscored page classification."""
 
-    def process_document_pages(
+    async def aprocess_document_pages(
         self,
         document_node: DocumentNode,
         task_input: ClassificationInput,
@@ -160,12 +161,17 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
 
             # TODO: Optimize rastrization with concurrency??
             image_uri = page.rasterizer.rasterize_to_data_uri("default")
-            _image_message = OpenAIMessage.from_image_uri(image_uri)
+            image_message = OpenAIMessage.from_image_uri(image_uri)
 
             messages.append(
                 [
-                    PAGE_CLASSIFICATION_SYSTEM_PROMPT.render(input=task_input),
-                    # image_message,
+                    OpenAIMessage(
+                        role="system",
+                        content=PAGE_CLASSIFICATION_SYSTEM_PROMPT.render(
+                            input=task_input
+                        ),
+                    ),
+                    image_message,
                 ]
             )
 
@@ -174,20 +180,17 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
             len(messages) == stop - start
         ), f"Invalid number of messages: {len(messages)}"
 
-        _parser = PageClassificationOutputParser.from_task_input(task_input)
+        parser = PageClassificationOutputParser.from_task_input(task_input)
 
         # NOTE: A mock implementation of a mini-chain for running inference in parallel
         # async def process_page(messages: List[OpenAIMessage]):
-        #     result = await run_inference(messages)
-        #     return parser.parse(result)
+        completions = await inference.run_batch_inference_anthropic(
+            "claude-3-haiku-20240307", messages, **kwargs
+        )
+        labels = [parser.parse(res) for res in completions]
 
-        # NOTE: Executing the tasks in a gather loop to run in parallel
-        # tasks = asyncio.gather(*[process_page(msgs) for msgs in messages])
-        # results = asyncio.run(tasks)
-        # return results
-
-        # NOTE: For now return document messages array
-        return messages
+        results = {i: label for i, label in zip(range(start, stop), labels)}
+        return results
 
     def contribute_to_document_node(self, *args, **kwargs):
         """Eventually this will define how the results are added to the document node.
