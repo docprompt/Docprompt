@@ -2,7 +2,7 @@ from abc import abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing_extensions import override
 
 from docprompt.tasks.base import AbstractPageTaskProvider
@@ -29,6 +29,18 @@ class ClassificationInput(BaseModel):
         if isinstance(self.labels, Enum):
             return [self.labels.value]
         return self.labels
+
+    @validator('descriptions')
+    def validate_descriptions_length(cls, v, values):
+        if v is not None:
+            labels = values.get('labels')
+            if labels is not None:
+                if isinstance(labels, Enum):
+                    if len(v) != len(labels.__members__):
+                        raise ValueError("descriptions must have the same length as labels")
+                elif len(v) != len(labels):
+                    raise ValueError("descriptions must have the same length as labels")
+        return v
 
 
 class ClassificationOutput(BaseModel):
