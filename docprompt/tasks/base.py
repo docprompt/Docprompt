@@ -11,6 +11,7 @@ from typing import (
 
 from pydantic import BaseModel, Field
 
+from docprompt._decorators import flexible_methods
 from docprompt.schema.document import Document
 
 from .capabilities import DocumentLevelCapabilities, PageLevelCapabilities
@@ -57,6 +58,7 @@ class ResultContainer(BaseModel, Generic[PageOrDocumentTaskResult]):
         return next(iter(self.results.values()), None)
 
 
+@flexible_methods(("process_document_pages", "aprocess_document_pages"))
 class AbstractPageTaskProvider(ABC, Generic[TTaskInput, PageTaskResult]):
     """
     A task provider performs a specific, repeatable task on a document or its pages
@@ -66,7 +68,16 @@ class AbstractPageTaskProvider(ABC, Generic[TTaskInput, PageTaskResult]):
     capabilities: List[PageLevelCapabilities]
     requires_input: bool
 
-    @abstractmethod
+    async def aprocess_document_pages(
+        self,
+        document: Document,
+        task_input: Optional[TTaskInput] = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        **kwargs,
+    ):
+        raise NotImplementedError
+
     def process_document_pages(
         self,
         document: Document,
