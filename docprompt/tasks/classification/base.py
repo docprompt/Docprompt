@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, List, Literal, Union
+from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 from typing_extensions import override
@@ -23,6 +23,7 @@ class ClassificationTypes(str, Enum):
 class ClassificationInput(BaseModel):
     type: ClassificationTypes
     labels: LabelType
+    descriptions: Optional[List[str]] = None
 
     def resolve_labels(self):
         if isinstance(self.labels, Enum):
