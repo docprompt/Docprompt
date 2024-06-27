@@ -20,8 +20,7 @@ from docprompt.schema.layout import (
     TextBlockMetadata,
     TextSpan,
 )
-from docprompt.schema.pipeline import DocumentNode
-from docprompt.tasks.base import AbstractTaskProvider
+from docprompt.tasks.ocr.base import BaseOCRProvider
 from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
 
 from ..base import CAPABILITIES
@@ -33,7 +32,6 @@ if TYPE_CHECKING:
     from google.cloud import documentai
 
     from docprompt.schema.document import Document
-    from docprompt.schema.pipeline import DocumentNode
 
 
 service_account_file_read_lock = Lock()
@@ -424,7 +422,7 @@ def gcp_documents_to_result(
         raise ValueError("Invalid mode for GCP document processing")
 
 
-class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
+class GoogleOcrProvider(BaseOCRProvider):
     name = "Google Document AI"
     capabilities = [
         CAPABILITIES.PAGE_TEXT_OCR.value,
@@ -697,11 +695,3 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
         **kwargs,
     ) -> Dict[int, OcrPageResult]:
         return self._process_document_concurrent(document, start=start, stop=stop)
-
-    def contribute_to_document_node(
-        self, document_node: "DocumentNode", results: Dict[int, OcrPageResult]
-    ) -> None:
-        for page_number, result in results.items():
-            document_node.page_nodes[page_number - 1].ocr_results.results[self.name] = (
-                result
-            )

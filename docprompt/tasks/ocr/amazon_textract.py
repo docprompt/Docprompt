@@ -1,27 +1,29 @@
-from typing import Optional, Dict, List
-from docprompt.schema.document import Document
-from docprompt.schema.pipeline import DocumentNode
-from docprompt.tasks.base import AbstractTaskProvider
-from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
-from ..base import CAPABILITIES
-from .result import OcrPageResult
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import logging
 import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+from typing import Dict, List, Optional
 
+import boto3
+import tqdm
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from docprompt.schema.document import Document
 from docprompt.schema.layout import (
-    TextBlock,
-    NormBBox,
-    TextSpan,
     BoundingPoly,
+    NormBBox,
     Point,
     SegmentLevels,
+    TextBlock,
     TextBlockMetadata,
+    TextSpan,
 )
-from tenacity import retry, stop_after_attempt, wait_exponential
-import tqdm
-import logging
-import boto3
+from docprompt.schema.pipeline import DocumentNode
+from docprompt.tasks.ocr.base import BaseOCRProvider
+from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
+
+from ..base import CAPABILITIES
+from .result import OcrPageResult
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +138,7 @@ def textract_documents_to_result(
     return results
 
 
-class AmazonTextractProvider(AbstractTaskProvider[OcrPageResult]):
+class AmazonTextractProvider(BaseOCRProvider):
     name = "Amazon Textract"
     capabilities = [
         CAPABILITIES.PAGE_TEXT_OCR.value,
