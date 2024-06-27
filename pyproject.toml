@@ -102,7 +102,12 @@ dev = [
   "toml<1.0.0,>=0.10.2",
   "bump2version<2.0.0,>=1.0.1",
   "ipython>=8.12.3",
-  "python-dotenv>=1.0.1"
+  "python-dotenv>=1.0.1",
+  "ipykernel>=6.29.4",
+  "matplotlib>=3.7.5",
+  "pandas>=2.0.3",
+  "seaborn>=0.13.2",
+  "sklearn>=0.0.post12"
 ]
 docs = [
   "mkdocs>=1.6.0",

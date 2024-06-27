@@ -1,7 +1,7 @@
 """The antrhopic implementation of page level calssification."""
 
 import re
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 from jinja2 import Template
 from pydantic import Field
@@ -22,38 +22,41 @@ from .base import (
 
 PAGE_CLASSIFICATION_SYSTEM_PROMPT = Template(
     """
-You are given a page of a PDF document. Classifiy the page by following the instructions below:
-{% if input.type == "binary" %}\
-{{ input.instructions }}\
-\
-Classify the page with a binary label:
-YES/NO
-{% else %}\
+You are a classification expert. Your are given a single page to perform a classification task on.
 
+Task Instructions:
 {% if input.instructions %}\
 {{ input.instructions }}
 {% endif %}\
 
-{% if input.type == 'single_label' %}\
-Classify the page as one of the following:
-{% elif input.type == 'multi_label' %}\
-Classify the page with all labels that apply:
-{% endif %}\
+{% if input.type == "binary" %}\
+You must classify the page with a binary label:
+YES/NO
+{% else %}\
+Classify the page as {% if input.type == 'multi_label' %}all labels that apply{% else %}one of the following{% endif %}:
 
-{% for label in input.formatted_labels %}\
+{% for label in input.formatted_labels %}
 - {{ label }}
 {% endfor %}\
 {% endif %}\
+
+It is crucial that your response is accurate and provides a valid answer using \
+{% if input.type == 'multi_label' %}\
+the labels \
+{% else %}\
+one of the labels \
+{% endif %}\
+above. There are consequences for providing INVALID or INACCURATE labels.
 
 Answer in the following format:
 
 Reasoning: { your reasoning and analysis }
 {% if input.type == "binary" %}\
-Answer: { YES/NO (only the label and NOTHING ELSE)}
+Answer: { YES/NO }
 {% elif input.type == "single_label" %}\
-Answer: { label (only the label and NOTHING ELSE)}
+Answer: { label }
 {% else %}\
-Answer: { label1, label2, ... (comma separated list of labels and NOTHING ELSE)}
+Answer: { label1, label2, ... }
 {% endif %}\
 {% if input.confidence %}\
 Confidence: { low, medium, high }
@@ -136,6 +139,35 @@ class PageClassificationOutputParser(
         return ClassificationOutput(type=self.type, labels=result)
 
 
+async def classify_images(
+    image_uris: List[str], task_input: ClassificationInput, **kwargs
+) -> List[ClassificationOutput]:
+    """Classify a list of images with the given input."""
+
+    def _format_message(image_uri: str):
+        system = OpenAIMessage(
+            role="system",
+            content=PAGE_CLASSIFICATION_SYSTEM_PROMPT.render(input=task_input),
+        )
+
+        human = OpenAIMessage.from_image_uri(image_uri)
+        return [system, human]
+
+    messages = [_format_message(uri) for uri in image_uris]
+
+    model_name = kwargs.pop("model_name", "claude-3-haiku-20240307")
+
+    parser = PageClassificationOutputParser.from_task_input(task_input)
+
+    completions = await inference.run_batch_inference_anthropic(
+        model_name, messages, **kwargs
+    )
+
+    labels = [parser.parse(res) for res in completions]
+
+    return labels
+
+
 class AnthropicClassificationProvider(BaseClassificationProvider):
     """The Anthropic implementation of unscored page classification."""
 
@@ -155,41 +187,15 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
             0 <= start < stop <= len(document_node.page_nodes)
         ), f"Invalid start and stop values: {start}, {stop}"
 
-        messages = []
-        for i in range(start, stop):
-            page = document_node.page_nodes[i]
+        image_uris = [
+            page.rasterizer.rasterize_to_data_uri("default")
+            for page in document_node.page_nodes[start:stop]
+        ]
 
-            # TODO: Optimize rastrization with concurrency??
-            image_uri = page.rasterizer.rasterize_to_data_uri("default")
-            image_message = OpenAIMessage.from_image_uri(image_uri)
-
-            messages.append(
-                [
-                    OpenAIMessage(
-                        role="system",
-                        content=PAGE_CLASSIFICATION_SYSTEM_PROMPT.render(
-                            input=task_input
-                        ),
-                    ),
-                    image_message,
-                ]
-            )
-
-        # Process all messages concurrently here
-        assert (
-            len(messages) == stop - start
-        ), f"Invalid number of messages: {len(messages)}"
-
-        parser = PageClassificationOutputParser.from_task_input(task_input)
-
-        # NOTE: A mock implementation of a mini-chain for running inference in parallel
-        # async def process_page(messages: List[OpenAIMessage]):
-        completions = await inference.run_batch_inference_anthropic(
-            "claude-3-haiku-20240307", messages, **kwargs
-        )
-        labels = [parser.parse(res) for res in completions]
+        labels = await classify_images(image_uris, task_input, **kwargs)
 
         results = {i: label for i, label in zip(range(start, stop), labels)}
+
         return results
 
     def contribute_to_document_node(self, *args, **kwargs):

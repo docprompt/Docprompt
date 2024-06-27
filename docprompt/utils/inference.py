@@ -4,6 +4,8 @@ import asyncio
 import os
 from typing import TYPE_CHECKING, List, TypeVar
 
+from tqdm.asyncio import tqdm
+
 if TYPE_CHECKING:
     from docprompt.tasks.message import OpenAIMessage
 
@@ -64,6 +66,12 @@ async def run_batch_inference_anthropic(
         return await run_inference_anthropic(model_name, msg_set, **kwargs)
 
     tasks = [process_message_set(msg_set) for msg_set in messages]
-    responses = await asyncio.gather(*tasks)
+
+    responses = []
+    for f in tqdm(
+        asyncio.as_completed(tasks), total=len(tasks), desc="Processing messages"
+    ):
+        response = await f
+        responses.append(response)
 
     return responses
