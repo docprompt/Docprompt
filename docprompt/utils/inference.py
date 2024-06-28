@@ -1,6 +1,5 @@
 """A utility file for running inference with various LLM providers."""
 
-import asyncio
 import os
 from typing import TYPE_CHECKING, List, TypeVar
 
@@ -31,13 +30,26 @@ def get_anthropic_retry_decorator():
     )
 
 
+def get_openai_retry_decorator():
+    import openai
+
+    return retry(
+        wait=wait_random_exponential(multiplier=0.5, max=60),
+        stop=stop_after_attempt(14),
+        retry=retry_if_exception_type(openai.RateLimitError)
+        | retry_if_exception_type(openai.InternalServerError)
+        | retry_if_exception_type(openai.APITimeoutError),
+        reraise=True,
+    )
+
+
 async def run_inference_anthropic(
     model_name: str, messages: List[OpenAIMessage], **kwargs
 ):
     """Run inference using an Anthropic model asynchronously."""
     from anthropic import AsyncAnthropic
 
-    api_key = kwargs.get("api_key", os.environ.get("ANTHROPIC_API_KEY"))
+    api_key = kwargs.pop("api_key", os.environ.get("ANTHROPIC_API_KEY"))
     client = AsyncAnthropic(api_key=api_key)
 
     system = None
@@ -67,9 +79,15 @@ async def run_inference_anthropic(
             msg.content = processed_content
         processed_messages.append(msg)
 
-    response = await client.messages.create(
-        model=model_name, max_tokens=512, system=system, messages=processed_messages
-    )
+    client_kwargs = {
+        "model_name": model_name,
+        "max_tokens": 512,
+        "system": system,
+        "messages": processed_messages,
+        **kwargs,
+    }
+
+    response = await client.messages.create(**client_kwargs)
 
     content = response.content[0].text
 
@@ -89,9 +107,7 @@ async def run_batch_inference_anthropic(
     tasks = [process_message_set(msg_set) for msg_set in messages]
 
     responses = []
-    for f in tqdm(
-        asyncio.as_completed(tasks), total=len(tasks), desc="Processing messages"
-    ):
+    for f in tqdm.as_completed(tasks):
         response = await f
         responses.append(response)
 

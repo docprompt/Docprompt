@@ -35,6 +35,9 @@ search = ["tantivy<1.0.0,>=0.21.0", "rtree<3.0.0,>=1.2.0", "networkx<4.0.0,>=2.8
 anthropic = [
   "anthropic>=0.26.0"
 ]
+openai = [
+  "openai>=1.0.1"
+]
 
 [project.scripts]
 docprompt = "docprompt.cli:main"
