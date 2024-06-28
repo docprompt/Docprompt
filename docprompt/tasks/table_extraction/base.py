@@ -1,16 +1,22 @@
 from typing import Dict
 
 from docprompt.schema.pipeline import DocumentNode
-from docprompt.tasks.base import CAPABILITIES, AbstractLanguageModelTaskProvider
+from docprompt.tasks.base import AbstractPageTaskProvider
+from docprompt.tasks.capabilities import PageLevelCapabilities
 
 from .schema import TableExtractionPageResult
 
 
-class BaseTableExtractionProvider(AbstractLanguageModelTaskProvider):
+class BaseTableExtractionProvider(
+    AbstractPageTaskProvider[None, TableExtractionPageResult]
+):
     capabilities = [
-        CAPABILITIES.PAGE_TABLE_IDENTIFICATION.value,
-        CAPABILITIES.PAGE_TABLE_EXTRACTION.value,
+        PageLevelCapabilities.PAGE_TABLE_EXTRACTION,
+        PageLevelCapabilities.PAGE_TABLE_IDENTIFICATION,
     ]
+
+    class Meta:
+        abstract = True
 
     def contribute_to_document_node(
         self, document_node: DocumentNode, results: Dict[int, TableExtractionPageResult]

@@ -1,12 +1,14 @@
 import re
-import xml.etree.ElementTree as ET
 from typing import Dict, List, Optional, Union
 
-from docprompt.schema.document import PdfDocument
-from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
+from bs4 import BeautifulSoup, Tag
 
-from ..base import BaseTableExtractionProvider
-from ..result import (
+from docprompt.schema.document import PdfDocument
+from docprompt.tasks.message import OpenAIMessage
+from docprompt.utils import inference
+
+from .base import BaseTableExtractionProvider
+from .schema import (
     ExtractedTable,
     TableCell,
     TableExtractionPageResult,
@@ -35,32 +37,32 @@ For each table, respond in the following format:
 """.strip()
 
 
-def _title_from_tree(tree: ET.Element) -> Union[str, None]:
+def _title_from_tree(tree: Tag) -> Union[str, None]:
     title = tree.find("title")
     if title is not None:
         return title.text
     return None
 
 
-def _headers_from_tree(tree: ET.Element) -> List[TableHeader]:
+def _headers_from_tree(tree: Tag) -> List[TableHeader]:
     headers = tree.find("headers")
     if headers is not None:
         return [
-            TableHeader(text=header.text or "") for header in headers.findall("header")
+            TableHeader(text=header.text or "") for header in headers.find_all("header")
         ]
     return []
 
 
-def _rows_from_tree(tree: ET.Element) -> List[TableRow]:
+def _rows_from_tree(tree: Tag) -> List[TableRow]:
     rows = tree.find("rows")
     if rows is not None:
         return [
             TableRow(
                 cells=[
-                    TableCell(text=cell.text or "") for cell in row.findall("column")
+                    TableCell(text=cell.text or "") for cell in row.find_all("column")
                 ]
             )
-            for row in rows.findall("row")
+            for row in rows.find_all("row")
         ]
     return []
 
@@ -82,7 +84,9 @@ def parse_response(response: str) -> List[ExtractedTable]:
     for table_start, table_end in zip(table_start_indices, table_end_indices):
         table_str = response[table_start:table_end]
 
-        table_element = ET.fromstring(table_str)
+        soup = BeautifulSoup(table_str, "xml")
+
+        table_element = soup.find("table")
 
         title = _title_from_tree(table_element)
         headers = _headers_from_tree(table_element)
@@ -94,11 +98,12 @@ def parse_response(response: str) -> List[ExtractedTable]:
 
 
 class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
-    def process_document_pages(
+    async def aprocess_document_pages(
         self,
         document: PdfDocument,
         start: Optional[int] = None,
         stop: Optional[int] = None,
+        model_name: str = "claude-3-5-sonnet-20240620",
         **kwargs,
     ) -> Dict[int, TableExtractionPageResult]:
         messages = []
@@ -111,16 +116,15 @@ class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
                         role="system",
                         content=SYSTEM_PROMPT,
                     ),
-                    OpenAIMessage(
-                        role="user",
-                        content=[
-                            OpenAIComplexContent(
-                                type="image_url",
-                                image_url=OpenAIImageURL(url=rastered_page),
-                            )
-                        ],
-                    ),
+                    OpenAIMessage.from_image_uri(rastered_page),
                 ]
             )
 
-        return {}
+        completions = await inference.run_batch_inference_anthropic(
+            model_name, messages, **kwargs
+        )
+
+        return {
+            i: parse_response(x)
+            for i, x in zip(range(start or 1, (stop or len(document)) + 1), completions)
+        }

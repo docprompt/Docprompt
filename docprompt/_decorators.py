@@ -24,6 +24,9 @@ def flexible_methods(*method_groups: Tuple[str, str]):
 
         def apply_flexible_methods(cls: Type):
             errors = []
+
+            is_abstract = getattr(getattr(cls, "Meta", None), "abstract", False)
+
             for group in method_groups:
                 if len(group) != 2:
                     errors.append(
@@ -43,7 +46,7 @@ def flexible_methods(*method_groups: Tuple[str, str]):
                 if async_error:
                     errors.append(async_error)
 
-                if not sync_method and not async_method:
+                if not sync_method and not async_method and not is_abstract:
                     errors.append(
                         f"{cls.__name__} must implement at least one of these methods: {sync_name}, {async_name}"
                     )

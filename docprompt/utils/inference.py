@@ -1,7 +1,8 @@
 """A utility file for running inference with various LLM providers."""
 
+import asyncio
 import os
-from typing import TYPE_CHECKING, List, TypeVar
+from typing import List
 
 from tenacity import (
     retry,
@@ -11,10 +12,7 @@ from tenacity import (
 )
 from tqdm.asyncio import tqdm
 
-if TYPE_CHECKING:
-    from docprompt.tasks.message import OpenAIMessage
-
-OpenAIMessage = TypeVar("OpenAIMessage")
+from docprompt.tasks.message import OpenAIComplexContent, OpenAIMessage
 
 
 def get_anthropic_retry_decorator():
@@ -45,7 +43,7 @@ def get_openai_retry_decorator():
 
 async def run_inference_anthropic(
     model_name: str, messages: List[OpenAIMessage], **kwargs
-):
+) -> str:
     """Run inference using an Anthropic model asynchronously."""
     from anthropic import AsyncAnthropic
 
@@ -62,30 +60,28 @@ async def run_inference_anthropic(
         if isinstance(msg.content, list):
             processed_content = []
             for content in msg.content:
-                if getattr(content, "type", None) == "image_url":
-                    url = content.image_url.url
-                    base64 = url.split("image/png;base64,")[1]
-                    image_content_block = {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "image/png",
-                            "data": base64,
-                        },
-                    }
-                    processed_content.append(image_content_block)
-                else:
+                if isinstance(content, OpenAIComplexContent):
+                    content = content.to_anthropic_message()
                     processed_content.append(content)
-            msg.content = processed_content
-        processed_messages.append(msg)
+                else:
+                    pass
+                    # raise ValueError(f"Invalid content type: {type(content)} Expected OpenAIComplexContent")
+
+            dumped = msg.model_dump()
+            dumped["content"] = processed_content
+            processed_messages.append(dumped)
+        else:
+            processed_messages.append(msg)
 
     client_kwargs = {
-        "model_name": model_name,
-        "max_tokens": 512,
-        "system": system,
+        "model": model_name,
+        "max_tokens": 2048,
         "messages": processed_messages,
         **kwargs,
     }
+
+    if system:
+        client_kwargs["system"] = system
 
     response = await client.messages.create(**client_kwargs)
 
@@ -96,7 +92,7 @@ async def run_inference_anthropic(
 
 async def run_batch_inference_anthropic(
     model_name: str, messages: List[List[OpenAIMessage]], **kwargs
-):
+) -> List[str]:
     """Run batch inference using an Anthropic model asynchronously."""
     retry_decorator = get_anthropic_retry_decorator()
 
@@ -106,8 +102,8 @@ async def run_batch_inference_anthropic(
 
     tasks = [process_message_set(msg_set) for msg_set in messages]
 
-    responses = []
-    for f in tqdm.as_completed(tasks):
+    responses: List[str] = []
+    for f in tqdm(asyncio.as_completed(tasks), desc="Processing messages"):
         response = await f
         responses.append(response)
 
