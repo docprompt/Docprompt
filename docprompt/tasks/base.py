@@ -1,13 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import (
-    TYPE_CHECKING,
-    Dict,
-    Generic,
-    List,
-    Optional,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -68,6 +61,15 @@ class AbstractPageTaskProvider(ABC, Generic[TTaskInput, PageTaskResult]):
     capabilities: List[PageLevelCapabilities]
     requires_input: bool
 
+    provider_kwargs: Dict[str, Any]
+
+    @classmethod
+    def with_kwargs(cls, **kwargs):
+        """Create the provider with kwargs."""
+        obj = cls()
+        obj.provider_kwargs = kwargs
+        return obj
+
     async def aprocess_document_pages(
         self,
         document: Document,
@@ -108,6 +110,7 @@ class AbstractPageTaskProvider(ABC, Generic[TTaskInput, PageTaskResult]):
         contribute_to_document: bool = True,
         **kwargs,
     ) -> Dict[int, PageTaskResult]:
+        kwargs = {**(self.provider_kwargs or {}), **kwargs}
         results = self.process_document_pages(
             document_node.document,
             task_input=task_input,
@@ -129,6 +132,17 @@ class AbstractDocumentTaskProvider(ABC, Generic[TTaskInput, DocumentTaskResult])
 
     name: str
     capabilities: List[DocumentLevelCapabilities]
+
+    # NOTE: Temporary solution to allo kwargs from the factory to providers who
+    # don't take arbitrary kwargs in there __init__ method
+    _provider_kwargs: Dict[str, Any]
+
+    @classmethod
+    def with_kwargs(cls, **kwargs):
+        """Create the provider with kwargs."""
+        obj = cls()
+        obj.provider_kwargs = kwargs
+        return obj
 
     @abstractmethod
     def process_document(

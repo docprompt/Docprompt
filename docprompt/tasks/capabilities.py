@@ -10,6 +10,7 @@ class PageLevelCapabilities(str, Enum):
     PAGE_LAYOUT_OCR = "page-layout-ocr"
     PAGE_TEXT_OCR = "page-text-ocr"
     PAGE_CLASSIFICATION = "page-classification"
+    PAGE_MARKERIZATION = "page-markerization"
     PAGE_SEGMENTATION = "page-segmentation"
     PAGE_VQA = "page-vqa"
     PAGE_TABLE_IDENTIFICATION = "page-table-identification"
