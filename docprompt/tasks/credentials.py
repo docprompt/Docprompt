@@ -88,8 +88,10 @@ class GCPServiceFileCredentials(BaseCredentials):
     service_account_file: Optional[str] = Field(None)
 
     def __init__(self, **data):
-        service_account_info = data.get("service_account_info")
-        service_account_file = data.get("service_account_file")
+        service_account_info = data.get("service_account_info", None)
+        service_account_file = data.get(
+            "service_account_file", os.environ.get("GCP_SERVICE_ACCOUNT_FILE", None)
+        )
 
         if isinstance(service_account_info, str):
             # If service_account_info is a string, assume it's a JSON string and parse it
@@ -105,7 +107,7 @@ class GCPServiceFileCredentials(BaseCredentials):
         """Ensure the provided GCP credentials are valid."""
         if self.service_account_info is None and self.service_account_file is None:
             raise ValueError(
-                "You must provide either service_account_info or service_account_file"
+                "You must provide either service_account_info or service_account_file. You may set the `GCP_SERVICE_ACCOUNT_FILE` environment variable to the path of the service account file."
             )
         if (
             self.service_account_info is not None
