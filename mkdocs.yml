@@ -28,7 +28,11 @@ plugins:
 nav:
   - Getting Started: index.md
   - How-to Guides:
-    - Perform OCR: guide/ocr.md
+    - Perform OCR:
+      - Basic OCR Usage: guide/ocr/basic_usage.md
+      - Customizing OCR Providers: guide/ocr/provider_config.md
+      - Lightning-Fast Doc Search: guide/ocr/advanced_search.md
+      - OCR-based Workflows: guide/ocr/advanced_workflows.md
     - Classify Pages: guide/classify.md
     - Extract Tables: guide/extract_tables.md
   - Concepts:

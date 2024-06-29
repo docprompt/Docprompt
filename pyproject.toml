@@ -110,8 +110,7 @@ dev = [
   "ipykernel>=6.29.4",
   "matplotlib>=3.7.5",
   "pandas>=2.0.3",
-  "seaborn>=0.13.2",
-  "sklearn>=0.0.post12"
+  "seaborn>=0.13.2"
 ]
 docs = [
   "mkdocs>=1.6.0",
@@ -121,6 +120,10 @@ docs = [
   "mkdocs-gen-files>=0.5.0",
   "mkdocs-literate-nav>=0.6.1"
 ]
+
+[tool.pdm.scripts]
+docs = "mkdocs serve"
+lint = "pre-commit run --all-files"
 
 [tool.ruff]
 target-version = "py38"
