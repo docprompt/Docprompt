@@ -9,17 +9,15 @@ from __future__ import annotations
 
 import json
 from collections.abc import MutableMapping
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, Generic, TypeVar, Union
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 if TYPE_CHECKING:
-    from docprompt.schema.pipeline import DocumentNode, PageNode
+    from docprompt.schema.pipeline.node import DocumentNode, PageNode
 
-DocumentNode = TypeVar("DocumentNode", bound="DocumentNode")
-PageNode = TypeVar("PageNode", bound="PageNode")
 
-TMetadataOwner = TypeVar("TMetadataOwner", bound=Union[DocumentNode, PageNode])
+TMetadataOwner = TypeVar("TMetadataOwner", bound=Union["DocumentNode", "PageNode"])
 
 
 class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
@@ -27,7 +25,7 @@ class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
     for metadata attached to various fields.
     """
 
-    extra: dict[str, Any] = Field(..., default_factory=dict, repr=False)
+    extra: Dict[str, Any] = Field(..., default_factory=dict, repr=False)
 
     _owner: TMetadataOwner = PrivateAttr()
 
