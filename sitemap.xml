@@ -2,222 +2,322 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docprompt.dev/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/enterprise/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/blog/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/community/contributing/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/community/versioning/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/concepts/nodes/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/concepts/primatives/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/concepts/provenance/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/concepts/providers/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/guide/classify/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/guide/extract_tables/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docprompt.dev/guide/ocr/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <loc>https://docprompt.dev/guide/ocr/advanced_search/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/guide/ocr/advanced_workflows/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/guide/ocr/basic_usage/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/guide/ocr/provider_config/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/SUMMARY/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/_decorators/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/_pdfium/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/rasterize/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/storage/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/_exec/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/_exec/ghostscript/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/contrib/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/contrib/parser_bot/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/provenance/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/provenance/search/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/provenance/source/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/provenance/util/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/schema/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/schema/document/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/schema/layout/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/schema/metadata/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/schema/pipeline/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/base/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/capabilities/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/credentials/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/factory/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/message/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/parser/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/util/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/classification/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/classification/anthropic/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/classification/base/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/markerize/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/markerize/anthropic/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/markerize/base/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/ocr/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/ocr/amazon_textract/</loc>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/ocr/base/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/ocr/gcp/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/ocr/result/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/table_extraction/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/tasks/table_extraction/anthropic/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/table_extraction/base/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/tasks/table_extraction/schema/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/utils/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/utils/compressor/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/utils/date_extraction/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.dev/reference/utils/inference/</loc>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/utils/splitter/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/utils/util/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/utils/masking/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://docprompt.dev/reference/utils/masking/image/</loc>
-         <lastmod>2024-06-21</lastmod>
+         <lastmod>2024-06-29</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
