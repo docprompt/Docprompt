@@ -10,7 +10,6 @@ authors = [
   {name = "Frank Colson", email = "frank@pageleaf.io"}
 ]
 dependencies = [
-  "python-dateutil<3.0.0,>=2.8.2",
   "pillow>=9.0.1",
   "tqdm>=4.50.2",
   "fsspec>=2022.11.0",
@@ -19,8 +18,6 @@ dependencies = [
   "pypdfium2<5.0.0,>=4.28.0",
   "rapidfuzz>=3.0.0",
   "filetype>=1.2.0",
-  "boto3>=1.34.129",
-  "pydantic-settings>=2.3.3",
   "jinja2>=3.1.4",
   "beautifulsoup4>=4.12.3"
 ]
@@ -38,6 +35,9 @@ anthropic = [
 ]
 openai = [
   "openai>=1.0.1"
+]
+aws = [
+  "aioboto3>=10.4.0"
 ]
 
 [project.scripts]
