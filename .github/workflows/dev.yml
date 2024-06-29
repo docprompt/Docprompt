@@ -40,7 +40,7 @@ jobs:
           pdm install -G:all
       - name: Lint with Ruff
         run: |
-          pdm run ruff --output-format=github .
+          pdm run ruff check --output-format=github .
       - name: Test with pytest
         run: |
           pdm run pytest -sxv --cov --cov-report=xml .
