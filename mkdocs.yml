@@ -1,6 +1,6 @@
 site_name: Docprompt
-site_url: https://docprompt.dev
-repo_url: https://github.com/Page-Leaf/Docprompt
+site_url: https://docprompt.io/docs
+repo_url: https://github.com/docprompt/Docprompt
 theme:
   name: material
   logo: assets/static/img/logo.png
