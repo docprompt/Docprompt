@@ -137,6 +137,7 @@ class BaseClassificationProvider(
 
         # Essentially an identical implementation as the `AbstractPageTaskProvider` class, but with
         # `DocumentNode` instead of `Document` as the first argument to `process_document_pages`
+        kwargs = {**(self.provider_kwargs or {}), **kwargs}
         results = await self.aprocess_document_pages(
             document_node,
             task_input,
