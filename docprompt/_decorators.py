@@ -2,6 +2,8 @@ import asyncio
 from functools import wraps
 from typing import Callable, Tuple, Type
 
+from docprompt.utils.async_utils import to_thread
+
 
 def flexible_methods(*method_groups: Tuple[str, str]):
     def decorator(cls: Type):
@@ -55,7 +57,7 @@ def flexible_methods(*method_groups: Tuple[str, str]):
 
                     @wraps(sync_method)
                     async def async_wrapper(*args, **kwargs):
-                        return await asyncio.to_thread(sync_method, *args, **kwargs)
+                        return await to_thread(sync_method, *args, **kwargs)
 
                     setattr(cls, async_name, async_wrapper)
 
