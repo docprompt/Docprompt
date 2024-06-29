@@ -33,7 +33,10 @@ nav:
       - Customizing OCR Providers: guide/ocr/provider_config.md
       - Lightning-Fast Doc Search: guide/ocr/advanced_search.md
       - OCR-based Workflows: guide/ocr/advanced_workflows.md
-    - Classify Pages: guide/classify.md
+    - Classify Pages:
+      - Binary Classification: guide/classify/binary.md
+      - Single-Label Classification: guide/classify/single.md
+      - Multi-Label Classification: guide/classify/multi.md
     - Extract Tables: guide/extract_tables.md
   - Concepts:
     - Primatives: concepts/primatives.md
