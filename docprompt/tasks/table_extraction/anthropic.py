@@ -1,10 +1,9 @@
 import re
-from typing import Dict, List, Optional, Union
+from typing import Iterable, List, Optional, Union
 
 from bs4 import BeautifulSoup, Tag
 
-from docprompt.schema.document import PdfDocument
-from docprompt.tasks.message import OpenAIMessage
+from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
 
 from .base import BaseTableExtractionProvider
@@ -99,36 +98,40 @@ def parse_response(response: str, **kwargs) -> TableExtractionPageResult:
     return result
 
 
+async def _prepare_messages(
+    document_images: Iterable[bytes],
+    start: Optional[int] = None,
+    stop: Optional[int] = None,
+):
+    messages = []
+
+    for image_bytes in document_images:
+        messages.append(
+            [
+                OpenAIMessage(
+                    role="user",
+                    content=[
+                        OpenAIComplexContent(
+                            type="image_url",
+                            image_url=OpenAIImageURL(url=image_bytes),
+                        ),
+                        OpenAIComplexContent(type="text", text=SYSTEM_PROMPT),
+                    ],
+                ),
+            ]
+        )
+
+    return messages
+
+
 class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
     name: str = "anthropic"
 
-    async def aprocess_document_pages(
-        self,
-        document: PdfDocument,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
-        model_name: str = "claude-3-5-sonnet-20240620",
-        **kwargs,
-    ) -> Dict[int, TableExtractionPageResult]:
-        messages = []
-        for page_number in range(start or 1, (stop or len(document)) + 1):
-            rastered_page = document.rasterize_page_to_data_uri(page_number)
+    async def _ainvoke(
+        self, input: Iterable[bytes], config: Optional[None] = None
+    ) -> List[TableExtractionPageResult]:
+        messages = await _prepare_messages(input)
 
-            messages.append(
-                [
-                    OpenAIMessage(
-                        role="system",
-                        content=SYSTEM_PROMPT,
-                    ),
-                    OpenAIMessage.from_image_uri(rastered_page),
-                ]
-            )
+        completions = await inference.run_batch_inference_anthropic(messages)
 
-        completions = await inference.run_batch_inference_anthropic(
-            model_name, messages, **kwargs
-        )
-
-        return {
-            i: parse_response(x, provider_name=self.name)
-            for i, x in zip(range(start or 1, (stop or len(document)) + 1), completions)
-        }
+        return [parse_response(x, provider_name=self.name) for x in completions]

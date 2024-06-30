@@ -1,9 +1,13 @@
+import re
+from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, model_validator
 
+from docprompt import DocumentNode
 from docprompt.tasks.base import AbstractPageTaskProvider, PageTaskResult
+from docprompt.tasks.parser import BaseOutputParser
 
 LabelType = Union[List[str], Enum, str]
 
@@ -22,7 +26,7 @@ class ClassificationTypes(str, Enum):
     BINARY = "binary"
 
 
-class ClassificationInput(BaseModel):
+class ClassificationConfig(BaseModel):
     type: ClassificationTypes
     labels: LabelType
     descriptions: Optional[List[str]] = Field(
@@ -111,11 +115,96 @@ class ClassificationOutput(PageTaskResult):
     task_name: str = "classification"
 
 
+class BasePageClassificationOutputParser(
+    ABC, BaseOutputParser[ClassificationConfig, ClassificationOutput]
+):
+    """The output parser for the page classification system."""
+
+    name: str = Field(...)
+    type: ClassificationTypes = Field(...)
+    labels: LabelType = Field(...)
+    confidence: bool = Field(False)
+
+    @classmethod
+    def from_task_input(cls, task_input: ClassificationConfig, provider_name: str):
+        return cls(
+            type=task_input.type,
+            name=provider_name,
+            labels=task_input.labels,
+            confidence=task_input.confidence,
+        )
+
+    def resolve_match(self, _match: Union[re.Match, None]) -> LabelType:
+        """Get the regex pattern for the output parser."""
+
+        if not _match:
+            raise ValueError("Could not find the answer in the text.")
+
+        val = _match.group(1)
+        match self.type:
+            case ClassificationTypes.BINARY:
+                if val not in self.labels:
+                    raise ValueError(f"Invalid label: {val}")
+                return val
+
+            case ClassificationTypes.SINGLE_LABEL:
+                if val not in self.labels:
+                    raise ValueError(f"Invalid label: {val}")
+                return val
+
+            case ClassificationTypes.MULTI_LABEL:
+                labels = val.split(", ")
+                for label in labels:
+                    if label not in self.labels:
+                        raise ValueError(f"Invalid label: {label}")
+                return labels
+
+            case _:
+                raise ValueError(f"Invalid classification type: {self.type}")
+
+    def resolve_confidence(self, _match: Union[re.Match, None]) -> ConfidenceLevel:
+        """Get the confidence level from the text."""
+
+        if not _match:
+            return None
+
+        val = _match.group(1).lower()
+
+        return ConfidenceLevel(val)
+
+    @abstractmethod
+    def parse(self, text: str) -> ClassificationOutput:
+        pass
+
+
 class BaseClassificationProvider(
-    AbstractPageTaskProvider[ClassificationInput, ClassificationOutput]
+    AbstractPageTaskProvider[bytes, ClassificationConfig, ClassificationOutput]
 ):
     """
     The base classification provider.
     """
 
-    pass
+    def process_document_node(
+        self,
+        document_node: "DocumentNode",
+        task_config: ClassificationConfig = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        contribute_to_document: bool = True,
+        **kwargs,
+    ):
+        raster_bytes = []
+        for page_number in range(start or 1, (stop or len(document_node)) + 1):
+            image_bytes = document_node.page_nodes[
+                page_number - 1
+            ].rasterizer.rasterize("default")
+            raster_bytes.append(image_bytes)
+
+        results = self._invoke(raster_bytes, config=task_config, **kwargs)
+
+        return {
+            i: res
+            for i, res in zip(
+                range(start or 1, (stop or len(document_node)) + 1), results
+            )
+        }
