@@ -17,7 +17,7 @@ class TesseractPageMetadata(BaseModel):
 
 
 class TesseractOcrProvider(BaseOCRProvider):
-    name = "Tesseract OCR"
+    name = "tesseract"
     capabilities = [
         CAPABILITIES.PAGE_TEXT_OCR.value,
         CAPABILITIES.PAGE_LAYOUT_OCR.value,

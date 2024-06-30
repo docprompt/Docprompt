@@ -114,6 +114,7 @@ class ClassificationOutput(PageTaskResult):
     type: ClassificationTypes
     labels: LabelType
     score: Optional[ConfidenceLevel] = Field(None)
+    task_name: str = "classification"
 
 
 class BaseClassificationProvider(
@@ -146,8 +147,10 @@ class BaseClassificationProvider(
             **kwargs,
         )
 
+        # We still need to make sure that this is reimplemented
         if contribute_to_document:
-            self.contribute_to_document_node(document_node, results)
+            for page_number, page_result in results.items():
+                page_result.contribute_to_document_node(document_node, page_number)
 
         return results
 

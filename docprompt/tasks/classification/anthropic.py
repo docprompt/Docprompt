@@ -211,18 +211,3 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
         results = {i: label for i, label in zip(range(start, stop), labels)}
 
         return results
-
-    def contribute_to_document_node(self, *args, **kwargs):
-        """Eventually this will define how the results are added to the document node.
-
-        NOTE: How should this be configurable for the user? Theoretically, they should be
-        able to declare how each page classification result is added to the Page/Document
-        metadata.
-
-        Potentially could this be done through a config argument that is passed as a kwarg? For
-        example, letting the user declare the field of the metadata model that the result should
-        be stored in. Maybe a lambda function?
-
-        We need sometheing to make storage of result configurable.
-        """
-        pass

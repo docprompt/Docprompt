@@ -139,7 +139,8 @@ def textract_documents_to_result(
 
 
 class AmazonTextractProvider(BaseOCRProvider):
-    name = "Amazon Textract"
+    name = "aws_textract"
+
     capabilities = [
         CAPABILITIES.PAGE_TEXT_OCR.value,
         CAPABILITIES.PAGE_LAYOUT_OCR.value,

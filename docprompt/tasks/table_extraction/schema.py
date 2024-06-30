@@ -53,3 +53,5 @@ class ExtractedTable(BaseModel):
 
 class TableExtractionPageResult(BasePageResult):
     tables: List[ExtractedTable] = Field(default_factory=list)
+
+    task_name = "table_extraction"

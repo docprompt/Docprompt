@@ -36,6 +36,8 @@ class OcrPageResult(BasePageResult, Generic[T]):
 
     extra: Optional[T] = Field(default_factory=dict)
 
+    task_name = "ocr"
+
     @property
     def pil_image(self):
         from PIL import Image

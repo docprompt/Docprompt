@@ -15,10 +15,8 @@ from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 if TYPE_CHECKING:
     from docprompt.schema.pipeline.node import DocumentNode, PageNode
-    from docprompt.tasks.base import BaseResult
 
 
-TBaseTaskResult = TypeVar("TBaseTaskResult", bound="BaseResult")
 TMetadataOwner = TypeVar("TMetadataOwner", bound=Union["DocumentNode", "PageNode"])
 
 
@@ -103,7 +101,7 @@ class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
         return self._task_results.__get__(self)
 
     @task_results.setter
-    def task_results(self, value: Dict[str, TBaseTaskResult]) -> None:
+    def task_results(self, value: Any) -> None:
         """This will raise an error, as we do not want to set the task results directly.
 
         NOTE: This implementation is here purely to avoid the task_results property from being

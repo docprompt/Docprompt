@@ -423,7 +423,7 @@ def gcp_documents_to_result(
 
 
 class GoogleOcrProvider(BaseOCRProvider):
-    name = "Google Document AI"
+    name = "google_documentai"
     capabilities = [
         CAPABILITIES.PAGE_TEXT_OCR.value,
         CAPABILITIES.PAGE_LAYOUT_OCR.value,
