@@ -15,7 +15,7 @@
   <p align="center">
     Document AI, powered by LLM's
     <br />
-    <a href="https://docprompt.io/docs"><strong>Explore the docs »</strong></a>
+    <a href="https://docs.docprompt.io"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     ·
