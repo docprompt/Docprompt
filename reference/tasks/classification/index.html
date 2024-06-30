@@ -398,16 +398,101 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../../guide/classify/" class="md-nav__link">
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
   
   <span class="md-ellipsis">
     Classify Pages
   </span>
   
 
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            Classify Pages
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/classify/binary/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Binary Classification
+  </span>
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/classify/single/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Single-Label Classification
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../guide/classify/multi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Multi-Label Classification
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -836,6 +921,27 @@
   
   <span class="md-ellipsis">
     ghostscript
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_exec/tesseract/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tesseract
   </span>
   
 
@@ -2239,6 +2345,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ocr/tesseract/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    tesseract
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -3084,17 +3211,7 @@
 
               <details class="quote">
                 <summary>Source code in <code>docprompt/tasks/classification/anthropic.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-171">171</a></span>
-<span class="normal"><a href="#__codelineno-0-172">172</a></span>
-<span class="normal"><a href="#__codelineno-0-173">173</a></span>
-<span class="normal"><a href="#__codelineno-0-174">174</a></span>
-<span class="normal"><a href="#__codelineno-0-175">175</a></span>
-<span class="normal"><a href="#__codelineno-0-176">176</a></span>
-<span class="normal"><a href="#__codelineno-0-177">177</a></span>
-<span class="normal"><a href="#__codelineno-0-178">178</a></span>
-<span class="normal"><a href="#__codelineno-0-179">179</a></span>
-<span class="normal"><a href="#__codelineno-0-180">180</a></span>
-<span class="normal"><a href="#__codelineno-0-181">181</a></span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-181">181</a></span>
 <span class="normal"><a href="#__codelineno-0-182">182</a></span>
 <span class="normal"><a href="#__codelineno-0-183">183</a></span>
 <span class="normal"><a href="#__codelineno-0-184">184</a></span>
@@ -3127,50 +3244,68 @@
 <span class="normal"><a href="#__codelineno-0-211">211</a></span>
 <span class="normal"><a href="#__codelineno-0-212">212</a></span>
 <span class="normal"><a href="#__codelineno-0-213">213</a></span>
-<span class="normal"><a href="#__codelineno-0-214">214</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-171" name="__codelineno-0-171"></a><span class="k">class</span> <span class="nc">AnthropicClassificationProvider</span><span class="p">(</span><span class="n">BaseClassificationProvider</span><span class="p">):</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The Anthropic implementation of unscored page classification.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173"></a>
-<a id="__codelineno-0-174" name="__codelineno-0-174"></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">aprocess_document_pages</span><span class="p">(</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175"></a>        <span class="bp">self</span><span class="p">,</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176"></a>        <span class="n">document_node</span><span class="p">:</span> <span class="n">DocumentNode</span><span class="p">,</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177"></a>        <span class="n">task_input</span><span class="p">:</span> <span class="n">ClassificationInput</span><span class="p">,</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178"></a>        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179"></a>        <span class="n">stop</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180"></a>        <span class="n">contribute_to_document</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181"></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ClassificationOutput</span><span class="p">]:</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183"></a>        <span class="n">start</span> <span class="o">=</span> <span class="n">start</span> <span class="ow">or</span> <span class="mi">0</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184"></a>        <span class="n">stop</span> <span class="o">=</span> <span class="n">stop</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">document_node</span><span class="o">.</span><span class="n">page_nodes</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-214">214</a></span>
+<span class="normal"><a href="#__codelineno-0-215">215</a></span>
+<span class="normal"><a href="#__codelineno-0-216">216</a></span>
+<span class="normal"><a href="#__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#__codelineno-0-221">221</a></span>
+<span class="normal"><a href="#__codelineno-0-222">222</a></span>
+<span class="normal"><a href="#__codelineno-0-223">223</a></span>
+<span class="normal"><a href="#__codelineno-0-224">224</a></span>
+<span class="normal"><a href="#__codelineno-0-225">225</a></span>
+<span class="normal"><a href="#__codelineno-0-226">226</a></span>
+<span class="normal"><a href="#__codelineno-0-227">227</a></span>
+<span class="normal"><a href="#__codelineno-0-228">228</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-181" name="__codelineno-0-181"></a><span class="k">class</span> <span class="nc">AnthropicClassificationProvider</span><span class="p">(</span><span class="n">BaseClassificationProvider</span><span class="p">):</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The Anthropic implementation of unscored page classification.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183"></a>
+<a id="__codelineno-0-184" name="__codelineno-0-184"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;anthropic&quot;</span>
 <a id="__codelineno-0-185" name="__codelineno-0-185"></a>
-<a id="__codelineno-0-186" name="__codelineno-0-186"></a>        <span class="k">assert</span> <span class="p">(</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187"></a>            <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="n">stop</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">document_node</span><span class="o">.</span><span class="n">page_nodes</span><span class="p">)</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Invalid start and stop values: </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">stop</span><span class="si">}</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189"></a>
-<a id="__codelineno-0-190" name="__codelineno-0-190"></a>        <span class="n">image_uris</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191"></a>            <span class="n">page</span><span class="o">.</span><span class="n">rasterizer</span><span class="o">.</span><span class="n">rasterize_to_data_uri</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192"></a>            <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">document_node</span><span class="o">.</span><span class="n">page_nodes</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="p">]</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194"></a>
-<a id="__codelineno-0-195" name="__codelineno-0-195"></a>        <span class="n">labels</span> <span class="o">=</span> <span class="k">await</span> <span class="n">classify_images</span><span class="p">(</span><span class="n">image_uris</span><span class="p">,</span> <span class="n">task_input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196"></a>
-<a id="__codelineno-0-197" name="__codelineno-0-197"></a>        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">label</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">),</span> <span class="n">labels</span><span class="p">)}</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198"></a>
-<a id="__codelineno-0-199" name="__codelineno-0-199"></a>        <span class="k">return</span> <span class="n">results</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200"></a>
-<a id="__codelineno-0-201" name="__codelineno-0-201"></a>    <span class="k">def</span> <span class="nf">contribute_to_document_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Eventually this will define how the results are added to the document node.</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">        NOTE: How should this be configurable for the user? Theoretically, they should be</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">        able to declare how each page classification result is added to the Page/Document</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">        metadata.</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207"></a>
-<a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">        Potentially could this be done through a config argument that is passed as a kwarg? For</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="sd">        example, letting the user declare the field of the metadata model that the result should</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210"></a><span class="sd">        be stored in. Maybe a lambda function?</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211"></a>
-<a id="__codelineno-0-212" name="__codelineno-0-212"></a><span class="sd">        We need sometheing to make storage of result configurable.</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213"></a><span class="sd">        &quot;&quot;&quot;</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214"></a>        <span class="k">pass</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186"></a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">aprocess_document_pages</span><span class="p">(</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187"></a>        <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188"></a>        <span class="n">document_node</span><span class="p">:</span> <span class="n">DocumentNode</span><span class="p">,</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189"></a>        <span class="n">task_input</span><span class="p">:</span> <span class="n">ClassificationInput</span><span class="p">,</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190"></a>        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191"></a>        <span class="n">stop</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192"></a>        <span class="n">contribute_to_document</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193"></a>        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194"></a>    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ClassificationOutput</span><span class="p">]:</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195"></a>        <span class="n">start</span> <span class="o">=</span> <span class="n">start</span> <span class="ow">or</span> <span class="mi">0</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196"></a>        <span class="n">stop</span> <span class="o">=</span> <span class="n">stop</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">document_node</span><span class="o">.</span><span class="n">page_nodes</span><span class="p">)</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197"></a>
+<a id="__codelineno-0-198" name="__codelineno-0-198"></a>        <span class="k">assert</span> <span class="p">(</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199"></a>            <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">start</span> <span class="o">&lt;</span> <span class="n">stop</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">document_node</span><span class="o">.</span><span class="n">page_nodes</span><span class="p">)</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200"></a>        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Invalid start and stop values: </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">stop</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201"></a>
+<a id="__codelineno-0-202" name="__codelineno-0-202"></a>        <span class="n">image_uris</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203"></a>            <span class="n">page</span><span class="o">.</span><span class="n">rasterizer</span><span class="o">.</span><span class="n">rasterize_to_data_uri</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204"></a>            <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">document_node</span><span class="o">.</span><span class="n">page_nodes</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205"></a>        <span class="p">]</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a>        <span class="n">labels</span> <span class="o">=</span> <span class="k">await</span> <span class="n">classify_images</span><span class="p">(</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a>            <span class="n">image_uris</span><span class="p">,</span> <span class="n">task_input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">provider_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209"></a>        <span class="p">)</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210"></a>
+<a id="__codelineno-0-211" name="__codelineno-0-211"></a>        <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">label</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">),</span> <span class="n">labels</span><span class="p">)}</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212"></a>
+<a id="__codelineno-0-213" name="__codelineno-0-213"></a>        <span class="k">return</span> <span class="n">results</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214"></a>
+<a id="__codelineno-0-215" name="__codelineno-0-215"></a>    <span class="k">def</span> <span class="nf">contribute_to_document_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Eventually this will define how the results are added to the document node.</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217"></a>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a><span class="sd">        NOTE: How should this be configurable for the user? Theoretically, they should be</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a><span class="sd">        able to declare how each page classification result is added to the Page/Document</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="sd">        metadata.</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>
+<a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="sd">        Potentially could this be done through a config argument that is passed as a kwarg? For</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">        example, letting the user declare the field of the metadata model that the result should</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="sd">        be stored in. Maybe a lambda function?</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a><span class="sd">        We need sometheing to make storage of result configurable.</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-228" name="__codelineno-0-228"></a>        <span class="k">pass</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -3208,33 +3343,33 @@ be stored in. Maybe a lambda function?</p>
 
             <details class="quote">
               <summary>Source code in <code>docprompt/tasks/classification/anthropic.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-201">201</a></span>
-<span class="normal"><a href="#__codelineno-0-202">202</a></span>
-<span class="normal"><a href="#__codelineno-0-203">203</a></span>
-<span class="normal"><a href="#__codelineno-0-204">204</a></span>
-<span class="normal"><a href="#__codelineno-0-205">205</a></span>
-<span class="normal"><a href="#__codelineno-0-206">206</a></span>
-<span class="normal"><a href="#__codelineno-0-207">207</a></span>
-<span class="normal"><a href="#__codelineno-0-208">208</a></span>
-<span class="normal"><a href="#__codelineno-0-209">209</a></span>
-<span class="normal"><a href="#__codelineno-0-210">210</a></span>
-<span class="normal"><a href="#__codelineno-0-211">211</a></span>
-<span class="normal"><a href="#__codelineno-0-212">212</a></span>
-<span class="normal"><a href="#__codelineno-0-213">213</a></span>
-<span class="normal"><a href="#__codelineno-0-214">214</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-201" name="__codelineno-0-201"></a><span class="k">def</span> <span class="nf">contribute_to_document_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Eventually this will define how the results are added to the document node.</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203"></a>
-<a id="__codelineno-0-204" name="__codelineno-0-204"></a><span class="sd">    NOTE: How should this be configurable for the user? Theoretically, they should be</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205"></a><span class="sd">    able to declare how each page classification result is added to the Page/Document</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a><span class="sd">    metadata.</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207"></a>
-<a id="__codelineno-0-208" name="__codelineno-0-208"></a><span class="sd">    Potentially could this be done through a config argument that is passed as a kwarg? For</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209"></a><span class="sd">    example, letting the user declare the field of the metadata model that the result should</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210"></a><span class="sd">    be stored in. Maybe a lambda function?</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211"></a>
-<a id="__codelineno-0-212" name="__codelineno-0-212"></a><span class="sd">    We need sometheing to make storage of result configurable.</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214"></a>    <span class="k">pass</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-215">215</a></span>
+<span class="normal"><a href="#__codelineno-0-216">216</a></span>
+<span class="normal"><a href="#__codelineno-0-217">217</a></span>
+<span class="normal"><a href="#__codelineno-0-218">218</a></span>
+<span class="normal"><a href="#__codelineno-0-219">219</a></span>
+<span class="normal"><a href="#__codelineno-0-220">220</a></span>
+<span class="normal"><a href="#__codelineno-0-221">221</a></span>
+<span class="normal"><a href="#__codelineno-0-222">222</a></span>
+<span class="normal"><a href="#__codelineno-0-223">223</a></span>
+<span class="normal"><a href="#__codelineno-0-224">224</a></span>
+<span class="normal"><a href="#__codelineno-0-225">225</a></span>
+<span class="normal"><a href="#__codelineno-0-226">226</a></span>
+<span class="normal"><a href="#__codelineno-0-227">227</a></span>
+<span class="normal"><a href="#__codelineno-0-228">228</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-215" name="__codelineno-0-215"></a><span class="k">def</span> <span class="nf">contribute_to_document_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Eventually this will define how the results are added to the document node.</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217"></a>
+<a id="__codelineno-0-218" name="__codelineno-0-218"></a><span class="sd">    NOTE: How should this be configurable for the user? Theoretically, they should be</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219"></a><span class="sd">    able to declare how each page classification result is added to the Page/Document</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220"></a><span class="sd">    metadata.</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221"></a>
+<a id="__codelineno-0-222" name="__codelineno-0-222"></a><span class="sd">    Potentially could this be done through a config argument that is passed as a kwarg? For</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223"></a><span class="sd">    example, letting the user declare the field of the metadata model that the result should</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224"></a><span class="sd">    be stored in. Maybe a lambda function?</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225"></a>
+<a id="__codelineno-0-226" name="__codelineno-0-226"></a><span class="sd">    We need sometheing to make storage of result configurable.</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-228" name="__codelineno-0-228"></a>    <span class="k">pass</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3340,78 +3475,92 @@ be stored in. Maybe a lambda function?</p>
 <span class="normal"><a href="#__codelineno-0-136">136</a></span>
 <span class="normal"><a href="#__codelineno-0-137">137</a></span>
 <span class="normal"><a href="#__codelineno-0-138">138</a></span>
-<span class="normal"><a href="#__codelineno-0-139">139</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="k">class</span> <span class="nc">PageClassificationOutputParser</span><span class="p">(</span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#__codelineno-0-142">142</a></span>
+<span class="normal"><a href="#__codelineno-0-143">143</a></span>
+<span class="normal"><a href="#__codelineno-0-144">144</a></span>
+<span class="normal"><a href="#__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#__codelineno-0-146">146</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-68" name="__codelineno-0-68"></a><span class="k">class</span> <span class="nc">PageClassificationOutputParser</span><span class="p">(</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="n">BaseOutputParser</span><span class="p">[</span><span class="n">ClassificationInput</span><span class="p">,</span> <span class="n">ClassificationOutput</span><span class="p">]</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="p">):</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The output parser for the page classification system.&quot;&quot;&quot;</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">ClassificationTypes</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="n">labels</span><span class="p">:</span> <span class="n">LabelType</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="n">confidence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>    <span class="nd">@classmethod</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="k">def</span> <span class="nf">from_task_input</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">task_input</span><span class="p">:</span> <span class="n">ClassificationInput</span><span class="p">):</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>            <span class="nb">type</span><span class="o">=</span><span class="n">task_input</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a>            <span class="n">labels</span><span class="o">=</span><span class="n">task_input</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a>            <span class="n">confidence</span><span class="o">=</span><span class="n">task_input</span><span class="o">.</span><span class="n">confidence</span><span class="p">,</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="p">)</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>    <span class="k">def</span> <span class="nf">resolve_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_match</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">LabelType</span><span class="p">:</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the regex pattern for the output parser.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">_match</span><span class="p">:</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not find the answer in the text.&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="n">val</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="k">match</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">:</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93"></a>            <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">BINARY</span><span class="p">:</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94"></a>                <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95"></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96"></a>                <span class="k">return</span> <span class="n">val</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97"></a>
-<a id="__codelineno-0-98" name="__codelineno-0-98"></a>            <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">SINGLE_LABEL</span><span class="p">:</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99"></a>                <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100"></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101"></a>                <span class="k">return</span> <span class="n">val</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103"></a>            <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">MULTI_LABEL</span><span class="p">:</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104"></a>                <span class="n">labels</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105"></a>                <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106"></a>                    <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107"></a>                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108"></a>                <span class="k">return</span> <span class="n">labels</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110"></a>            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid classification type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112"></a>
-<a id="__codelineno-0-113" name="__codelineno-0-113"></a>    <span class="k">def</span> <span class="nf">resolve_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_match</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ConfidenceLevel</span><span class="p">:</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the confidence level from the text.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-115" name="__codelineno-0-115"></a>
-<a id="__codelineno-0-116" name="__codelineno-0-116"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">_match</span><span class="p">:</span>
-<a id="__codelineno-0-117" name="__codelineno-0-117"></a>            <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118"></a>
-<a id="__codelineno-0-119" name="__codelineno-0-119"></a>        <span class="n">val</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="nb">type</span><span class="p">:</span> <span class="n">ClassificationTypes</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="n">labels</span><span class="p">:</span> <span class="n">LabelType</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="n">confidence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="nd">@classmethod</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">def</span> <span class="nf">from_task_input</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">task_input</span><span class="p">:</span> <span class="n">ClassificationInput</span><span class="p">,</span> <span class="n">provider_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>            <span class="nb">type</span><span class="o">=</span><span class="n">task_input</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>            <span class="n">name</span><span class="o">=</span><span class="n">provider_name</span><span class="p">,</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>            <span class="n">labels</span><span class="o">=</span><span class="n">task_input</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>            <span class="n">confidence</span><span class="o">=</span><span class="n">task_input</span><span class="o">.</span><span class="n">confidence</span><span class="p">,</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="p">)</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="k">def</span> <span class="nf">resolve_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_match</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">LabelType</span><span class="p">:</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the regex pattern for the output parser.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">_match</span><span class="p">:</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not find the answer in the text.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="n">val</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="k">match</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">:</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>            <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">BINARY</span><span class="p">:</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>                <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>                <span class="k">return</span> <span class="n">val</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a>            <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">SINGLE_LABEL</span><span class="p">:</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a>                <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a>                <span class="k">return</span> <span class="n">val</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>            <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">MULTI_LABEL</span><span class="p">:</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a>                <span class="n">labels</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a>                <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a>                    <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a>                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a>                <span class="k">return</span> <span class="n">labels</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>            <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid classification type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114"></a>
+<a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="k">def</span> <span class="nf">resolve_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_match</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ConfidenceLevel</span><span class="p">:</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the confidence level from the text.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117"></a>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">_match</span><span class="p">:</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>            <span class="k">return</span> <span class="kc">None</span>
 <a id="__codelineno-0-120" name="__codelineno-0-120"></a>
-<a id="__codelineno-0-121" name="__codelineno-0-121"></a>        <span class="k">return</span> <span class="n">ConfidenceLevel</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+<a id="__codelineno-0-121" name="__codelineno-0-121"></a>        <span class="n">val</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 <a id="__codelineno-0-122" name="__codelineno-0-122"></a>
-<a id="__codelineno-0-123" name="__codelineno-0-123"></a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationOutput</span><span class="p">:</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the results of the classification task.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-125" name="__codelineno-0-125"></a>        <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Answer: (.+)&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="n">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-<a id="__codelineno-0-127" name="__codelineno-0-127"></a>
-<a id="__codelineno-0-128" name="__codelineno-0-128"></a>        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_match</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a>        <span class="k">return</span> <span class="n">ConfidenceLevel</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>
+<a id="__codelineno-0-125" name="__codelineno-0-125"></a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationOutput</span><span class="p">:</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the results of the classification task.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Answer: (.+)&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a>        <span class="n">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a>
-<a id="__codelineno-0-130" name="__codelineno-0-130"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span><span class="p">:</span>
-<a id="__codelineno-0-131" name="__codelineno-0-131"></a>            <span class="n">conf_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Confidence: (.+)&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132"></a>            <span class="n">conf_match</span> <span class="o">=</span> <span class="n">conf_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-<a id="__codelineno-0-133" name="__codelineno-0-133"></a>            <span class="n">conf_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_confidence</span><span class="p">(</span><span class="n">conf_match</span><span class="p">)</span>
-<a id="__codelineno-0-134" name="__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135"></a>            <span class="k">return</span> <span class="n">ClassificationOutput</span><span class="p">(</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136"></a>                <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="n">conf_result</span>
-<a id="__codelineno-0-137" name="__codelineno-0-137"></a>            <span class="p">)</span>
-<a id="__codelineno-0-138" name="__codelineno-0-138"></a>
-<a id="__codelineno-0-139" name="__codelineno-0-139"></a>        <span class="k">return</span> <span class="n">ClassificationOutput</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">result</span><span class="p">)</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_match</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span><span class="p">:</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133"></a>            <span class="n">conf_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Confidence: (.+)&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a>            <span class="n">conf_match</span> <span class="o">=</span> <span class="n">conf_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135"></a>            <span class="n">conf_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_confidence</span><span class="p">(</span><span class="n">conf_match</span><span class="p">)</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>            <span class="k">return</span> <span class="n">ClassificationOutput</span><span class="p">(</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a>                <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>                <span class="n">labels</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>                <span class="n">score</span><span class="o">=</span><span class="n">conf_result</span><span class="p">,</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a>                <span class="n">provider_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a>            <span class="p">)</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143"></a>
+<a id="__codelineno-0-144" name="__codelineno-0-144"></a>        <span class="k">return</span> <span class="n">ClassificationOutput</span><span class="p">(</span>
+<a id="__codelineno-0-145" name="__codelineno-0-145"></a>            <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">provider_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146"></a>        <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -3442,9 +3591,7 @@ be stored in. Maybe a lambda function?</p>
 
             <details class="quote">
               <summary>Source code in <code>docprompt/tasks/classification/anthropic.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-123">123</a></span>
-<span class="normal"><a href="#__codelineno-0-124">124</a></span>
-<span class="normal"><a href="#__codelineno-0-125">125</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-125">125</a></span>
 <span class="normal"><a href="#__codelineno-0-126">126</a></span>
 <span class="normal"><a href="#__codelineno-0-127">127</a></span>
 <span class="normal"><a href="#__codelineno-0-128">128</a></span>
@@ -3458,23 +3605,35 @@ be stored in. Maybe a lambda function?</p>
 <span class="normal"><a href="#__codelineno-0-136">136</a></span>
 <span class="normal"><a href="#__codelineno-0-137">137</a></span>
 <span class="normal"><a href="#__codelineno-0-138">138</a></span>
-<span class="normal"><a href="#__codelineno-0-139">139</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationOutput</span><span class="p">:</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse the results of the classification task.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-125" name="__codelineno-0-125"></a>    <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Answer: (.+)&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126"></a>    <span class="n">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-<a id="__codelineno-0-127" name="__codelineno-0-127"></a>
-<a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_match</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#__codelineno-0-142">142</a></span>
+<span class="normal"><a href="#__codelineno-0-143">143</a></span>
+<span class="normal"><a href="#__codelineno-0-144">144</a></span>
+<span class="normal"><a href="#__codelineno-0-145">145</a></span>
+<span class="normal"><a href="#__codelineno-0-146">146</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-125" name="__codelineno-0-125"></a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassificationOutput</span><span class="p">:</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse the results of the classification task.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a>    <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Answer: (.+)&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a>    <span class="n">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
 <a id="__codelineno-0-129" name="__codelineno-0-129"></a>
-<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span><span class="p">:</span>
-<a id="__codelineno-0-131" name="__codelineno-0-131"></a>        <span class="n">conf_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Confidence: (.+)&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132"></a>        <span class="n">conf_match</span> <span class="o">=</span> <span class="n">conf_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
-<a id="__codelineno-0-133" name="__codelineno-0-133"></a>        <span class="n">conf_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_confidence</span><span class="p">(</span><span class="n">conf_match</span><span class="p">)</span>
-<a id="__codelineno-0-134" name="__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135"></a>        <span class="k">return</span> <span class="n">ClassificationOutput</span><span class="p">(</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136"></a>            <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">score</span><span class="o">=</span><span class="n">conf_result</span>
-<a id="__codelineno-0-137" name="__codelineno-0-137"></a>        <span class="p">)</span>
-<a id="__codelineno-0-138" name="__codelineno-0-138"></a>
-<a id="__codelineno-0-139" name="__codelineno-0-139"></a>    <span class="k">return</span> <span class="n">ClassificationOutput</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">result</span><span class="p">)</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_match</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span><span class="p">:</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133"></a>        <span class="n">conf_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Confidence: (.+)&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a>        <span class="n">conf_match</span> <span class="o">=</span> <span class="n">conf_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135"></a>        <span class="n">conf_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_confidence</span><span class="p">(</span><span class="n">conf_match</span><span class="p">)</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>        <span class="k">return</span> <span class="n">ClassificationOutput</span><span class="p">(</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a>            <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>            <span class="n">labels</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>            <span class="n">score</span><span class="o">=</span><span class="n">conf_result</span><span class="p">,</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a>            <span class="n">provider_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a>        <span class="p">)</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143"></a>
+<a id="__codelineno-0-144" name="__codelineno-0-144"></a>    <span class="k">return</span> <span class="n">ClassificationOutput</span><span class="p">(</span>
+<a id="__codelineno-0-145" name="__codelineno-0-145"></a>        <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">provider_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3496,23 +3655,23 @@ be stored in. Maybe a lambda function?</p>
 
             <details class="quote">
               <summary>Source code in <code>docprompt/tasks/classification/anthropic.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-113">113</a></span>
-<span class="normal"><a href="#__codelineno-0-114">114</a></span>
-<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-115">115</a></span>
 <span class="normal"><a href="#__codelineno-0-116">116</a></span>
 <span class="normal"><a href="#__codelineno-0-117">117</a></span>
 <span class="normal"><a href="#__codelineno-0-118">118</a></span>
 <span class="normal"><a href="#__codelineno-0-119">119</a></span>
 <span class="normal"><a href="#__codelineno-0-120">120</a></span>
-<span class="normal"><a href="#__codelineno-0-121">121</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-113" name="__codelineno-0-113"></a><span class="k">def</span> <span class="nf">resolve_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_match</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ConfidenceLevel</span><span class="p">:</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the confidence level from the text.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-115" name="__codelineno-0-115"></a>
-<a id="__codelineno-0-116" name="__codelineno-0-116"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">_match</span><span class="p">:</span>
-<a id="__codelineno-0-117" name="__codelineno-0-117"></a>        <span class="k">return</span> <span class="kc">None</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118"></a>
-<a id="__codelineno-0-119" name="__codelineno-0-119"></a>    <span class="n">val</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+<span class="normal"><a href="#__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#__codelineno-0-123">123</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-115" name="__codelineno-0-115"></a><span class="k">def</span> <span class="nf">resolve_confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_match</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ConfidenceLevel</span><span class="p">:</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the confidence level from the text.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117"></a>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">_match</span><span class="p">:</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>        <span class="k">return</span> <span class="kc">None</span>
 <a id="__codelineno-0-120" name="__codelineno-0-120"></a>
-<a id="__codelineno-0-121" name="__codelineno-0-121"></a>    <span class="k">return</span> <span class="n">ConfidenceLevel</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+<a id="__codelineno-0-121" name="__codelineno-0-121"></a>    <span class="n">val</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122"></a>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a>    <span class="k">return</span> <span class="n">ConfidenceLevel</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3534,9 +3693,7 @@ be stored in. Maybe a lambda function?</p>
 
             <details class="quote">
               <summary>Source code in <code>docprompt/tasks/classification/anthropic.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
-<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
-<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
 <span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
 <span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
 <span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
@@ -3560,33 +3717,35 @@ be stored in. Maybe a lambda function?</p>
 <span class="normal"><a href="#__codelineno-0-108">108</a></span>
 <span class="normal"><a href="#__codelineno-0-109">109</a></span>
 <span class="normal"><a href="#__codelineno-0-110">110</a></span>
-<span class="normal"><a href="#__codelineno-0-111">111</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-85" name="__codelineno-0-85"></a><span class="k">def</span> <span class="nf">resolve_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_match</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">LabelType</span><span class="p">:</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the regex pattern for the output parser.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">_match</span><span class="p">:</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not find the answer in the text.&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="n">val</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">match</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">:</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">BINARY</span><span class="p">:</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94"></a>            <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96"></a>            <span class="k">return</span> <span class="n">val</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97"></a>
-<a id="__codelineno-0-98" name="__codelineno-0-98"></a>        <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">SINGLE_LABEL</span><span class="p">:</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99"></a>            <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101"></a>            <span class="k">return</span> <span class="n">val</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103"></a>        <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">MULTI_LABEL</span><span class="p">:</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104"></a>            <span class="n">labels</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105"></a>            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106"></a>                <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107"></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108"></a>            <span class="k">return</span> <span class="n">labels</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid classification type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="k">def</span> <span class="nf">resolve_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_match</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Match</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">LabelType</span><span class="p">:</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the regex pattern for the output parser.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">_match</span><span class="p">:</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Could not find the answer in the text.&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="n">val</span> <span class="o">=</span> <span class="n">_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="k">match</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">:</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">BINARY</span><span class="p">:</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>            <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>            <span class="k">return</span> <span class="n">val</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a>        <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">SINGLE_LABEL</span><span class="p">:</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a>            <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a>            <span class="k">return</span> <span class="n">val</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>        <span class="k">case</span> <span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">MULTI_LABEL</span><span class="p">:</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a>            <span class="n">labels</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a>            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a>                <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">:</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a>                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid label: </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a>            <span class="k">return</span> <span class="n">labels</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>        <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid classification type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -3621,14 +3780,7 @@ be stored in. Maybe a lambda function?</p>
 
             <details class="quote">
               <summary>Source code in <code>docprompt/tasks/classification/anthropic.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-142">142</a></span>
-<span class="normal"><a href="#__codelineno-0-143">143</a></span>
-<span class="normal"><a href="#__codelineno-0-144">144</a></span>
-<span class="normal"><a href="#__codelineno-0-145">145</a></span>
-<span class="normal"><a href="#__codelineno-0-146">146</a></span>
-<span class="normal"><a href="#__codelineno-0-147">147</a></span>
-<span class="normal"><a href="#__codelineno-0-148">148</a></span>
-<span class="normal"><a href="#__codelineno-0-149">149</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-149">149</a></span>
 <span class="normal"><a href="#__codelineno-0-150">150</a></span>
 <span class="normal"><a href="#__codelineno-0-151">151</a></span>
 <span class="normal"><a href="#__codelineno-0-152">152</a></span>
@@ -3647,33 +3799,46 @@ be stored in. Maybe a lambda function?</p>
 <span class="normal"><a href="#__codelineno-0-165">165</a></span>
 <span class="normal"><a href="#__codelineno-0-166">166</a></span>
 <span class="normal"><a href="#__codelineno-0-167">167</a></span>
-<span class="normal"><a href="#__codelineno-0-168">168</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-142" name="__codelineno-0-142"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">classify_images</span><span class="p">(</span>
-<a id="__codelineno-0-143" name="__codelineno-0-143"></a>    <span class="n">image_uris</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">task_input</span><span class="p">:</span> <span class="n">ClassificationInput</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-<a id="__codelineno-0-144" name="__codelineno-0-144"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ClassificationOutput</span><span class="p">]:</span>
-<a id="__codelineno-0-145" name="__codelineno-0-145"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Classify a list of images with the given input.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-146" name="__codelineno-0-146"></a>
-<a id="__codelineno-0-147" name="__codelineno-0-147"></a>    <span class="k">def</span> <span class="nf">_format_message</span><span class="p">(</span><span class="n">image_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148"></a>        <span class="n">system</span> <span class="o">=</span> <span class="n">OpenAIMessage</span><span class="p">(</span>
-<a id="__codelineno-0-149" name="__codelineno-0-149"></a>            <span class="n">role</span><span class="o">=</span><span class="s2">&quot;system&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150"></a>            <span class="n">content</span><span class="o">=</span><span class="n">PAGE_CLASSIFICATION_SYSTEM_PROMPT</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">task_input</span><span class="p">),</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151"></a>        <span class="p">)</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152"></a>
-<a id="__codelineno-0-153" name="__codelineno-0-153"></a>        <span class="n">human</span> <span class="o">=</span> <span class="n">OpenAIMessage</span><span class="o">.</span><span class="n">from_image_uri</span><span class="p">(</span><span class="n">image_uri</span><span class="p">)</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">system</span><span class="p">,</span> <span class="n">human</span><span class="p">]</span>
-<a id="__codelineno-0-155" name="__codelineno-0-155"></a>
-<a id="__codelineno-0-156" name="__codelineno-0-156"></a>    <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span><span class="n">_format_message</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span> <span class="k">for</span> <span class="n">uri</span> <span class="ow">in</span> <span class="n">image_uris</span><span class="p">]</span>
-<a id="__codelineno-0-157" name="__codelineno-0-157"></a>
-<a id="__codelineno-0-158" name="__codelineno-0-158"></a>    <span class="n">model_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_name&quot;</span><span class="p">,</span> <span class="s2">&quot;claude-3-haiku-20240307&quot;</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-168">168</a></span>
+<span class="normal"><a href="#__codelineno-0-169">169</a></span>
+<span class="normal"><a href="#__codelineno-0-170">170</a></span>
+<span class="normal"><a href="#__codelineno-0-171">171</a></span>
+<span class="normal"><a href="#__codelineno-0-172">172</a></span>
+<span class="normal"><a href="#__codelineno-0-173">173</a></span>
+<span class="normal"><a href="#__codelineno-0-174">174</a></span>
+<span class="normal"><a href="#__codelineno-0-175">175</a></span>
+<span class="normal"><a href="#__codelineno-0-176">176</a></span>
+<span class="normal"><a href="#__codelineno-0-177">177</a></span>
+<span class="normal"><a href="#__codelineno-0-178">178</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-149" name="__codelineno-0-149"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">classify_images</span><span class="p">(</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150"></a>    <span class="n">image_uris</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">task_input</span><span class="p">:</span> <span class="n">ClassificationInput</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ClassificationOutput</span><span class="p">]:</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Classify a list of images with the given input.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153"></a>
+<a id="__codelineno-0-154" name="__codelineno-0-154"></a>    <span class="k">def</span> <span class="nf">_format_message</span><span class="p">(</span><span class="n">image_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155"></a>        <span class="n">system</span> <span class="o">=</span> <span class="n">OpenAIMessage</span><span class="p">(</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156"></a>            <span class="n">role</span><span class="o">=</span><span class="s2">&quot;system&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157"></a>            <span class="n">content</span><span class="o">=</span><span class="n">PAGE_CLASSIFICATION_SYSTEM_PROMPT</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">task_input</span><span class="p">),</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158"></a>        <span class="p">)</span>
 <a id="__codelineno-0-159" name="__codelineno-0-159"></a>
-<a id="__codelineno-0-160" name="__codelineno-0-160"></a>    <span class="n">parser</span> <span class="o">=</span> <span class="n">PageClassificationOutputParser</span><span class="o">.</span><span class="n">from_task_input</span><span class="p">(</span><span class="n">task_input</span><span class="p">)</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161"></a>
-<a id="__codelineno-0-162" name="__codelineno-0-162"></a>    <span class="n">completions</span> <span class="o">=</span> <span class="k">await</span> <span class="n">inference</span><span class="o">.</span><span class="n">run_batch_inference_anthropic</span><span class="p">(</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163"></a>        <span class="n">model_name</span><span class="p">,</span> <span class="n">messages</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164"></a>    <span class="p">)</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165"></a>
-<a id="__codelineno-0-166" name="__codelineno-0-166"></a>    <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">completions</span><span class="p">]</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167"></a>
-<a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="k">return</span> <span class="n">labels</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160"></a>        <span class="n">human</span> <span class="o">=</span> <span class="n">OpenAIMessage</span><span class="o">.</span><span class="n">from_image_uri</span><span class="p">(</span><span class="n">image_uri</span><span class="p">)</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">system</span><span class="p">,</span> <span class="n">human</span><span class="p">]</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162"></a>
+<a id="__codelineno-0-163" name="__codelineno-0-163"></a>    <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span><span class="n">_format_message</span><span class="p">(</span><span class="n">uri</span><span class="p">)</span> <span class="k">for</span> <span class="n">uri</span> <span class="ow">in</span> <span class="n">image_uris</span><span class="p">]</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164"></a>
+<a id="__codelineno-0-165" name="__codelineno-0-165"></a>    <span class="n">model_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;model_name&quot;</span><span class="p">,</span> <span class="s2">&quot;claude-3-haiku-20240307&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166"></a>
+<a id="__codelineno-0-167" name="__codelineno-0-167"></a>    <span class="n">provider_name</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;provider_name&quot;</span><span class="p">,</span> <span class="s2">&quot;anthropic&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168"></a>    <span class="n">parser</span> <span class="o">=</span> <span class="n">PageClassificationOutputParser</span><span class="o">.</span><span class="n">from_task_input</span><span class="p">(</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169"></a>        <span class="n">task_input</span><span class="p">,</span> <span class="n">provider_name</span><span class="o">=</span><span class="n">provider_name</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170"></a>    <span class="p">)</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171"></a>
+<a id="__codelineno-0-172" name="__codelineno-0-172"></a>    <span class="n">completions</span> <span class="o">=</span> <span class="k">await</span> <span class="n">inference</span><span class="o">.</span><span class="n">run_batch_inference_anthropic</span><span class="p">(</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173"></a>        <span class="n">model_name</span><span class="p">,</span> <span class="n">messages</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174"></a>    <span class="p">)</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175"></a>
+<a id="__codelineno-0-176" name="__codelineno-0-176"></a>    <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">res</span><span class="p">)</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">completions</span><span class="p">]</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177"></a>
+<a id="__codelineno-0-178" name="__codelineno-0-178"></a>    <span class="k">return</span> <span class="n">labels</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

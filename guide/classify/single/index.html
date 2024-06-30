@@ -8,23 +8,25 @@
       
       
       
-        <link rel="canonical" href="https://docprompt.io/docs/community/versioning/">
+        <link rel="canonical" href="https://docprompt.io/docs/guide/classify/single/">
       
       
-        <link rel="prev" href="../contributing/">
+        <link rel="prev" href="../binary/">
       
       
+        <link rel="next" href="../multi/">
       
-      <link rel="icon" href="../../assets/static/img/logo.png">
+      
+      <link rel="icon" href="../../../assets/static/img/logo.png">
       <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.27">
     
     
       
-        <title>Versioning - Docprompt</title>
+        <title>Single-Label Classification - Docprompt</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.6543a935.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.6543a935.min.css">
       
       
 
@@ -43,9 +45,9 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -63,6 +65,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#single-label-classification-with-docprompt-recipe-categories" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -75,9 +82,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Docprompt" class="md-header__button md-logo" aria-label="Docprompt" data-md-component="logo">
+    <a href="../../.." title="Docprompt" class="md-header__button md-logo" aria-label="Docprompt" data-md-component="logo">
       
-  <img src="../../assets/static/img/logo.png" alt="logo">
+  <img src="../../../assets/static/img/logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -94,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Versioning
+              Single-Label Classification
             
           </span>
         </div>
@@ -181,9 +188,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Docprompt" class="md-nav__button md-logo" aria-label="Docprompt" data-md-component="logo">
+    <a href="../../.." title="Docprompt" class="md-nav__button md-logo" aria-label="Docprompt" data-md-component="logo">
       
-  <img src="../../assets/static/img/logo.png" alt="logo">
+  <img src="../../../assets/static/img/logo.png" alt="logo">
 
     </a>
     Docprompt
@@ -210,7 +217,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -227,17 +234,19 @@
       
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -251,7 +260,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             How-to Guides
@@ -300,7 +309,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guide/ocr/basic_usage/" class="md-nav__link">
+      <a href="../../ocr/basic_usage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -321,7 +330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guide/ocr/provider_config/" class="md-nav__link">
+      <a href="../../ocr/provider_config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -342,7 +351,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guide/ocr/advanced_search/" class="md-nav__link">
+      <a href="../../ocr/advanced_search/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -363,7 +372,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guide/ocr/advanced_workflows/" class="md-nav__link">
+      <a href="../../ocr/advanced_workflows/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -389,17 +398,19 @@
                 
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
         
           
           <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
@@ -413,7 +424,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_2">
             <span class="md-nav__icon md-icon"></span>
             Classify Pages
@@ -427,7 +438,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guide/classify/binary/" class="md-nav__link">
+      <a href="../binary/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -445,10 +456,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../guide/classify/single/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Single-Label Classification
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -457,6 +488,98 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setting-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting Up
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preparing-the-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      Preparing the Document
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-the-classification-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuring the Classification Task
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performing-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performing Classification
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpreting-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interpreting Results
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tips-for-effective-single-label-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tips for Effective Single-Label Classification
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage-customizing-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Usage: Customizing the Model
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -469,7 +592,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guide/classify/multi/" class="md-nav__link">
+      <a href="../multi/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -498,7 +621,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../guide/extract_tables/" class="md-nav__link">
+      <a href="../../extract_tables/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -561,7 +684,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/primatives/" class="md-nav__link">
+      <a href="../../../concepts/primatives/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -582,7 +705,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/nodes/" class="md-nav__link">
+      <a href="../../../concepts/nodes/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -603,7 +726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/providers/" class="md-nav__link">
+      <a href="../../../concepts/providers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -624,7 +747,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../concepts/provenance/" class="md-nav__link">
+      <a href="../../../concepts/provenance/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -652,7 +775,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../enterprise/" class="md-nav__link">
+      <a href="../../../enterprise/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -709,7 +832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../blog/" class="md-nav__link">
+      <a href="../../../blog/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -730,7 +853,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -828,7 +951,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/_decorators/" class="md-nav__link">
+      <a href="../../../reference/_decorators/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -884,7 +1007,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/_exec/" class="md-nav__link">
+      <a href="../../../reference/_exec/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -905,7 +1028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/_exec/ghostscript/" class="md-nav__link">
+      <a href="../../../reference/_exec/ghostscript/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -926,7 +1049,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/_exec/tesseract/" class="md-nav__link">
+      <a href="../../../reference/_exec/tesseract/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -955,7 +1078,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/_pdfium/" class="md-nav__link">
+      <a href="../../../reference/_pdfium/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1011,7 +1134,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/contrib/" class="md-nav__link">
+      <a href="../../../reference/contrib/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1032,7 +1155,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/contrib/parser_bot/" class="md-nav__link">
+      <a href="../../../reference/contrib/parser_bot/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1096,7 +1219,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/provenance/" class="md-nav__link">
+      <a href="../../../reference/provenance/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1117,7 +1240,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/provenance/search/" class="md-nav__link">
+      <a href="../../../reference/provenance/search/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1138,7 +1261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/provenance/source/" class="md-nav__link">
+      <a href="../../../reference/provenance/source/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1159,7 +1282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/provenance/util/" class="md-nav__link">
+      <a href="../../../reference/provenance/util/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1188,7 +1311,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/rasterize/" class="md-nav__link">
+      <a href="../../../reference/rasterize/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1244,7 +1367,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/" class="md-nav__link">
+      <a href="../../../reference/schema/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1265,7 +1388,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/document/" class="md-nav__link">
+      <a href="../../../reference/schema/document/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1286,7 +1409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/layout/" class="md-nav__link">
+      <a href="../../../reference/schema/layout/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1342,7 +1465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1363,7 +1486,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/collection/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/collection/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1384,7 +1507,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/metadata/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/metadata/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1440,7 +1563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/node/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/node/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1461,7 +1584,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/node/base/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/node/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1482,7 +1605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/node/document/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/node/document/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1503,7 +1626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/node/image/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/node/image/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1524,7 +1647,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/node/page/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/node/page/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1545,7 +1668,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/node/typing/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/node/typing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1574,7 +1697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/schema/pipeline/rasterizer/" class="md-nav__link">
+      <a href="../../../reference/schema/pipeline/rasterizer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1611,7 +1734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/storage/" class="md-nav__link">
+      <a href="../../../reference/storage/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1667,7 +1790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/" class="md-nav__link">
+      <a href="../../../reference/tasks/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1688,7 +1811,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/base/" class="md-nav__link">
+      <a href="../../../reference/tasks/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1709,7 +1832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/capabilities/" class="md-nav__link">
+      <a href="../../../reference/tasks/capabilities/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1765,7 +1888,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/classification/" class="md-nav__link">
+      <a href="../../../reference/tasks/classification/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1786,7 +1909,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/classification/anthropic/" class="md-nav__link">
+      <a href="../../../reference/tasks/classification/anthropic/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1807,7 +1930,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/classification/base/" class="md-nav__link">
+      <a href="../../../reference/tasks/classification/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1836,7 +1959,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/credentials/" class="md-nav__link">
+      <a href="../../../reference/tasks/credentials/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1857,7 +1980,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/factory/" class="md-nav__link">
+      <a href="../../../reference/tasks/factory/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1913,7 +2036,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/markerize/" class="md-nav__link">
+      <a href="../../../reference/tasks/markerize/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1934,7 +2057,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/markerize/anthropic/" class="md-nav__link">
+      <a href="../../../reference/tasks/markerize/anthropic/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1955,7 +2078,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/markerize/base/" class="md-nav__link">
+      <a href="../../../reference/tasks/markerize/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1984,7 +2107,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/message/" class="md-nav__link">
+      <a href="../../../reference/tasks/message/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2040,7 +2163,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/ocr/" class="md-nav__link">
+      <a href="../../../reference/tasks/ocr/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2061,7 +2184,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/ocr/amazon_textract/" class="md-nav__link">
+      <a href="../../../reference/tasks/ocr/amazon_textract/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2082,7 +2205,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/ocr/base/" class="md-nav__link">
+      <a href="../../../reference/tasks/ocr/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2103,7 +2226,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/ocr/gcp/" class="md-nav__link">
+      <a href="../../../reference/tasks/ocr/gcp/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2124,7 +2247,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/ocr/result/" class="md-nav__link">
+      <a href="../../../reference/tasks/ocr/result/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2145,7 +2268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/ocr/tesseract/" class="md-nav__link">
+      <a href="../../../reference/tasks/ocr/tesseract/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2174,7 +2297,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/parser/" class="md-nav__link">
+      <a href="../../../reference/tasks/parser/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2230,7 +2353,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/table_extraction/" class="md-nav__link">
+      <a href="../../../reference/tasks/table_extraction/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2251,7 +2374,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/table_extraction/anthropic/" class="md-nav__link">
+      <a href="../../../reference/tasks/table_extraction/anthropic/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2272,7 +2395,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/table_extraction/base/" class="md-nav__link">
+      <a href="../../../reference/tasks/table_extraction/base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2293,7 +2416,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/table_extraction/schema/" class="md-nav__link">
+      <a href="../../../reference/tasks/table_extraction/schema/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2322,7 +2445,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/tasks/util/" class="md-nav__link">
+      <a href="../../../reference/tasks/util/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2386,7 +2509,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/utils/" class="md-nav__link">
+      <a href="../../../reference/utils/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2407,7 +2530,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/utils/async_utils/" class="md-nav__link">
+      <a href="../../../reference/utils/async_utils/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2428,7 +2551,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/utils/compressor/" class="md-nav__link">
+      <a href="../../../reference/utils/compressor/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2449,7 +2572,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/utils/date_extraction/" class="md-nav__link">
+      <a href="../../../reference/utils/date_extraction/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2470,7 +2593,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/utils/inference/" class="md-nav__link">
+      <a href="../../../reference/utils/inference/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2526,7 +2649,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/utils/masking/" class="md-nav__link">
+      <a href="../../../reference/utils/masking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2547,7 +2670,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/utils/masking/image/" class="md-nav__link">
+      <a href="../../../reference/utils/masking/image/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2576,7 +2699,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/utils/splitter/" class="md-nav__link">
+      <a href="../../../reference/utils/splitter/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2597,7 +2720,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/utils/util/" class="md-nav__link">
+      <a href="../../../reference/utils/util/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2634,7 +2757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../enterprise" class="md-nav__link">
+      <a href="../../../enterprise" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2659,19 +2782,17 @@
       
   
   
-    
   
   
-  
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
           <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
@@ -2685,7 +2806,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Community
@@ -2699,7 +2820,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contributing/" class="md-nav__link">
+      <a href="../../../community/contributing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2717,17 +2838,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../community/versioning/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2736,7 +2850,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -2766,6 +2879,88 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setting-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setting Up
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preparing-the-document" class="md-nav__link">
+    <span class="md-ellipsis">
+      Preparing the Document
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuring-the-classification-task" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuring the Classification Task
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performing-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performing Classification
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interpreting-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interpreting Results
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tips-for-effective-single-label-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tips for Effective Single-Label Classification
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-usage-customizing-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advanced Usage: Customizing the Model
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -2783,9 +2978,102 @@
   
 
 
-  <h1>Versioning</h1>
-
-
+<h1 id="single-label-classification-with-docprompt-recipe-categories">Single-Label Classification with DocPrompt: Recipe Categories</h1>
+<p>In this guide, we'll use DocPrompt to classify recipes in a PDF document into distinct meal categories. We'll use single-label classification, meaning each page (recipe) will be assigned to one category: Breakfast, Lunch, Dinner, or Dessert.</p>
+<h2 id="setting-up">Setting Up</h2>
+<p>First, let's import the necessary modules and set up our environment:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">docprompt</span> <span class="kn">import</span> <span class="n">load_document</span><span class="p">,</span> <span class="n">DocumentNode</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">docprompt.tasks.factory</span> <span class="kn">import</span> <span class="n">AnthropicTaskProviderFactory</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span> <span class="nn">docprompt.tasks.classification</span> <span class="kn">import</span> <span class="n">ClassificationInput</span><span class="p">,</span> <span class="n">ClassificationTypes</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Initialize the Anthropic factory</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="c1"># Ensure you have set the ANTHROPIC_API_KEY environment variable</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">factory</span> <span class="o">=</span> <span class="n">AnthropicTaskProviderFactory</span><span class="p">()</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># Create the classification provider</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">classification_provider</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_page_classification_provider</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="preparing-the-document">Preparing the Document</h2>
+<p>Load your recipe book PDF and create a DocumentNode:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">document</span> <span class="o">=</span> <span class="n">load_document</span><span class="p">(</span><span class="s2">&quot;path/to/your/recipe_book.pdf&quot;</span><span class="p">)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">document_node</span> <span class="o">=</span> <span class="n">DocumentNode</span><span class="o">.</span><span class="n">from_document</span><span class="p">(</span><span class="n">document</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="configuring-the-classification-task">Configuring the Classification Task</h2>
+<p>For single-label classification, we'll create a <code>ClassificationInput</code> object that specifies our labels and provides instructions for the model:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">classification_input</span> <span class="o">=</span> <span class="n">ClassificationInput</span><span class="p">(</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="nb">type</span><span class="o">=</span><span class="n">ClassificationTypes</span><span class="o">.</span><span class="n">SINGLE_LABEL</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Breakfast&quot;</span><span class="p">,</span> <span class="s2">&quot;Lunch&quot;</span><span class="p">,</span> <span class="s2">&quot;Dinner&quot;</span><span class="p">,</span> <span class="s2">&quot;Dessert&quot;</span><span class="p">],</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;Classify the recipe on this page into one of the given meal categories based on its ingredients, cooking methods, and typical serving time.&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">descriptions</span><span class="o">=</span><span class="p">[</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        <span class="s2">&quot;Morning meals, often including eggs, cereals, or pastries&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="s2">&quot;Midday meals, typically lighter fare like sandwiches or salads&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="s2">&quot;Evening meals, often the most substantial meal of the day&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        <span class="s2">&quot;Sweet treats typically served after a meal or as a snack&quot;</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="p">],</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="n">confidence</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Request confidence scores</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">)</span>
+</code></pre></div>
+<p>Let's break down the <code>ClassificationInput</code>:</p>
+<ul>
+<li><code>type</code>: Set to <code>ClassificationTypes.SINGLE_LABEL</code> for single-label classification.</li>
+<li><code>labels</code>: List of possible categories for our recipes.</li>
+<li><code>instructions</code>: Clear directions for the model on how to classify the recipes.</li>
+<li><code>descriptions</code>: (Optional) Provide additional context for each label to improve classification accuracy.<ul>
+<li><em>Note that the <code>descriptions</code> array must be the same length as the <code>labels</code> array.</em></li>
+</ul>
+</li>
+<li><code>confidence</code>: Set to <code>True</code> to get confidence scores with the results.</li>
+</ul>
+<h2 id="performing-classification">Performing Classification</h2>
+<p>Now, let's run the classification task on our recipe book:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">results</span> <span class="o">=</span> <span class="n">classification_provider</span><span class="o">.</span><span class="n">process_document_node</span><span class="p">(</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">document_node</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">classification_input</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="p">)</span>
+</code></pre></div>
+<h2 id="interpreting-results">Interpreting Results</h2>
+<p>Let's examine the classification results for each recipe:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">for</span> <span class="n">page_number</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">category</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">labels</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">confidence</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">score</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Recipe on Page </span><span class="si">{</span><span class="n">page_number</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Category: </span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">confidence</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;---&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p>This will print the assigned category (Breakfast, Lunch, Dinner, or Dessert) for each recipe, along with the confidence level.</p>
+<h2 id="tips-for-effective-single-label-classification">Tips for Effective Single-Label Classification</h2>
+<ol>
+<li>
+<p><strong>Comprehensive Labels</strong>: Ensure your label set covers all possible categories without overlap.</p>
+</li>
+<li>
+<p><strong>Clear Instructions</strong>: Provide specific criteria for each category in your instructions. For recipes, mention considering ingredients, cooking methods, and typical serving times.</p>
+</li>
+<li>
+<p><strong>Use Descriptions</strong>: The <code>descriptions</code> field can help the model understand nuances between categories, especially for edge cases like brunch recipes.</p>
+</li>
+<li>
+<p><strong>Consider Confidence Scores</strong>: Low confidence scores might indicate recipes that don't clearly fit into one category, such as versatile dishes that could be served at multiple meals.</p>
+</li>
+<li>
+<p><strong>Handling Edge Cases</strong>: If you encounter many low-confidence classifications, you might need to refine your categories or instructions. For example, you might add an "Anytime" category for versatile recipes.</p>
+</li>
+</ol>
+<h2 id="advanced-usage-customizing-the-model">Advanced Usage: Customizing the Model</h2>
+<p>If you need to experiment with different LLM models, based on the complexity of your task, you may control the model_name parameter to the classification provider:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">haiku_classification_provider</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_page_classification_provider</span><span class="p">(</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;claude-3-haiku-20240307&quot;</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="p">)</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">sonnet_classification_provider</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">get_page_classification_provider</span><span class="p">(</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20240620&quot;</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">)</span>
+</code></pre></div>
+<h2 id="conclusion">Conclusion</h2>
+<p>Single-label classification with DocPrompt provides a powerful way to categorize pages in your documents, such as recipes in a cookbook. By carefully crafting your <code>ClassificationInput</code> with clear labels, instructions, and descriptions, you can achieve accurate and efficient document analysis.</p>
+<p>Remember that the quality of your results depends on the clarity of your instructions and the appropriateness of your label set. Experiment with different phrasings and label combinations to find what works best for your specific use case.</p>
+<p>This approach can be easily adapted to other single-label classification tasks, such as categorizing scientific papers by field, sorting legal documents by type, or classifying news articles by topic.</p>
 
 
 
@@ -2832,10 +3120,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.instant.prefetch"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.prefetch"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.ad660dcc.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.ad660dcc.min.js"></script>
       
     
   </body>
