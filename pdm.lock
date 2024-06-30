@@ -2,10 +2,10 @@
 # It is not intended for manual editing.
 
 [metadata]
-groups = ["default", "azure", "dev", "google", "search", "test", "docs", "anthropic", "openai", "aws"]
+groups = ["default", "anthropic", "aws", "azure", "dev", "docs", "google", "openai", "search", "test"]
 strategy = ["cross_platform", "inherit_metadata"]
-lock_version = "4.4.1"
-content_hash = "sha256:fdab79ac146b08892575a391385fe9319098da61824ce58cebd3863bef81ff00"
+lock_version = "4.4.2"
+content_hash = "sha256:3605c12a16e3f67bfe651542c62df9a4920e7cff33f975d4d6a9afa071f2a4dc"
 
 [[package]]
 name = "aioboto3"
@@ -3058,21 +3058,6 @@ files = [
 ]
 
 [[package]]
-name = "pydantic-settings"
-version = "2.3.4"
-requires_python = ">=3.8"
-summary = "Settings management using Pydantic"
-groups = ["default"]
-dependencies = [
-    "pydantic>=2.7.0",
-    "python-dotenv>=0.21.0",
-]
-files = [
-    {file = "pydantic_settings-2.3.4-py3-none-any.whl", hash = "sha256:11ad8bacb68a045f00e4f862c7a718c8a9ec766aa8fd4c32e39a0594b207b53a"},
-    {file = "pydantic_settings-2.3.4.tar.gz", hash = "sha256:c5802e3d62b78e82522319bbc9b8f8ffb28ad1c988a99311d04f2a6051fca0a7"},
-]
-
-[[package]]
 name = "pydocstyle"
 version = "6.3.0"
 requires_python = ">=3.6"
@@ -3209,7 +3194,7 @@ name = "python-dateutil"
 version = "2.9.0.post0"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 summary = "Extensions to the standard Python datetime module"
-groups = ["aws", "default", "dev", "docs"]
+groups = ["aws", "dev", "docs"]
 dependencies = [
     "six>=1.5",
 ]
@@ -3223,7 +3208,7 @@ name = "python-dotenv"
 version = "1.0.1"
 requires_python = ">=3.8"
 summary = "Read key-value pairs from a .env file and set them as environment variables"
-groups = ["default", "dev"]
+groups = ["dev"]
 files = [
     {file = "python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca"},
     {file = "python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"},
@@ -3430,7 +3415,7 @@ name = "rapidfuzz"
 version = "3.9.3"
 requires_python = ">=3.8"
 summary = "rapid fuzzy string matching"
-groups = ["default"]
+groups = ["search"]
 files = [
     {file = "rapidfuzz-3.9.3-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:bdb8c5b8e29238ec80727c2ba3b301efd45aa30c6a7001123a6647b8e6f77ea4"},
     {file = "rapidfuzz-3.9.3-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:b3bd0d9632088c63a241f217742b1cf86e2e8ae573e01354775bd5016d12138c"},
@@ -3799,7 +3784,7 @@ name = "six"
 version = "1.16.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 summary = "Python 2 and 3 compatibility utilities"
-groups = ["aws", "azure", "default", "dev", "docs"]
+groups = ["aws", "azure", "dev", "docs"]
 files = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},

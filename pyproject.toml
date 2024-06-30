@@ -16,7 +16,6 @@ dependencies = [
   "pydantic>=2.1.0",
   "tenacity>=7.0.0",
   "pypdfium2<5.0.0,>=4.28.0",
-  "rapidfuzz>=3.0.0",
   "filetype>=1.2.0",
   "jinja2>=3.1.4",
   "beautifulsoup4>=4.12.3"
@@ -29,7 +28,12 @@ classifiers = ["Development Status :: 2 - Pre-Alpha", "Intended Audience :: Deve
 [project.optional-dependencies]
 google = ["google-cloud-documentai>=2.20.0"]
 azure = ["azure-ai-formrecognizer>=3.3.0"]
-search = ["tantivy<1.0.0,>=0.21.0", "rtree<3.0.0,>=1.2.0", "networkx<4.0.0,>=2.8.8"]
+search = [
+  "tantivy<1.0.0,>=0.21.0",
+  "rtree<3.0.0,>=1.2.0",
+  "networkx<4.0.0,>=2.8.8",
+  "rapidfuzz>=3.0.0"
+]
 anthropic = [
   "anthropic>=0.26.0"
 ]
