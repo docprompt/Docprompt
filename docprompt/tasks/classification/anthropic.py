@@ -70,14 +70,16 @@ class PageClassificationOutputParser(
 ):
     """The output parser for the page classification system."""
 
+    name: str = Field(...)
     type: ClassificationTypes = Field(...)
     labels: LabelType = Field(...)
     confidence: bool = Field(False)
 
     @classmethod
-    def from_task_input(cls, task_input: ClassificationInput):
+    def from_task_input(cls, task_input: ClassificationInput, provider_name: str):
         return cls(
             type=task_input.type,
+            name=provider_name,
             labels=task_input.labels,
             confidence=task_input.confidence,
         )
@@ -133,10 +135,15 @@ class PageClassificationOutputParser(
             conf_result = self.resolve_confidence(conf_match)
 
             return ClassificationOutput(
-                type=self.type, labels=result, score=conf_result
+                type=self.type,
+                labels=result,
+                score=conf_result,
+                provider_name=self.name,
             )
 
-        return ClassificationOutput(type=self.type, labels=result)
+        return ClassificationOutput(
+            type=self.type, labels=result, provider_name=self.name
+        )
 
 
 async def classify_images(
@@ -157,7 +164,10 @@ async def classify_images(
 
     model_name = kwargs.pop("model_name", "claude-3-haiku-20240307")
 
-    parser = PageClassificationOutputParser.from_task_input(task_input)
+    provider_name = kwargs.pop("provider_name", "anthropic")
+    parser = PageClassificationOutputParser.from_task_input(
+        task_input, provider_name=provider_name
+    )
 
     completions = await inference.run_batch_inference_anthropic(
         model_name, messages, **kwargs
@@ -170,6 +180,8 @@ async def classify_images(
 
 class AnthropicClassificationProvider(BaseClassificationProvider):
     """The Anthropic implementation of unscored page classification."""
+
+    name: str = "anthropic"
 
     async def aprocess_document_pages(
         self,
@@ -192,7 +204,9 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
             for page in document_node.page_nodes[start:stop]
         ]
 
-        labels = await classify_images(image_uris, task_input, **kwargs)
+        labels = await classify_images(
+            image_uris, task_input, **kwargs, provider_name=self.name
+        )
 
         results = {i: label for i, label in zip(range(start, stop), labels)}
 

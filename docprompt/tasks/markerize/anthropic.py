@@ -51,7 +51,9 @@ async def _prepare_message(
     return messages
 
 
-class MarkerizeProvider(BaseMarkerizeProvider):
+class AnthropicMarkerizeProvider(BaseMarkerizeProvider):
+    name = "anthropic"
+
     async def aprocess_document_pages(
         self,
         document: Document,
@@ -69,6 +71,6 @@ class MarkerizeProvider(BaseMarkerizeProvider):
         parsed = [_parse_result(x) for x in completions]
 
         return {
-            i: MarkerizeResult(raw_markdown=x)
+            i: MarkerizeResult(provider_name=self.name, raw_markdown=x)
             for i, x in zip(range(start or 1, (stop or len(document)) + 1), parsed)
         }

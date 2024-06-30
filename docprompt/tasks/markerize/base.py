@@ -1,12 +1,10 @@
 from typing import Dict
 
-from pydantic import BaseModel
-
 from docprompt.schema.pipeline import DocumentNode
-from docprompt.tasks.base import AbstractPageTaskProvider
+from docprompt.tasks.base import AbstractPageTaskProvider, BasePageResult
 
 
-class MarkerizeResult(BaseModel):
+class MarkerizeResult(BasePageResult):
     raw_markdown: str
 
 

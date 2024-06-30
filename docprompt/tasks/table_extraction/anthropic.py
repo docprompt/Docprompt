@@ -75,11 +75,12 @@ def _find_end_indices(s: str, sub: str) -> List[int]:
     return [m.end() for m in re.finditer(sub, s)]
 
 
-def parse_response(response: str) -> List[ExtractedTable]:
+def parse_response(response: str, **kwargs) -> TableExtractionPageResult:
     table_start_indices = _find_start_indices(response, "<table>")
     table_end_indices = _find_end_indices(response, "</table>")
 
     tables: List[ExtractedTable] = []
+    provider_name = kwargs.pop("provider_name", "anthropic")
 
     for table_start, table_end in zip(table_start_indices, table_end_indices):
         table_str = response[table_start:table_end]
@@ -94,10 +95,13 @@ def parse_response(response: str) -> List[ExtractedTable]:
 
         tables.append(ExtractedTable(title=title, headers=headers, rows=rows))
 
-    return tables
+    result = TableExtractionPageResult(tables=tables, provider_name=provider_name)
+    return result
 
 
 class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
+    name: str = "anthropic"
+
     async def aprocess_document_pages(
         self,
         document: PdfDocument,
@@ -125,6 +129,6 @@ class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
         )
 
         return {
-            i: parse_response(x)
+            i: parse_response(x, provider_name=self.name)
             for i, x in zip(range(start or 1, (stop or len(document)) + 1), completions)
         }

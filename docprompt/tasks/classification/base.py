@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, model_validator
 from typing_extensions import override
 
 from docprompt.schema.pipeline import DocumentNode
-from docprompt.tasks.base import AbstractPageTaskProvider
+from docprompt.tasks.base import AbstractPageTaskProvider, PageTaskResult
 
 if TYPE_CHECKING:
     from docprompt.schema.pipeline import DocumentNode
@@ -110,7 +110,7 @@ class ClassificationInput(BaseModel):
             yield from raw_labels
 
 
-class ClassificationOutput(BaseModel):
+class ClassificationOutput(PageTaskResult):
     type: ClassificationTypes
     labels: LabelType
     score: Optional[ConfidenceLevel] = Field(None)
