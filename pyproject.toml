@@ -41,7 +41,8 @@ openai = [
   "openai>=1.0.1"
 ]
 aws = [
-  "aioboto3>=10.4.0"
+  "aioboto3>=13.1.0",
+  "boto3>=1.18.0"
 ]
 
 [project.scripts]

@@ -1,7 +1,7 @@
 """Define the base factory for creating task providers."""
 
 from abc import ABC, abstractmethod
-from typing import ClassVar, List, TypeVar
+from typing import ClassVar, List, TypeVar, Union
 
 from pydantic import BaseModel, PrivateAttr, ValidationInfo, model_validator
 from typing_extensions import Generic, Self
@@ -25,7 +25,7 @@ TTaskProvider = TypeVar("TTaskProvider", bound=AbstractPageTaskProvider)
 class AbstractTaskMixin(ABC):
     """Base class for all task mixins."""
 
-    tags: ClassVar[List[PageLevelCapabilities | DocumentLevelCapabilities]]
+    tags: ClassVar[List[Union[PageLevelCapabilities | DocumentLevelCapabilities]]]
 
 
 class PageRasterizationMixin(AbstractTaskMixin, Generic[TTaskProvider]):

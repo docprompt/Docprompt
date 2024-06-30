@@ -5,7 +5,7 @@
 groups = ["default", "anthropic", "aws", "azure", "dev", "docs", "google", "openai", "search", "test"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.2"
-content_hash = "sha256:e312600240efccb88ef20d6a539eedf9d8d642333fd55ab6ddeb5f5f83302fc2"
+content_hash = "sha256:96fbc588d0e87ba417753bb226eef34966c422694a0ff0e31bea8b5c2b810715"
 
 [[package]]
 name = "aioboto3"
