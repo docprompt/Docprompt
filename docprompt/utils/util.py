@@ -11,6 +11,7 @@ import fsspec
 
 from docprompt._pdfium import get_pdfium_document
 from docprompt.schema.document import PdfDocument
+from docprompt.schema.pipeline.node.document import DocumentNode
 
 
 def is_pdf(fd: Union[Path, PathLike, bytes]) -> bool:
@@ -81,6 +82,7 @@ def load_pdf_document(
     fp: Union[Path, PathLike, bytes],
     *,
     file_name: Optional[str] = None,
+    password: Optional[str] = None,
 ) -> PdfDocument:
     """
     Loads a document from a file path
@@ -97,7 +99,10 @@ def load_pdf_document(
         raise ValueError("File is not a PDF")
 
     return PdfDocument(
-        name=unquote(file_name), file_path=str(fp), file_bytes=file_bytes
+        name=unquote(file_name),
+        file_path=str(fp),
+        file_bytes=file_bytes,
+        password=password,
     )
 
 
@@ -105,6 +110,7 @@ def load_pdf_documents(
     fps: List[Union[Path, PathLike, bytes]],
     *,
     max_threads: int = 12,
+    passwords: Optional[List[str]] = None,
 ):
     """
     Loads multiple documents from file paths, using a thread pool
@@ -123,6 +129,17 @@ def load_pdf_documents(
         results.append(future.result())
 
     return results
+
+
+def load_document_node(
+    fp: Union[Path, PathLike, bytes],
+    *,
+    file_name: Optional[str] = None,
+    password: Optional[str] = None,
+):
+    document = load_pdf_document(fp, file_name=file_name, password=password)
+
+    return DocumentNode.from_document(document)
 
 
 load_document = load_pdf_document

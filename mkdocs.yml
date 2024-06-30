@@ -37,7 +37,7 @@ nav:
       - Binary Classification: guide/classify/binary.md
       - Single-Label Classification: guide/classify/single.md
       - Multi-Label Classification: guide/classify/multi.md
-    - Extract Tables: guide/extract_tables.md
+    - Extract Tables: guide/table_extraction/extract_tables.md
   - Concepts:
     - Primatives: concepts/primatives.md
     - Nodes: concepts/nodes.md
