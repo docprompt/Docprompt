@@ -1,8 +1,8 @@
-from typing import Dict, Optional
+from typing import Iterable, List, Optional
 
 from bs4 import BeautifulSoup
 
-from docprompt.schema.document import Document
+from docprompt.schema.pipeline.node.document import DocumentNode
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
 
@@ -25,14 +25,14 @@ def _parse_result(raw_markdown: str) -> Optional[str]:
     return md.text.strip() if md else ""  # TODO Fix bad extractions
 
 
-async def _prepare_message(
-    document: Document, start: Optional[int] = None, stop: Optional[int] = None
+async def _prepare_messages(
+    document_images: Iterable[bytes],
+    start: Optional[int] = None,
+    stop: Optional[int] = None,
 ):
     messages = []
 
-    for page_number in range(start or 1, (stop or len(document)) + 1):
-        rastered_page = document.rasterize_page_to_data_uri(page_number)
-
+    for image_bytes in document_images:
         messages.append(
             [
                 OpenAIMessage(
@@ -40,7 +40,7 @@ async def _prepare_message(
                     content=[
                         OpenAIComplexContent(
                             type="image_url",
-                            image_url=OpenAIImageURL(url=rastered_page),
+                            image_url=OpenAIImageURL(url=image_bytes),
                         ),
                         OpenAIComplexContent(type="text", text=_HUMAN_MESSAGE_PROMPT),
                     ],
@@ -54,23 +54,36 @@ async def _prepare_message(
 class AnthropicMarkerizeProvider(BaseMarkerizeProvider):
     name = "anthropic"
 
-    async def aprocess_document_pages(
+    def _invoke(
+        self, input: Iterable[bytes], config: Optional[None] = None
+    ) -> List[MarkerizeResult]:
+        messages = _prepare_messages(input)
+
+        completions = inference.run_batch_inference_anthropic(messages)
+
+        return [_parse_result(x) for x in completions]
+
+    def process_document_node(
         self,
-        document: Document,
-        task_input: Optional[None] = None,
+        document_node: "DocumentNode",
+        task_config: Optional[None] = None,
         start: Optional[int] = None,
         stop: Optional[int] = None,
-        model_name: str = "claude-3-haiku-20240307",
+        contribute_to_document: bool = True,
         **kwargs,
-    ) -> Dict[int, MarkerizeResult]:
-        messages = await _prepare_message(document, start=start, stop=stop)
-        completions = await inference.run_batch_inference_anthropic(
-            model_name, messages, **kwargs
-        )
+    ):
+        raster_bytes = []
+        for page_number in range(start or 1, (stop or len(document_node)) + 1):
+            image_bytes = document_node.page_nodes[
+                page_number - 1
+            ].rasterizer.rasterize("default")
+            raster_bytes.append(image_bytes)
 
-        parsed = [_parse_result(x) for x in completions]
+        results = self._invoke(raster_bytes, config=task_config, **kwargs)
 
         return {
             i: MarkerizeResult(provider_name=self.name, raw_markdown=x)
-            for i, x in zip(range(start or 1, (stop or len(document)) + 1), parsed)
+            for i, x in zip(
+                range(start or 1, (stop or len(document_node)) + 1), results
+            )
         }

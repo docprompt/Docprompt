@@ -1,6 +1,16 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, ClassVar, Dict, Generic, List, Optional, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    TypeVar,
+)
 
 from pydantic import BaseModel, Field
 
@@ -11,8 +21,6 @@ from .capabilities import DocumentLevelCapabilities, PageLevelCapabilities
 
 if TYPE_CHECKING:
     from docprompt.schema.pipeline import DocumentNode
-
-TDocumentNode = TypeVar("TDocumentNode", bound="DocumentNode")
 
 
 class BaseResult(BaseModel):
@@ -65,7 +73,8 @@ class BasePageResult(BaseResult):
         page_node.metadata.task_results[self.task_key] = self
 
 
-TTaskInput = TypeVar("TTaskInput")
+TTaskInput = TypeVar("TTaskInput")  # What invoke requires
+TTaskConfig = TypeVar("TTaskConfig")  # Task specific config like classification labels
 PageTaskResult = TypeVar("PageTaskResult", bound=BasePageResult)
 DocumentTaskResult = TypeVar("DocumentTaskResult", bound=BaseDocumentResult)
 PageOrDocumentTaskResult = TypeVar("PageOrDocumentTaskResult", bound=BaseResult)
@@ -86,10 +95,11 @@ class ResultContainer(BaseModel, Generic[PageOrDocumentTaskResult]):
 
 
 @flexible_methods(
-    ("process_document_pages", "aprocess_document_pages"),
     ("process_document_node", "aprocess_document_node"),
+    ("invoke", "ainvoke"),
+    ("_invoke", "_ainvoke"),
 )
-class AbstractPageTaskProvider(ABC, Generic[TTaskInput, PageTaskResult]):
+class AbstractPageTaskProvider(Generic[TTaskInput, TTaskConfig, PageTaskResult]):
     """
     A task provider performs a specific, repeatable task on a document or its pages.
 
@@ -106,7 +116,7 @@ class AbstractPageTaskProvider(ABC, Generic[TTaskInput, PageTaskResult]):
     capabilities: List[PageLevelCapabilities]
     requires_input: bool
 
-    provider_kwargs: Dict[str, Any]
+    _default_invoke_kwargs: Dict[str, Any]
 
     @classmethod
     def with_kwargs(cls, **kwargs):
@@ -115,54 +125,69 @@ class AbstractPageTaskProvider(ABC, Generic[TTaskInput, PageTaskResult]):
         obj.provider_kwargs = kwargs
         return obj
 
-    async def aprocess_document_pages(
+    async def _ainvoke(
         self,
-        document: TDocumentNode,
-        task_input: Optional[TTaskInput] = None,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
+        input: Iterable[TTaskInput],
+        config: Optional[TTaskConfig] = None,
         **kwargs,
-    ):
-        raise NotImplementedError(
-            "`process_document_pages` or `aprocess_document_pages` must be implemented."
-        )
+    ) -> List[PageTaskResult]:
+        raise NotImplementedError
 
-    def process_document_pages(
+    async def ainvoke(
         self,
-        document: TDocumentNode,
-        task_input: Optional[TTaskInput] = None,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
+        input: Iterable[TTaskInput],
+        config: Optional[TTaskConfig] = None,
         **kwargs,
-    ) -> Dict[int, PageTaskResult]:
-        raise NotImplementedError(
-            "`process_document_pages` or `aprocess_document_pages` must be implemented."
-        )
+    ) -> List[PageTaskResult]:
+        invoke_kwargs = {
+            **self._default_invoke_kwargs,
+            **kwargs,
+        }
+
+        return await self._ainvoke(input, config, **invoke_kwargs)
+
+    def _invoke(
+        self,
+        input: Iterable[TTaskInput],
+        config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> List[PageTaskResult]:
+        raise NotImplementedError
+
+    def invoke(
+        self,
+        input: Iterable[TTaskInput],
+        config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> List[PageTaskResult]:
+        invoke_kwargs = {
+            **self._default_invoke_kwargs,
+            **kwargs,
+        }
+
+        return self._invoke(input, config, **invoke_kwargs)
 
     def process_document_node(
         self,
-        document_node: TDocumentNode,
-        task_input: Optional[TTaskInput] = None,
+        document_node: "DocumentNode",
+        task_config: Optional[TTaskConfig] = None,
         start: Optional[int] = None,
         stop: Optional[int] = None,
         contribute_to_document: bool = True,
         **kwargs,
     ) -> Dict[int, PageTaskResult]:
-        kwargs = {**(self.provider_kwargs or {}), **kwargs}
-        results = self.process_document_pages(
-            document_node,
-            task_input=task_input,
-            start=start,
-            stop=stop,
-            **kwargs,
-        )
+        raise NotImplementedError
 
-        # If we want to contribute to the node, we can here by setting the kwarg
-        if contribute_to_document:
-            for page_number, page_result in results.items():
-                page_result.contribute_to_document_node(document_node, page_number)
-
-        return results
+    async def aprocess_document_node(
+        self,
+        document_node: "DocumentNode",
+        task_config: Optional[TTaskConfig] = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        contribute_to_document: bool = True,
+        **kwargs,
+    ) -> Dict[int, PageTaskResult]:
+        raise NotImplementedError
 
 
 class AbstractDocumentTaskProvider(ABC, Generic[TTaskInput, DocumentTaskResult]):

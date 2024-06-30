@@ -14,6 +14,7 @@ from pydantic import (
     BaseModel,
     Field,
     PositiveInt,
+    SecretStr,
     computed_field,
     field_serializer,
     field_validator,
@@ -61,6 +62,8 @@ class PdfDocument(BaseModel):
     name: str = Field(description="The name of the document")
     file_bytes: bytes = Field(description="The bytes of the document", repr=False)
     file_path: Optional[str] = None
+
+    password: Optional[SecretStr] = None
 
     def __len__(self):
         return self.num_pages

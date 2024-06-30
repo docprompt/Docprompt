@@ -6,6 +6,6 @@ class MarkerizeResult(BasePageResult):
     raw_markdown: str
 
 
-class BaseMarkerizeProvider(AbstractPageTaskProvider[None, MarkerizeResult]):
+class BaseMarkerizeProvider(AbstractPageTaskProvider[bytes, None, MarkerizeResult]):
     class Meta:
         abstract = True

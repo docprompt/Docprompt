@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 TInput = str
 
 
-class BaseOCRProvider(AbstractPageTaskProvider[None, OcrPageResult]):
+class BaseOCRProvider(AbstractPageTaskProvider[bytes, None, OcrPageResult]):
     def _populate_ocr_results(
         self, document_node: "DocumentNode", results: Dict[int, OcrPageResult]
     ) -> None:
