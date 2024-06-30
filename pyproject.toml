@@ -44,7 +44,7 @@ aws = [
 docprompt = "docprompt.cli:main"
 
 [project.urls]
-homepage = "https://github.com/Page-Leaf/docprompt"
+homepage = "https://github.com/Docprompt/docprompt"
 
 [tool.black]
 line-length = 120
