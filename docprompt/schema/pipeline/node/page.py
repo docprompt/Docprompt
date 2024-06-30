@@ -4,8 +4,11 @@ from pydantic import Field, PositiveInt, PrivateAttr
 
 from docprompt.schema.pipeline.metadata import BaseMetadata
 from docprompt.schema.pipeline.rasterizer import PageRasterizer
-from docprompt.tasks.base import ResultContainer
 from docprompt.tasks.ocr.result import OcrPageResult
+
+# TODO: This dependency should be removed -- schmea should be lowest level
+# Can do this by moving the OCR results to the metadata.task_results
+from docprompt.tasks.result import ResultContainer
 
 from .base import BaseNode
 from .typing import PageNodeMetadata

@@ -1,9 +1,7 @@
 """Define the base factory for creating task providers."""
 
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
-from contextvars import ContextVar
-from typing import Any, ClassVar, Dict, Iterator, List, TypeVar
+from typing import ClassVar, List, TypeVar
 
 from pydantic import BaseModel, PrivateAttr, ValidationInfo, model_validator
 from typing_extensions import Generic, Self
@@ -14,7 +12,12 @@ from docprompt.tasks.capabilities import (
 )
 
 from .base import AbstractPageTaskProvider
-from .credentials import APIKeyCredential, AWSCredentials, GCPServiceFileCredentials
+from .credentials import (
+    APIKeyCredential,
+    AWSCredentials,
+    GCPServiceFileCredentials,
+)
+from .util import _init_context_var, init_context
 
 TTaskProvider = TypeVar("TTaskProvider", bound=AbstractPageTaskProvider)
 
@@ -114,20 +117,6 @@ class DocumentVQAMixin(AbstractTaskMixin, Generic[TTaskProvider]):
     def get_document_vqa_provider(self, *args, **kwargs) -> TTaskProvider:
         """Perform multi-page document VQA."""
 
-        _init_context_var = ContextVar("_init_context_var", default=None)
-
-
-_init_context_var = ContextVar("_init_context_var", default=None)
-
-
-@contextmanager
-def init_context(value: Dict[str, Any]) -> Iterator[None]:
-    token = _init_context_var.set(value)
-    try:
-        yield
-    finally:
-        _init_context_var.reset(token)
-
 
 class AbstractTaskProviderFactory(ABC, BaseModel):
     """The abstract interface for a provider task factory.
@@ -144,6 +133,7 @@ class AbstractTaskProviderFactory(ABC, BaseModel):
                 context=_init_context_var.get(),
             )
 
+    @abstractmethod
     @model_validator(mode="after")
     def _validate_provider(self) -> Self:
         """Validate the provider before returning it.
@@ -151,7 +141,6 @@ class AbstractTaskProviderFactory(ABC, BaseModel):
         This method needs to handle credential validation, to ensure that the provider is properly
         configured and can be utilized for the tasks it can be used to provide.
         """
-        raise NotImplementedError("You must provide custom provider validation!")
 
 
 class AnthropicTaskProviderFactory(
@@ -183,8 +172,7 @@ class AnthropicTaskProviderFactory(
             AnthropicClassificationProvider,
         )
 
-        kwargs = {**self._credentials.kwargs, **kwargs}
-        return AnthropicClassificationProvider.with_kwargs(**kwargs)
+        return AnthropicClassificationProvider(invoke_kwargs=self._credentials.kwargs)
 
     def get_page_table_extraction_provider(self, **kwargs) -> TTaskProvider:
         """Get the page table extraction provider."""
@@ -192,17 +180,17 @@ class AnthropicTaskProviderFactory(
             AnthropicTableExtractionProvider,
         )
 
-        kwargs = {**self._credentials.kwargs, **kwargs}
-        return AnthropicTableExtractionProvider.with_kwargs(**kwargs)
+        return AnthropicTableExtractionProvider(
+            invoke_kwargs=self._credentials.kwargs, **kwargs
+        )
 
     def get_page_markerization_provider(self, **kwargs) -> TTaskProvider:
         """Get the page markerization provider."""
-        from docprompt.tasks.markerization.anthropic import (
-            AnthropicMarkerizationProvider,
-        )
+        from docprompt.tasks.markerize.anthropic import AnthropicMarkerizeProvider
 
-        kwargs = {**self._credentials.kwargs, **kwargs}
-        return AnthropicMarkerizationProvider.with_kwargs(**kwargs)
+        return AnthropicMarkerizeProvider(
+            invoke_kwargs=self._credentials.kwargs, **kwargs
+        )
 
 
 class AmazonTaskProviderFactory(AbstractTaskProviderFactory, PageOCRMixin):
@@ -216,10 +204,11 @@ class AmazonTaskProviderFactory(AbstractTaskProviderFactory, PageOCRMixin):
 
     def get_page_ocr_provider(self, **kwargs) -> TTaskProvider:
         """Get the page OCR provider."""
-        from docprompt.tasks.ocr.amazon import AmazonOCRProvider
+        from docprompt.tasks.ocr.amazon import AmazonTextractOCRProvider
 
-        kwargs = {**self._credentials.kwargs, **kwargs}
-        return AmazonOCRProvider(**kwargs)
+        return AmazonTextractOCRProvider(
+            invoke_kwargs=self._credentials.kwargs, **kwargs
+        )
 
 
 class GCPTaskProviderFactory(
@@ -232,7 +221,8 @@ class GCPTaskProviderFactory(
     def _validate_provider(self, info: ValidationInfo) -> Self:
         """Validate the provider before returning it."""
         _payload = info.context["payload"]
-        self._credentials = GCPServiceFileCredentials
+        self._credentials = GCPServiceFileCredentials(**_payload)
+        return self
 
     def get_page_ocr_provider(
         self, project_id: str, processor_id: str, **kwargs
@@ -240,5 +230,6 @@ class GCPTaskProviderFactory(
         """Get the page OCR provider."""
         from docprompt.tasks.ocr.gcp import GoogleOcrProvider
 
-        kwargs = {**self._credentials.kwargs, **kwargs}
-        return GoogleOcrProvider(project_id, processor_id, **kwargs)
+        return GoogleOcrProvider(
+            project_id, processor_id, invoke_kwargs=self._credentials.kwargs, **kwargs
+        )

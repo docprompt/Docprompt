@@ -3,6 +3,8 @@ from typing import Optional
 from docprompt.schema.pipeline.node.document import DocumentNode
 from docprompt.tasks.base import AbstractPageTaskProvider, BasePageResult
 
+from ..capabilities import PageLevelCapabilities
+
 
 class MarkerizeResult(BasePageResult):
     task_name = "markerize"
@@ -10,6 +12,8 @@ class MarkerizeResult(BasePageResult):
 
 
 class BaseMarkerizeProvider(AbstractPageTaskProvider[bytes, None, MarkerizeResult]):
+    capabilities = [PageLevelCapabilities.PAGE_MARKERIZATION]
+
     class Meta:
         abstract = True
 

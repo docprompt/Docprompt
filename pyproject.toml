@@ -114,7 +114,8 @@ dev = [
   "ipykernel>=6.29.4",
   "matplotlib>=3.7.5",
   "pandas>=2.0.3",
-  "seaborn>=0.13.2"
+  "seaborn>=0.13.2",
+  "pytest-asyncio>=0.23.7"
 ]
 docs = [
   "mkdocs>=1.6.0",
@@ -128,6 +129,7 @@ docs = [
 [tool.pdm.scripts]
 docs = "mkdocs serve"
 lint = "pre-commit run --all-files"
+cov = {shell = "python tests/_run_tests_with_coverage.py {args}"}
 
 [tool.ruff]
 target-version = "py38"
