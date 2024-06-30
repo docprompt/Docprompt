@@ -4,6 +4,7 @@ from pydantic import Field, PositiveInt, PrivateAttr
 
 from docprompt.schema.pipeline.metadata import BaseMetadata
 from docprompt.schema.pipeline.rasterizer import PageRasterizer
+from docprompt.tasks.ocr.result import OcrPageResult
 
 # TODO: This dependency should be removed -- schmea should be lowest level
 # Can do this by moving the OCR results to the metadata.task_results
@@ -13,14 +14,11 @@ from .base import BaseNode
 from .typing import PageNodeMetadata
 
 if TYPE_CHECKING:
-    from docprompt.tasks.base import ResultContainer
-    from docprompt.tasks.ocr.result import OcrPageResult
-
     from .document import DocumentNode
 
 
 def _result_container_factory():
-    from docprompt.tasks.base import ResultContainer
+    from docprompt.tasks.result import ResultContainer
 
     return ResultContainer()
 
@@ -41,7 +39,7 @@ class PageNode(BaseNode, Generic[PageNodeMetadata]):
         default_factory=dict,
     )
 
-    ocr_results: "ResultContainer[OcrPageResult]" = Field(
+    ocr_results: ResultContainer[OcrPageResult] = Field(
         default_factory=_result_container_factory,
         description="The OCR results for the page",
         repr=False,

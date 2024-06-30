@@ -10,7 +10,8 @@ from docprompt.schema.layout import NormBBox, TextBlock  # noqa
 from docprompt.schema.pipeline import DocumentCollection, DocumentNode, PageNode  # noqa
 from docprompt.utils import hash_from_bytes, load_document, load_documents  # noqa
 
-Document.model_rebuild()
+PdfDocument.model_rebuild()
+DocumentNode.model_rebuild()
 
 
 __all__ = [

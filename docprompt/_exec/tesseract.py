@@ -10,6 +10,13 @@ from PIL import Image
 TESSERACT = "tesseract"
 
 
+def check_tesseract_installed() -> bool:
+    result = run(
+        [TESSERACT, "--version"], stdout=PIPE, stderr=PIPE, check=False, text=True
+    )
+    return result.returncode == 0
+
+
 class TesseractError(Exception):
     def __init__(self, message: str, process: CompletedProcess) -> None:
         self.process = process

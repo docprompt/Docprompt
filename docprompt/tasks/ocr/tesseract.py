@@ -2,16 +2,19 @@ import logging
 import multiprocessing as mp
 import tempfile
 from concurrent.futures import ProcessPoolExecutor
-from typing import Dict, List
+from typing import TYPE_CHECKING, Dict, List
 
 from pydantic import BaseModel
 
 from docprompt._exec.tesseract import OCRResult as TesseractResult
-from docprompt._exec.tesseract import process_image_to_dict
+from docprompt._exec.tesseract import check_tesseract_installed, process_image_to_dict
 from docprompt.schema.layout import NormBBox, TextBlock, TextBlockMetadata, TextSpan
 from docprompt.tasks.capabilities import PageLevelCapabilities
-from docprompt.tasks.ocr.base import ImageOcrProvider
+from docprompt.tasks.ocr.base import BaseOCRProvider, ImageBytes
 from docprompt.tasks.ocr.result import OcrPageResult
+
+if TYPE_CHECKING:
+    from docprompt.schema.pipeline import DocumentNode
 
 logger = logging.getLogger(__name__)
 
@@ -116,11 +119,17 @@ def _process_image_to_page_result(image: bytes):
     return _tesseract_result_to_page_result(result)
 
 
-class TesseractOcrProvider(ImageOcrProvider):
+class TesseractOcrProvider(BaseOCRProvider):
     name = "tesseract"
     capabilities = [
         PageLevelCapabilities.PAGE_TEXT_OCR,
     ]
+
+    def __init__(self):
+        if not check_tesseract_installed():
+            raise RuntimeError(
+                "Tesseract is not installed. Please install Tesseract to use this provider."
+            )
 
     def _process_images(self, images: List[bytes]) -> List[OcrPageResult]:
         results = []
@@ -135,8 +144,26 @@ class TesseractOcrProvider(ImageOcrProvider):
 
     def _invoke(
         self,
-        input: List[bytes],
+        input: List[ImageBytes],
         config: None = None,
         **kwargs,
     ):
         return self._process_images(input)
+
+    def process_document_node(
+        self,
+        document_node: "DocumentNode",
+        task_config: None = None,
+        start: int | None = None,
+        stop: int | None = None,
+        contribute_to_document: bool = True,
+        **kwargs,
+    ) -> Dict[int, OcrPageResult]:
+        rasterized_images = document_node.rasterizer.rasterize("default")
+
+        base_result = self.invoke(rasterized_images, start=start, stop=stop, **kwargs)
+
+        # For OCR, we also need to populate the ocr_results for powered search
+        self._populate_ocr_results(document_node, base_result)
+
+        return base_result

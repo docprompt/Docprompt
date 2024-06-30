@@ -199,10 +199,10 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
     @model_validator(mode="after")
     def setup_textract_client(self) -> Self:
         try:
-            import boto3  # noqa
+            import aioboto3  # noqa
         except ImportError as e:
             raise ValueError(
-                "The boto3 library is required to use the AWS Textract provider."
+                "The aioboto3 library is required to use the AWS Textract provider."
             ) from e
 
         kwargs = {}
@@ -214,7 +214,7 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
         if self.region_name:
             kwargs["region_name"] = self.region_name
 
-        self._textract_client = boto3.client("textract", **kwargs)
+        self._textract_client = aioboto3.client("textract", **kwargs)
 
     @default_retry_decorator
     def process_byte_chunk(self, split_bytes: bytes):

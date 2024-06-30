@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from google.cloud import documentai
 
     from docprompt.schema.document import Document
+    from docprompt.schema.pipeline.node.document import DocumentNode
 
 
 service_account_file_read_lock = Lock()
@@ -682,3 +683,21 @@ class GoogleOcrProvider(BaseOCRProvider):
             )
 
         return self._process_document_concurrent(input[0], start=start, stop=stop)
+
+    def process_document_node(
+        self,
+        document_node: "DocumentNode",
+        task_config: None = None,
+        start: int | None = None,
+        stop: int | None = None,
+        contribute_to_document: bool = True,
+        **kwargs,
+    ) -> Dict[int, OcrPageResult]:
+        base_result = self.invoke(
+            [document_node.document.file_bytes], start=start, stop=stop, **kwargs
+        )
+
+        # For OCR, we also need to populate the ocr_results for powered search
+        self._populate_ocr_results(document_node, base_result)
+
+        return base_result
