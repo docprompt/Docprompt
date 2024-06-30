@@ -1,15 +1,9 @@
-from abc import abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, model_validator
-from typing_extensions import override
 
-from docprompt.schema.pipeline import DocumentNode
 from docprompt.tasks.base import AbstractPageTaskProvider, PageTaskResult
-
-if TYPE_CHECKING:
-    from docprompt.schema.pipeline import DocumentNode
 
 LabelType = Union[List[str], Enum, str]
 
@@ -120,48 +114,8 @@ class ClassificationOutput(PageTaskResult):
 class BaseClassificationProvider(
     AbstractPageTaskProvider[ClassificationInput, ClassificationOutput]
 ):
-    # NOTE: We override the method here for more accurate type-hinting
-    @override
-    async def aprocess_document_node(
-        self,
-        document_node: DocumentNode,
-        task_input: ClassificationInput,
-        start: int | None = None,
-        stop: int | None = None,
-        contribute_to_document: bool = True,
-        **kwargs,
-    ) -> Dict[int, ClassificationOutput]:
-        # NOTE: We need to pass the document node to `process_document_pages` instead of `document_node.document`
-        # because the `DocumentNode` object contains an easy iterable of `PageNode` objects.
-        # The defualt implementation of `process_document_nodes` passes, the `document_node.document` object to
-        # `process_document_pages` which is not iterable.
+    """
+    The base classification provider.
+    """
 
-        # Essentially an identical implementation as the `AbstractPageTaskProvider` class, but with
-        # `DocumentNode` instead of `Document` as the first argument to `process_document_pages`
-        kwargs = {**(self.provider_kwargs or {}), **kwargs}
-        results = await self.aprocess_document_pages(
-            document_node,
-            task_input,
-            start=start,
-            stop=stop,
-            **kwargs,
-        )
-
-        # We still need to make sure that this is reimplemented
-        if contribute_to_document:
-            for page_number, page_result in results.items():
-                page_result.contribute_to_document_node(document_node, page_number)
-
-        return results
-
-    @abstractmethod
-    @override
-    def process_document_pages(
-        self,
-        document_node: DocumentNode,  # NOTE: We override here to DocumentNode, instead of Document
-        task_input: ClassificationInput,
-        start: int | None = None,
-        stop: int | None = None,
-        contribute_to_document: bool = True,
-        **kwargs,
-    ) -> Dict[int, ClassificationOutput]: ...
+    pass

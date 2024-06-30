@@ -136,7 +136,7 @@ class AbstractPageTaskProvider(ABC, Generic[TTaskInput, PageTaskResult]):
     ) -> Dict[int, PageTaskResult]:
         kwargs = {**(self.provider_kwargs or {}), **kwargs}
         results = self.process_document_pages(
-            document_node.document,
+            document_node,
             task_input=task_input,
             start=start,
             stop=stop,
