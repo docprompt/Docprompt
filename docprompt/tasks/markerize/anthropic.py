@@ -2,7 +2,6 @@ from typing import Iterable, List, Optional
 
 from bs4 import BeautifulSoup
 
-from docprompt.schema.pipeline.node.document import DocumentNode
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
 
@@ -54,36 +53,14 @@ async def _prepare_messages(
 class AnthropicMarkerizeProvider(BaseMarkerizeProvider):
     name = "anthropic"
 
-    def _invoke(
+    async def _ainvoke(
         self, input: Iterable[bytes], config: Optional[None] = None
     ) -> List[MarkerizeResult]:
         messages = _prepare_messages(input)
 
-        completions = inference.run_batch_inference_anthropic(messages)
+        completions = await inference.run_batch_inference_anthropic(messages)
 
-        return [_parse_result(x) for x in completions]
-
-    def process_document_node(
-        self,
-        document_node: "DocumentNode",
-        task_config: Optional[None] = None,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
-        contribute_to_document: bool = True,
-        **kwargs,
-    ):
-        raster_bytes = []
-        for page_number in range(start or 1, (stop or len(document_node)) + 1):
-            image_bytes = document_node.page_nodes[
-                page_number - 1
-            ].rasterizer.rasterize("default")
-            raster_bytes.append(image_bytes)
-
-        results = self._invoke(raster_bytes, config=task_config, **kwargs)
-
-        return {
-            i: MarkerizeResult(provider_name=self.name, raw_markdown=x)
-            for i, x in zip(
-                range(start or 1, (stop or len(document_node)) + 1), results
-            )
-        }
+        return [
+            MarkerizeResult(raw_markdown=_parse_result(x), provider_name=self.name)
+            for x in completions
+        ]
