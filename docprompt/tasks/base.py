@@ -37,7 +37,6 @@ Capabilites = TypeVar(
 
 @flexible_methods(
     ("process_document_node", "aprocess_document_node"),
-    ("invoke", "ainvoke"),
     ("_invoke", "_ainvoke"),
 )
 class AbstractTaskProvider(BaseModel, Generic[TTaskInput, TTaskConfig, TTaskResult]):

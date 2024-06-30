@@ -1,11 +1,11 @@
-from typing import Generic, List, TypeVar
+from typing import TYPE_CHECKING, Generic, List
 
 from pydantic import BaseModel, Field
 
-from .metadata import BaseMetadata
-from .node import DocumentNode, DocumentNodeMetadata, PageNodeMetadata
+from .typing import DocumentCollectionMetadata, DocumentNodeMetadata, PageNodeMetadata
 
-DocumentCollectionMetadata = TypeVar("DocumentCollectionMetadata", bound=BaseMetadata)
+if TYPE_CHECKING:
+    from .document import DocumentNode
 
 
 class DocumentCollection(
@@ -16,5 +16,5 @@ class DocumentCollection(
     Represents a collection of documents with some common metadata
     """
 
-    document_nodes: List[DocumentNode[DocumentNodeMetadata, PageNodeMetadata]]
+    document_nodes: List["DocumentNode[DocumentNodeMetadata, PageNodeMetadata]"]
     metadata: DocumentCollectionMetadata = Field(..., default_factory=dict)

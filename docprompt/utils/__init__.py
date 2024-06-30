@@ -5,11 +5,15 @@ from .util import (
     is_pdf,
     load_document,
     load_documents,
+    load_pdf_document,
+    load_pdf_documents,
 )
 
 __all__ = [
     "get_page_count",
     "is_pdf",
+    "load_pdf_document",
+    "load_pdf_documents",
     "load_document",
     "load_documents",
     "hash_from_bytes",

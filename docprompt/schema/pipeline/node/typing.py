@@ -4,3 +4,4 @@ from ..metadata import BaseMetadata
 
 PageNodeMetadata = TypeVar("PageNodeMetadata", bound=BaseMetadata)
 DocumentNodeMetadata = TypeVar("DocumentNodeMetadata", bound=BaseMetadata)
+DocumentCollectionMetadata = TypeVar("DocumentCollectionMetadata", bound=BaseMetadata)

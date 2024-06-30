@@ -1,6 +1,5 @@
-from .collection import DocumentCollection
 from .metadata import BaseMetadata
-from .node import DocumentNode, PageNode
+from .node import DocumentCollection, DocumentNode, PageNode
 
 __all__ = [
     "DocumentCollection",

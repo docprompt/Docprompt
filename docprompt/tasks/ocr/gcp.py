@@ -9,7 +9,7 @@ import tqdm
 from pydantic import BaseModel, Field, PrivateAttr
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from docprompt.schema.document import Document
+from docprompt.schema.document import Document, PdfDocument
 from docprompt.schema.layout import (
     BoundingPoly,
     DirectionChoices,
@@ -668,11 +668,17 @@ class GoogleOcrProvider(BaseOCRProvider):
             return_images=self.return_images,
         )
 
-    def process_document_pages(
+    def _invoke(
         self,
-        document: Document,
+        input: List[PdfDocument],
+        config: None = None,
         start: Optional[int] = None,
         stop: Optional[int] = None,
         **kwargs,
-    ) -> Dict[int, OcrPageResult]:
-        return self._process_document_concurrent(document, start=start, stop=stop)
+    ):
+        if len(input) != 1:
+            raise ValueError(
+                "GoogleOcrProvider only supports processing a single document at a time."
+            )
+
+        return self._process_document_concurrent(input[0], start=start, stop=stop)
