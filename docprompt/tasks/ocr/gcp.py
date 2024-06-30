@@ -20,10 +20,10 @@ from docprompt.schema.layout import (
     TextBlockMetadata,
     TextSpan,
 )
+from docprompt.tasks.capabilities import PageLevelCapabilities
 from docprompt.tasks.ocr.base import BaseOCRProvider
 from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
 
-from ..base import CAPABILITIES
 from .result import OcrPageResult
 
 logger = logging.getLogger(__name__)
@@ -425,9 +425,9 @@ def gcp_documents_to_result(
 class GoogleOcrProvider(BaseOCRProvider):
     name = "google_documentai"
     capabilities = [
-        CAPABILITIES.PAGE_TEXT_OCR.value,
-        CAPABILITIES.PAGE_LAYOUT_OCR.value,
-        CAPABILITIES.PAGE_RASTERIZATION.value,
+        PageLevelCapabilities.PAGE_TEXT_OCR,
+        PageLevelCapabilities.PAGE_LAYOUT_OCR,
+        PageLevelCapabilities.PAGE_RASTERIZATION,
     ]
 
     max_bytes_per_request = (

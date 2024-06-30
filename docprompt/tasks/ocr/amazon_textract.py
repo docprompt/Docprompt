@@ -19,10 +19,10 @@ from docprompt.schema.layout import (
     TextSpan,
 )
 from docprompt.schema.pipeline import DocumentNode
+from docprompt.tasks.capabilities import PageLevelCapabilities
 from docprompt.tasks.ocr.base import BaseOCRProvider
 from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
 
-from ..base import CAPABILITIES
 from .result import OcrPageResult
 
 logger = logging.getLogger(__name__)
@@ -142,8 +142,8 @@ class AmazonTextractProvider(BaseOCRProvider):
     name = "aws_textract"
 
     capabilities = [
-        CAPABILITIES.PAGE_TEXT_OCR.value,
-        CAPABILITIES.PAGE_LAYOUT_OCR.value,
+        PageLevelCapabilities.PAGE_TEXT_OCR,
+        PageLevelCapabilities.PAGE_LAYOUT_OCR,
     ]
 
     max_bytes_per_request = (

@@ -8,13 +8,7 @@ from docprompt.utils.async_utils import to_thread
 def flexible_methods(*method_groups: Tuple[str, str]):
     def decorator(cls: Type):
         def get_method(cls: Type, name: str) -> Callable:
-            method = cls.__dict__.get(name)
-            if method:
-                return method
-            for base in cls.__bases__:
-                if name in base.__dict__:
-                    return None  # Method exists in parent, so it's not overridden
-            return getattr(cls, name, None)  # Return inherited method if it exists
+            return cls.__dict__.get(name)
 
         def validate_method(name: str, method: Callable, expected_async: bool):
             if method is None:
@@ -37,8 +31,8 @@ def flexible_methods(*method_groups: Tuple[str, str]):
                     continue
 
                 sync_name, async_name = group
-                sync_method = get_method(cls, sync_name)
-                async_method = get_method(cls, async_name)
+                sync_method = cls.__dict__.get(sync_name)
+                async_method = cls.__dict__.get(async_name)
 
                 sync_error = validate_method(sync_name, sync_method, False)
                 if sync_error:

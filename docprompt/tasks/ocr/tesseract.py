@@ -4,10 +4,9 @@ from typing import Dict, Optional
 from pydantic import BaseModel
 
 from docprompt import PdfDocument
+from docprompt.tasks.capabilities import PageLevelCapabilities
 from docprompt.tasks.ocr.base import BaseOCRProvider
 from docprompt.tasks.ocr.result import OcrPageResult
-
-from ..base import CAPABILITIES
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +18,7 @@ class TesseractPageMetadata(BaseModel):
 class TesseractOcrProvider(BaseOCRProvider):
     name = "tesseract"
     capabilities = [
-        CAPABILITIES.PAGE_TEXT_OCR.value,
-        CAPABILITIES.PAGE_LAYOUT_OCR.value,
-        CAPABILITIES.PAGE_RASTERIZATION.value,
+        PageLevelCapabilities.PAGE_TEXT_OCR,
     ]
 
     def __init__(
