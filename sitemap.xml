@@ -46,16 +46,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docprompt.io/docs/guide/classify/</loc>
-         <lastmod>2024-06-30</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://docprompt.io/docs/guide/extract_tables/</loc>
-         <lastmod>2024-06-30</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://docprompt.io/docs/guide/classify/binary/</loc>
          <lastmod>2024-06-30</lastmod>
          <changefreq>daily</changefreq>
@@ -87,6 +77,11 @@
     </url>
     <url>
          <loc>https://docprompt.io/docs/guide/ocr/provider_config/</loc>
+         <lastmod>2024-06-30</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.io/docs/guide/table_extraction/extract_tables/</loc>
          <lastmod>2024-06-30</lastmod>
          <changefreq>daily</changefreq>
     </url>
@@ -181,11 +176,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docprompt.io/docs/reference/schema/pipeline/collection/</loc>
-         <lastmod>2024-06-30</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://docprompt.io/docs/reference/schema/pipeline/metadata/</loc>
          <lastmod>2024-06-30</lastmod>
          <changefreq>daily</changefreq>
@@ -202,6 +192,11 @@
     </url>
     <url>
          <loc>https://docprompt.io/docs/reference/schema/pipeline/node/base/</loc>
+         <lastmod>2024-06-30</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://docprompt.io/docs/reference/schema/pipeline/node/collection/</loc>
          <lastmod>2024-06-30</lastmod>
          <changefreq>daily</changefreq>
     </url>
@@ -261,6 +256,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://docprompt.io/docs/reference/tasks/result/</loc>
+         <lastmod>2024-06-30</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://docprompt.io/docs/reference/tasks/util/</loc>
          <lastmod>2024-06-30</lastmod>
          <changefreq>daily</changefreq>
@@ -301,7 +301,7 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docprompt.io/docs/reference/tasks/ocr/amazon_textract/</loc>
+         <loc>https://docprompt.io/docs/reference/tasks/ocr/amazon/</loc>
          <lastmod>2024-06-30</lastmod>
          <changefreq>daily</changefreq>
     </url>
