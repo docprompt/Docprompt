@@ -1,6 +1,8 @@
 site_name: Docprompt
-site_url: https://docprompt.io/docs
+site_url: https://docprompt.io/docs/
 repo_url: https://github.com/docprompt/Docprompt
+use_directory_urls: true
+docs_dir: docs
 theme:
   name: material
   logo: assets/static/img/logo.png
@@ -52,6 +54,9 @@ nav:
   - Community:
     - Contributing: community/contributing.md
     - Versioning: community/versioning.md
+
+extra:
+  assets_prefix: /docs
 
 markdown_extensions:
   - pymdownx.highlight:
