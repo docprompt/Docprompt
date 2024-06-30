@@ -1,6 +1,5 @@
 """The credentials module defines a simple model schema for storing credentials."""
 
-import json
 import os
 from typing import Dict, Optional
 
@@ -27,7 +26,9 @@ class APIKeyCredential(BaseCredentials):
     api_key: SecretStr = Field(...)
 
     def __init__(self, environ_path: Optional[str] = None, **data):
-        api_key = data.get("api_key", os.environ.get(environ_path, None))
+        api_key = data.get("api_key", None)
+        if api_key is None and environ_path:
+            api_key = os.environ.get(environ_path, None)
         super().__init__(api_key=api_key)
 
 
@@ -92,10 +93,6 @@ class GCPServiceFileCredentials(BaseCredentials):
         service_account_file = data.get(
             "service_account_file", os.environ.get("GCP_SERVICE_ACCOUNT_FILE", None)
         )
-
-        if isinstance(service_account_info, str):
-            # If service_account_info is a string, assume it's a JSON string and parse it
-            service_account_info = json.loads(service_account_info)
 
         super().__init__(
             service_account_info=service_account_info,

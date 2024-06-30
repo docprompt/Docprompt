@@ -6,8 +6,11 @@ from typing import Any, List, Optional, Union
 from pydantic import BaseModel, Field, model_validator
 
 from docprompt import DocumentNode
-from docprompt.tasks.base import AbstractPageTaskProvider, PageTaskResult
+from docprompt.tasks.base import AbstractPageTaskProvider
 from docprompt.tasks.parser import BaseOutputParser
+from docprompt.tasks.result import BasePageResult
+
+from ..capabilities import PageLevelCapabilities
 
 LabelType = Union[List[str], Enum, str]
 
@@ -108,7 +111,7 @@ class ClassificationConfig(BaseModel):
             yield from raw_labels
 
 
-class ClassificationOutput(PageTaskResult):
+class ClassificationOutput(BasePageResult):
     type: ClassificationTypes
     labels: LabelType
     score: Optional[ConfidenceLevel] = Field(None)
@@ -183,6 +186,11 @@ class BaseClassificationProvider(
     """
     The base classification provider.
     """
+
+    capabilities = [PageLevelCapabilities.PAGE_CLASSIFICATION]
+
+    class Meta:
+        abstract = True
 
     def process_document_node(
         self,

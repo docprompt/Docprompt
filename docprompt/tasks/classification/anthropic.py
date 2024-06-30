@@ -120,7 +120,7 @@ async def _prepare_messages(
 class AnthropicClassificationProvider(BaseClassificationProvider):
     """The Anthropic implementation of unscored page classification."""
 
-    name: str = "anthropic"
+    name = "anthropic"
 
     async def _ainvoke(
         self, input: Iterable[bytes], config: ClassificationConfig = None

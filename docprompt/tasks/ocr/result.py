@@ -1,15 +1,13 @@
 from io import BytesIO
-from typing import Generic, List, Optional, TypeVar
+from typing import Any, Dict, List, Optional
 
 from pydantic import Field
 
 from docprompt.schema.layout import TextBlock
 from docprompt.tasks.base import BasePageResult
 
-T = TypeVar("T")
 
-
-class OcrPageResult(BasePageResult, Generic[T]):
+class OcrPageResult(BasePageResult):
     page_text: str = Field(description="The text for the entire page in reading order")
 
     word_level_blocks: List[TextBlock] = Field(
@@ -34,7 +32,7 @@ class OcrPageResult(BasePageResult, Generic[T]):
         repr=False,
     )
 
-    extra: Optional[T] = Field(default_factory=dict)
+    extra: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
     task_name = "ocr"
 

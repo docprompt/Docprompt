@@ -125,7 +125,7 @@ async def _prepare_messages(
 
 
 class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
-    name: str = "anthropic"
+    name = "anthropic"
 
     async def _ainvoke(
         self, input: Iterable[bytes], config: Optional[None] = None

@@ -2,11 +2,12 @@ import logging
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional
 
-import boto3
 import tqdm
+from pydantic import Field, PrivateAttr, model_validator
 from tenacity import retry, stop_after_attempt, wait_exponential
+from typing_extensions import Self
 
 from docprompt.schema.document import Document
 from docprompt.schema.layout import (
@@ -22,8 +23,11 @@ from docprompt.schema.pipeline import DocumentNode
 from docprompt.tasks.ocr.base import BaseOCRProvider
 from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
 
-from ..base import CAPABILITIES
+from ..capabilities import PageLevelCapabilities
 from .result import OcrPageResult
+
+if TYPE_CHECKING:
+    import botocore
 
 logger = logging.getLogger(__name__)
 
@@ -138,50 +142,83 @@ def textract_documents_to_result(
     return results
 
 
-class AmazonTextractProvider(BaseOCRProvider):
+class AmazonTextractOCRProvider(BaseOCRProvider):
     name = "aws_textract"
 
     capabilities = [
-        CAPABILITIES.PAGE_TEXT_OCR.value,
-        CAPABILITIES.PAGE_LAYOUT_OCR.value,
+        PageLevelCapabilities.PAGE_TEXT_OCR,
+        PageLevelCapabilities.PAGE_LAYOUT_OCR,
     ]
 
-    max_bytes_per_request = (
+    max_bytes_per_request: ClassVar[int] = (
         1024 * 1024 * 5
     )  # 5MB is the max size for a single sync request
-    max_page_count = 15
+    max_page_count: ClassVar[int] = 15
 
-    def __init__(
-        self,
-        aws_access_key_id: Optional[str] = None,
-        aws_secret_access_key: Optional[str] = None,
-        region_name: Optional[str] = None,
-        *,
-        max_workers: int = multiprocessing.cpu_count() * 2,
-        exclude_bounding_poly: bool = False,
-        return_images: bool = False,
-    ):
-        self.aws_access_key_id = aws_access_key_id
-        self.aws_secret_access_key = aws_secret_access_key
-        self.region_name = region_name
-        self.max_workers = max_workers
-        self.exclude_bounding_poly = exclude_bounding_poly
-        self.return_images = return_images
+    aws_access_key_id: Optional[str] = Field(None)
+    aws_secret_access_key: Optional[str] = Field(None)
+    region_name: Optional[str] = Field(None)
+    aws_session_token: Optional[str] = Field(None)
 
-    def get_textract_client(self):
+    max_workers: int = Field(multiprocessing.cpu_count() * 2)
+    exclude_bounding_poly: bool = Field(False)
+    return_images: bool = Field(False)
+
+    _textract_client: "botocore.client.BaseClient" = PrivateAttr()
+
+    @model_validator(mode="after")
+    def validate_aws_credentials(self) -> Self:
+        # Set the AWS credentials from the environment if not provided
+        if self.aws_access_key_id is None:
+            self.aws_access_key_id = self._default_invoke_kwargs.get(
+                "aws_access_key_id", None
+            )
+        if self.aws_secret_access_key is None:
+            self.aws_secret_access_key = self._default_invoke_kwargs.get(
+                "aws_secret_access_key", None
+            )
+        if self.region_name is None:
+            self.region_name = self._default_invoke_kwargs.get("aws_region", None)
+
+        _explict_keys_provided = self.aws_access_key_id and self.aws_secret_access_key
+
+        if not _explict_keys_provided:
+            # Check for the session key
+            self.aws_session_token = self._default_invoke_kwargs.get(
+                "aws_session_token", None
+            )
+
+        # Ensure that we have valid AWS credentials
+        if not (_explict_keys_provided or self.aws_session_token):
+            raise ValueError(
+                "You must provide either an AWS session token or an access key and secret key."
+            )
+
+        return self
+
+    @model_validator(mode="after")
+    def setup_textract_client(self) -> Self:
+        try:
+            import boto3  # noqa
+        except ImportError as e:
+            raise ValueError(
+                "The boto3 library is required to use the AWS Textract provider."
+            ) from e
+
         kwargs = {}
-        if self.aws_access_key_id and self.aws_secret_access_key:
+        if self.aws_session_token:
+            kwargs["aws_session_token"] = self.aws_session_token
+        elif self.aws_access_key_id and self.aws_secret_access_key:
             kwargs["aws_access_key_id"] = self.aws_access_key_id
             kwargs["aws_secret_access_key"] = self.aws_secret_access_key
         if self.region_name:
             kwargs["region_name"] = self.region_name
 
-        return boto3.client("textract", **kwargs)
+        self._textract_client = boto3.client("textract", **kwargs)
 
     @default_retry_decorator
     def process_byte_chunk(self, split_bytes: bytes):
-        client = self.get_textract_client()
-        response = client.analyze_document(
+        response = self._textract_client.analyze_document(
             Document={"Bytes": split_bytes}, FeatureTypes=["FORMS", "TABLES"]
         )
         return response
