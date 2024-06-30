@@ -99,30 +99,33 @@ class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
 
     @property
     def task_results(self) -> TaskResultsDescriptor:
-        return self._task_results
+        """Return the task results descriptor."""
+        return self._task_results.__get__(self)
+
+    @task_results.setter
+    def task_results(self, value: Dict[str, TBaseTaskResult]) -> None:
+        """This will raise an error, as we do not want to set the task results directly.
+
+        NOTE: This implementation is here purely to avoid the task_results property from being
+        overwritten by accident.
+        """
+        self._task_results.__set__(self, value)
 
     @property
     def owner(self) -> TMetadataOwner:
-        """Return the owner of the metadata.
-
-        NOTE: We avoid using a standard property here, due to conflicts with the custom
-        __getattr__ implementation.
-        """
+        """Return the owner of the metadata."""
         return self._owner
 
-    def set_owner(self, owner: TMetadataOwner) -> None:
-        """Return the owner of the metadata.
-
-        NOTE: We avoid using a standard setter here, due to conflicts with the custom
-        __setattr__ implementation.
-        """
+    @owner.setter
+    def owner(self, owner: TMetadataOwner) -> None:
+        """Return the owner of the metadata."""
         self._owner = owner
 
     @classmethod
     def from_owner(cls, owner: TMetadataOwner, **data) -> BaseMetadata:
         """Create a new instance of the metadata class with the owner set."""
         metadata = cls(**data)
-        metadata.set_owner(owner)
+        metadata.owner = owner
         return metadata
 
     @model_validator(mode="before")
@@ -133,12 +136,17 @@ class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
         # We want to make sure that we combine the `extra` metdata along with any
         # other specific fields that are defined in the metadata.
         extra = data.pop("extra", {})
+        assert isinstance(extra, dict), "The `extra` field must be a dictionary."
         data = {**data, **extra}
 
         # If the model has been sub-classed, then all of our fields must be
         # validated by the pydantic model.
         if cls._is_field_typed():
-            return data
+            # We will get the fields out of extra and set them as potential fields to
+            # validate. They will be ignored if they are not defined in the model, but it
+            # allows for a more flexible way to define metadata.
+            # Otherwise, what ever is in the `extra` field will be stroed in the `extra` field.
+            return {**data, "extra": extra}
 
         # Otherwise, we are using our mock-dict implentation, so we store our
         # metadata in the `extra` field.
@@ -283,4 +291,31 @@ class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
         if name.startswith("_"):
             return super().__setattr__(name, value)
 
+        # If it is `owner` or `task_results`, we want
+        # to avoid setting the attribute in the `extra` dictionary
+        if name in ["owner", "task_results"]:
+            return super().__setattr__(name, value)
+
         self.extra[name] = value
+
+    def __delattr__(self, name: str) -> None:
+        """
+        Ensure that we can delete attributes from the metadata class.
+
+        The attributes are deleted through the following heirarchy:
+            - If the attribute is `task_results`, we use the descriptor to delete the task results.
+            - Otherwise, if it is a sub-classed model, it will be deleted as normal.
+            - Finally, if we are deleting a public attribute on the base metadata class,
+                we use the extra field.
+        """
+
+        # We want to use the descriptor to delete the task results
+        if name == "task_results":
+            self._task_results.__delete__(self)
+            return
+
+        # Otherwise, we use our standard fallback tiers
+        if self._is_field_typed():
+            return super().__delattr__(name)
+
+        del self.extra[name]
