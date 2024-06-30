@@ -5,7 +5,7 @@ from threading import Lock
 from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional
 
 import tqdm
-from pydantic import Field, PrivateAttr, model_validator
+from pydantic import Field, model_validator
 from tenacity import retry, stop_after_attempt, wait_exponential
 from typing_extensions import Self
 
@@ -27,7 +27,7 @@ from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
 from .result import OcrPageResult
 
 if TYPE_CHECKING:
-    import botocore
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -164,8 +164,6 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
     exclude_bounding_poly: bool = Field(False)
     return_images: bool = Field(False)
 
-    _textract_client: "botocore.client.BaseClient" = PrivateAttr()
-
     @model_validator(mode="after")
     def validate_aws_credentials(self) -> Self:
         # Set the AWS credentials from the environment if not provided
@@ -197,7 +195,7 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
         return self
 
     @model_validator(mode="after")
-    def setup_textract_client(self) -> Self:
+    def validate_aioboto3(self) -> Self:
         try:
             import aioboto3  # noqa
         except ImportError as e:
@@ -205,22 +203,22 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
                 "The aioboto3 library is required to use the AWS Textract provider."
             ) from e
 
-        kwargs = {}
-        if self.aws_session_token:
-            kwargs["aws_session_token"] = self.aws_session_token
-        elif self.aws_access_key_id and self.aws_secret_access_key:
-            kwargs["aws_access_key_id"] = self.aws_access_key_id
-            kwargs["aws_secret_access_key"] = self.aws_secret_access_key
-        if self.region_name:
-            kwargs["region_name"] = self.region_name
-
-        self._textract_client = aioboto3.client("textract", **kwargs)
-
     @default_retry_decorator
-    def process_byte_chunk(self, split_bytes: bytes):
-        response = self._textract_client.analyze_document(
-            Document={"Bytes": split_bytes}, FeatureTypes=["FORMS", "TABLES"]
+    async def process_byte_chunk(self, split_bytes: bytes):
+        import aioboto3
+
+        session = aioboto3.Session(
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key,
+            region_name=self.region_name,
+            aws_session_token=self.aws_session_token,
         )
+
+        async with session.client("textract") as textract_client:
+            response = await textract_client.analyze_document(
+                Document={"Bytes": split_bytes}, FeatureTypes=["FORMS", "TABLES"]
+            )
+
         return response
 
     def _process_document_concurrent(

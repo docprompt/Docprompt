@@ -1,7 +1,7 @@
 """The antrhopic implementation of page level calssification."""
 
 import re
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 from jinja2 import Template
 
@@ -90,8 +90,6 @@ class AnthropicPageClassificationOutputParser(BasePageClassificationOutputParser
 async def _prepare_messages(
     document_images: Iterable[bytes],
     config: ClassificationConfig,
-    start: Optional[int] = None,
-    stop: Optional[int] = None,
 ):
     messages = []
 
@@ -123,9 +121,10 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
     name = "anthropic"
 
     async def _ainvoke(
-        self, input: Iterable[bytes], config: ClassificationConfig = None
+        self, input: Iterable[bytes], config: ClassificationConfig = None, **kwargs
     ) -> List[ClassificationOutput]:
         messages = _prepare_messages(input, config)
+
         parser = AnthropicPageClassificationOutputParser.from_task_input(
             config, provider_name=self.name
         )

@@ -1,16 +1,17 @@
 import re
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, model_validator
 
-from docprompt import DocumentNode
 from docprompt.tasks.base import AbstractPageTaskProvider
+from docprompt.tasks.capabilities import PageLevelCapabilities
 from docprompt.tasks.parser import BaseOutputParser
 from docprompt.tasks.result import BasePageResult
 
-from ..capabilities import PageLevelCapabilities
+if TYPE_CHECKING:
+    from docprompt.schema.pipeline import DocumentNode
 
 LabelType = Union[List[str], Enum, str]
 
@@ -42,11 +43,6 @@ class ClassificationConfig(BaseModel):
     )
 
     confidence: bool = Field(False)
-
-    def resolve_labels(self):
-        if isinstance(self.labels, Enum):
-            return [self.labels.value]
-        return self.labels
 
     @model_validator(mode="before")
     def validate_label_bindings(cls, data: Any) -> Any:
@@ -82,28 +78,18 @@ class ClassificationConfig(BaseModel):
                     )
                 return data
 
-        # Anything that get's to here will hit a validation error anyways. We just return
-        # to avoid redundant error raising.
-        return data
-
     @model_validator(mode="after")
     def validate_descriptions_length(self):
         if self.descriptions is not None:
             labels = self.labels
-            if labels is not None:
-                if isinstance(labels, Enum):
-                    if len(self.descriptions) != len(labels.__members__):
-                        raise ValueError(
-                            "descriptions must have the same length as labels"
-                        )
-                elif len(self.descriptions) != len(labels):
-                    raise ValueError("descriptions must have the same length as labels")
+            if labels is not None and len(self.descriptions) != len(labels):
+                raise ValueError("descriptions must have the same length as labels")
         return self
 
     @property
     def formatted_labels(self):
         """Produce the formatted labels for the prompt template."""
-        raw_labels = self.resolve_labels()
+        raw_labels = self.labels
         if self.descriptions:
             for label, description in zip(raw_labels, self.descriptions):
                 yield f"{label}: {description}"
@@ -176,8 +162,7 @@ class BasePageClassificationOutputParser(
         return ConfidenceLevel(val)
 
     @abstractmethod
-    def parse(self, text: str) -> ClassificationOutput:
-        pass
+    def parse(self, text: str) -> ClassificationOutput: ...
 
 
 class BaseClassificationProvider(
@@ -201,6 +186,10 @@ class BaseClassificationProvider(
         contribute_to_document: bool = True,
         **kwargs,
     ):
+        assert (
+            task_config is not None
+        ), "task_config must be provided for classification tasks"
+
         raster_bytes = []
         for page_number in range(start or 1, (stop or len(document_node)) + 1):
             image_bytes = document_node.page_nodes[
@@ -208,6 +197,9 @@ class BaseClassificationProvider(
             ].rasterizer.rasterize("default")
             raster_bytes.append(image_bytes)
 
+        # TODO: This is a somewhat dangerous way of requiring these kwargs to be drilled
+        # through, potentially a decorator solution to be had here
+        kwargs = {**self._default_invoke_kwargs, **kwargs}
         results = self._invoke(raster_bytes, config=task_config, **kwargs)
 
         return {

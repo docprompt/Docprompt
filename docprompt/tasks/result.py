@@ -1,12 +1,6 @@
 from abc import abstractmethod
 from datetime import datetime
-from typing import (
-    TYPE_CHECKING,
-    ClassVar,
-    Dict,
-    Generic,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, ClassVar, Dict, Generic, Optional, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -29,7 +23,9 @@ class BaseResult(BaseModel):
         return f"{self.provider_name}_{self.task_name}"
 
     @abstractmethod
-    def contribute_to_document_node(self, document_node: "DocumentNode") -> None:
+    def contribute_to_document_node(
+        self, document_node: "DocumentNode", **kwargs
+    ) -> None:
         """
         Contribute this task result to the document node or a specific page node.
 
@@ -39,19 +35,24 @@ class BaseResult(BaseModel):
 
 
 class BaseDocumentResult(BaseResult):
-    document_name: str = Field(description="The name of the document")
-    file_hash: str = Field(description="The hash of the document")
-
-    def contribute_to_document_node(self, document_node: "DocumentNode") -> None:
+    def contribute_to_document_node(
+        self, document_node: "DocumentNode", **kwargs
+    ) -> None:
         document_node.metadata.task_results[self.task_key] = self
 
 
 class BasePageResult(BaseResult):
-    page_number: int = Field(description="The page number")
+    def contribute_to_document_node(
+        self, document_node: "DocumentNode", page_number: Optional[int] = None, **kwargs
+    ) -> None:
+        assert (
+            page_number is not None
+        ), "Page number must be provided for page level results"
+        assert (
+            0 < page_number <= len(document_node)
+        ), "Page number must be less than or equal to the number of pages in the document"
 
-    def contribute_to_document_node(self, document_node: "DocumentNode") -> None:
-        page_node = document_node.page_nodes[self.page_number - 1]
-        print(page_node.metadata)
+        page_node = document_node.page_nodes[page_number - 1]
         page_node.metadata.task_results[self.task_key] = self
 
 

@@ -42,16 +42,19 @@ def test_base_page_result_contribution():
     class TestPageResult(BasePageResult):
         task_name = "test"
 
-    result = TestPageResult(provider_name="test", page_number=1)
+    result = TestPageResult(provider_name="test")
 
+    num_pages = 3
     mock_meta = MagicMock(spec=BaseMetadata)
     mock_meta.task_results = {}
     mock_node = MagicMock(spec=DocumentNode)
-    mock_node.page_nodes = [MagicMock() for _ in range(3)]
+    mock_node.page_nodes = [MagicMock() for _ in range(num_pages)]
 
     # Test contributing to a specific page
     mock_node.page_nodes[0].metadata = mock_meta
 
-    result.contribute_to_document_node(mock_node)
+    mock_node.__len__.return_value = num_pages
+
+    result.contribute_to_document_node(mock_node, page_number=1)
 
     assert mock_node.page_nodes[0].metadata.task_results["test_test"] == result

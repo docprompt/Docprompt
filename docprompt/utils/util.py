@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 from urllib.parse import unquote, urlparse
 
 import filetype
@@ -11,7 +11,9 @@ import fsspec
 
 from docprompt._pdfium import get_pdfium_document
 from docprompt.schema.document import PdfDocument
-from docprompt.schema.pipeline.node.document import DocumentNode
+
+if TYPE_CHECKING:
+    from docprompt.schema.pipeline.node.document import DocumentNode
 
 
 def is_pdf(fd: Union[Path, PathLike, bytes]) -> bool:
@@ -136,7 +138,9 @@ def load_document_node(
     *,
     file_name: Optional[str] = None,
     password: Optional[str] = None,
-):
+) -> "DocumentNode":
+    from docprompt.schema.pipeline.node.document import DocumentNode
+
     document = load_pdf_document(fp, file_name=file_name, password=password)
 
     return DocumentNode.from_document(document)
