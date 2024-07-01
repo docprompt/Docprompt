@@ -274,8 +274,8 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
         self,
         document_node: "DocumentNode",
         task_config: None = None,
-        start: int | None = None,
-        stop: int | None = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
         contribute_to_document: bool = True,
         **kwargs,
     ) -> Dict[int, OcrPageResult]:
