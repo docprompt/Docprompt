@@ -49,34 +49,30 @@ class ClassificationConfig(BaseModel):
         """Validate the the label/description bindings based on the type."""
 
         classification_type = data.get("type", None)
-        match classification_type:
-            # Here, we just want to assert that we have a lables value
-            case ClassificationTypes.SINGLE_LABEL:
-                labels = data.get("labels", None)
-                if not labels:
-                    raise ValueError(
-                        "labels must be provided for single_label classification"
-                    )
-                return data
+        if classification_type == ClassificationTypes.SINGLE_LABEL:
+            labels = data.get("labels", None)
+            if not labels:
+                raise ValueError(
+                    "labels must be provided for single_label classification"
+                )
+            return data
 
-            # Here, the labels must be hardcoded to YES/NO. Instead we just want
-            # a single instruction value
-            case ClassificationTypes.BINARY:
-                instructions = data.get("instructions", None)
-                if not instructions:
-                    raise ValueError(
-                        "instructions must be provided for binary classification"
-                    )
-                data["labels"] = ["YES", "NO"]
-                return data
+        elif classification_type == ClassificationTypes.BINARY:
+            instructions = data.get("instructions", None)
+            if not instructions:
+                raise ValueError(
+                    "instructions must be provided for binary classification"
+                )
+            data["labels"] = ["YES", "NO"]
+            return data
 
-            case ClassificationTypes.MULTI_LABEL:
-                labels = data.get("labels", None)
-                if not labels:
-                    raise ValueError(
-                        "labels must be provided for multi_label classification"
-                    )
-                return data
+        elif classification_type == ClassificationTypes.MULTI_LABEL:
+            labels = data.get("labels", None)
+            if not labels:
+                raise ValueError(
+                    "labels must be provided for multi_label classification"
+                )
+            return data
 
     @model_validator(mode="after")
     def validate_descriptions_length(self):
