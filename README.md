@@ -7,7 +7,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/docprompt/Docprompt">
-    <img src="docs/docprompt/static/img/logo.png" alt="Logo" width="120" height="120">
+    <img src="docs/assets/static/img/logo.png" alt="Logo" width="120" height="120">
   </a>
 
   <h3 align="center">Docprompt</h3>
