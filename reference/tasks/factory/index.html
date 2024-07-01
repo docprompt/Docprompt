@@ -3565,7 +3565,7 @@
 <span class="normal"><a href="#__codelineno-0-28">28</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="k">class</span> <span class="nc">AbstractTaskMixin</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for all task mixins.&quot;&quot;&quot;</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a>    <span class="n">tags</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">PageLevelCapabilities</span> <span class="o">|</span> <span class="n">DocumentLevelCapabilities</span><span class="p">]]</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>    <span class="n">tags</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">PageLevelCapabilities</span><span class="p">,</span> <span class="n">DocumentLevelCapabilities</span><span class="p">]]]</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
