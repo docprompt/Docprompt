@@ -51,6 +51,7 @@ class AWSCredentials(BaseCredentials):
             "aws_session_token", os.environ.get("AWS_SESSION_TOKEN", None)
         )
         aws_region = data.get("aws_region", os.environ.get("AWS_DEFAULT_REGION", None))
+
         super().__init__(
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,

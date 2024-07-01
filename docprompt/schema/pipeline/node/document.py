@@ -76,9 +76,16 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         """
         from docprompt.provenance.search import DocumentProvenanceLocator
 
-        if any(not page.ocr_results.result for page in self.page_nodes):
+        ocr_keys = [
+            key
+            for page in self
+            for key in page.metadata.task_results.keys()
+            if key.endswith("_ocr")
+        ]
+
+        if not ocr_keys:
             raise ValueError(
-                "Cannot create a locator for a document node with missing OCR results"
+                "Cannot create a locator for a document without any OCR results."
             )
 
         self._locator = DocumentProvenanceLocator.from_document_node(self)
@@ -228,7 +235,7 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         # Store the metadata on the node and page nodes
         node.metadata = metadata
         for page, meta in zip(node.page_nodes, page_metadata):
-            meta.set_owner(page)
+            meta.owner = page
             page.metadata = meta
 
         # Make sure to set the persistance path on the node

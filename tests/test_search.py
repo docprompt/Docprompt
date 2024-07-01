@@ -16,13 +16,14 @@ def test_search():
     with raises(ValueError):
         document_node.refresh_locator()
 
-    for page_num, ocr_results in ocr_results.items():
-        document_node.page_nodes[page_num - 1].ocr_results.results[
-            ocr_results.provider_name
-        ] = ocr_results
+    for page_num, ocr_result in ocr_results.items():
+        ocr_result.contribute_to_document_node(document_node, page_number=page_num)
+
+    print(document_node[0].metadata.task_results)
 
     assert document_node._locator is None  # Ensure the locator is not set
 
+    # Need to make sure an ocr_key is set to avoid ValueError
     locator = document_node.locator
 
     result = locator.search("word that doesn't exist")
@@ -70,10 +71,8 @@ def test_pickling__removes_locator_document_basis():
 
     ocr_results = PDF_FIXTURES[0].get_ocr_results()
 
-    for page_num, ocr_results in ocr_results.items():
-        document_node.page_nodes[page_num - 1].ocr_results.results[
-            ocr_results.provider_name
-        ] = ocr_results
+    for page_num, ocr_result in ocr_results.items():
+        ocr_result.contribute_to_document_node(document_node, page_number=page_num)
 
     result_page_1 = document_node.locator.search("rooted", page_number=1)
 
@@ -92,10 +91,8 @@ def test_pickling__removes_locator_page_basis():
 
     ocr_results = PDF_FIXTURES[0].get_ocr_results()
 
-    for page_num, ocr_results in ocr_results.items():
-        document_node.page_nodes[page_num - 1].ocr_results.results[
-            ocr_results.provider_name
-        ] = ocr_results
+    for page_num, ocr_result in ocr_results.items():
+        ocr_result.contribute_to_document_node(document_node, page_number=page_num)
 
     page = document_node.page_nodes[0]
 
