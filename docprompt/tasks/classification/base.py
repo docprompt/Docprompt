@@ -126,26 +126,24 @@ class BasePageClassificationOutputParser(
             raise ValueError("Could not find the answer in the text.")
 
         val = _match.group(1)
-        match self.type:
-            case ClassificationTypes.BINARY:
-                if val not in self.labels:
-                    raise ValueError(f"Invalid label: {val}")
-                return val
+        if self.type == ClassificationTypes.BINARY:
+            if val not in self.labels:
+                raise ValueError(f"Invalid label: {val}")
+            return val
 
-            case ClassificationTypes.SINGLE_LABEL:
-                if val not in self.labels:
-                    raise ValueError(f"Invalid label: {val}")
-                return val
+        elif self.type == ClassificationTypes.SINGLE_LABEL:
+            if val not in self.labels:
+                raise ValueError(f"Invalid label: {val}")
+            return val
 
-            case ClassificationTypes.MULTI_LABEL:
-                labels = val.split(", ")
-                for label in labels:
-                    if label not in self.labels:
-                        raise ValueError(f"Invalid label: {label}")
-                return labels
-
-            case _:
-                raise ValueError(f"Invalid classification type: {self.type}")
+        elif self.type == ClassificationTypes.MULTI_LABEL:
+            labels = val.split(", ")
+            for label in labels:
+                if label not in self.labels:
+                    raise ValueError(f"Invalid label: {label}")
+            return labels
+        else:
+            raise ValueError(f"Invalid classification type: {self.type}")
 
     def resolve_confidence(self, _match: Union[re.Match, None]) -> ConfidenceLevel:
         """Get the confidence level from the text."""
