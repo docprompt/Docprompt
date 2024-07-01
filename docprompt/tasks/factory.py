@@ -25,7 +25,7 @@ TTaskProvider = TypeVar("TTaskProvider", bound=AbstractPageTaskProvider)
 class AbstractTaskMixin(ABC):
     """Base class for all task mixins."""
 
-    tags: ClassVar[List[Union[PageLevelCapabilities | DocumentLevelCapabilities]]]
+    tags: ClassVar[List[Union[PageLevelCapabilities, DocumentLevelCapabilities]]]
 
 
 class PageRasterizationMixin(AbstractTaskMixin, Generic[TTaskProvider]):
