@@ -98,7 +98,7 @@ def parse_response(response: str, **kwargs) -> TableExtractionPageResult:
     return result
 
 
-async def _prepare_messages(
+def _prepare_messages(
     document_images: Iterable[bytes],
     start: Optional[int] = None,
     stop: Optional[int] = None,
@@ -130,7 +130,7 @@ class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
     async def _ainvoke(
         self, input: Iterable[bytes], config: Optional[None] = None
     ) -> List[TableExtractionPageResult]:
-        messages = await _prepare_messages(input)
+        messages = _prepare_messages(input)
 
         completions = await inference.run_batch_inference_anthropic(messages)
 
