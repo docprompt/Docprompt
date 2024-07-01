@@ -10,17 +10,15 @@ authors = [
   {name = "Frank Colson", email = "frank@pageleaf.io"}
 ]
 dependencies = [
-  "python-dateutil<3.0.0,>=2.8.2",
   "pillow>=9.0.1",
   "tqdm>=4.50.2",
   "fsspec>=2022.11.0",
   "pydantic>=2.1.0",
   "tenacity>=7.0.0",
   "pypdfium2<5.0.0,>=4.28.0",
-  "rapidfuzz>=3.0.0",
   "filetype>=1.2.0",
-  "boto3>=1.34.129",
-  "pydantic-settings>=2.3.3"
+  "jinja2>=3.1.4",
+  "beautifulsoup4>=4.12.3"
 ]
 requires-python = "<3.13,>=3.8.1"
 readme = "README.md"
@@ -30,13 +28,28 @@ classifiers = ["Development Status :: 2 - Pre-Alpha", "Intended Audience :: Deve
 [project.optional-dependencies]
 google = ["google-cloud-documentai>=2.20.0"]
 azure = ["azure-ai-formrecognizer>=3.3.0"]
-search = ["tantivy<1.0.0,>=0.21.0", "rtree<3.0.0,>=1.2.0", "networkx<4.0.0,>=2.8.8"]
+search = [
+  "tantivy<1.0.0,>=0.21.0",
+  "rtree<3.0.0,>=1.2.0",
+  "networkx<4.0.0,>=2.8.8",
+  "rapidfuzz>=3.0.0"
+]
+anthropic = [
+  "anthropic>=0.26.0"
+]
+openai = [
+  "openai>=1.0.1"
+]
+aws = [
+  "aioboto3>=13.1.0",
+  "boto3>=1.18.0"
+]
 
 [project.scripts]
 docprompt = "docprompt.cli:main"
 
 [project.urls]
-homepage = "https://github.com/Page-Leaf/docprompt"
+homepage = "https://github.com/Docprompt/docprompt"
 
 [tool.black]
 line-length = 120
@@ -50,7 +63,7 @@ exclude = '''
   | \.hg
   | \.mypy_cache
   | \.tox
-  | \.venv
+  | \.venv`
   | _build
   | buck-out
   | build
@@ -79,7 +92,16 @@ distribution = true
 includes = ["docprompt", "tests"]
 
 [tool.pdm.dev-dependencies]
-test = ["isort<6.0.0,>=5.12.0", "flake8<7.0.0,>=6.1.0", "flake8-docstrings<2.0.0,>=1.7.0", "mypy<2.0.0,>=1.6.1", "pytest<8.0.0,>=7.4.2", "pytest-cov<5.0.0,>=4.1.0", "ruff<1.0.0,>=0.3.3"]
+test = [
+  "isort<6.0.0,>=5.12.0",
+  "flake8<7.0.0,>=6.1.0",
+  "flake8-docstrings<2.0.0,>=1.7.0",
+  "mypy<2.0.0,>=1.6.1",
+  "pytest<8.0.0,>=7.4.2",
+  "pytest-cov<5.0.0,>=4.1.0",
+  "ruff<1.0.0,>=0.3.3",
+  "pytest-asyncio>=0.23.7"
+]
 dev = [
   "tox<4.0.0,>=3.20.1",
   "virtualenv<21.0.0,>=20.2.2",
@@ -89,7 +111,12 @@ dev = [
   "toml<1.0.0,>=0.10.2",
   "bump2version<2.0.0,>=1.0.1",
   "ipython>=8.12.3",
-  "python-dotenv>=1.0.1"
+  "python-dotenv>=1.0.1",
+  "ipykernel>=6.29.4",
+  "matplotlib>=3.7.5",
+  "pandas>=2.0.3",
+  "seaborn>=0.13.2",
+  "pytest-asyncio>=0.23.7"
 ]
 docs = [
   "mkdocs>=1.6.0",
@@ -100,6 +127,11 @@ docs = [
   "mkdocs-literate-nav>=0.6.1"
 ]
 
+[tool.pdm.scripts]
+docs = "mkdocs serve"
+lint = "pre-commit run --all-files"
+cov = {shell = "python tests/_run_tests_with_coverage.py {args}"}
+
 [tool.ruff]
 target-version = "py38"
 
@@ -109,7 +141,7 @@ target-version = "py38"
 # McCabe complexity (`C901`) by default.
 select = ["E4", "E7", "E9", "F"]
 extend-select = ["I"]
-ignore = []
+ignore = ["D212"]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []

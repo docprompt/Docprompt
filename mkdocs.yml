@@ -1,6 +1,6 @@
 site_name: Docprompt
-site_url: https://docprompt.dev
-repo_url: https://github.com/Page-Leaf/Docprompt
+site_url: https://docs.docprompt.io
+repo_url: https://github.com/docprompt/Docprompt
 theme:
   name: material
   logo: assets/static/img/logo.png
@@ -28,9 +28,16 @@ plugins:
 nav:
   - Getting Started: index.md
   - How-to Guides:
-    - Perform OCR: guide/ocr.md
-    - Classify Pages: guide/classify.md
-    - Extract Tables: guide/extract_tables.md
+    - Perform OCR:
+      - Basic OCR Usage: guide/ocr/basic_usage.md
+      - Customizing OCR Providers: guide/ocr/provider_config.md
+      - Lightning-Fast Doc Search: guide/ocr/advanced_search.md
+      - OCR-based Workflows: guide/ocr/advanced_workflows.md
+    - Classify Pages:
+      - Binary Classification: guide/classify/binary.md
+      - Single-Label Classification: guide/classify/single.md
+      - Multi-Label Classification: guide/classify/multi.md
+    - Extract Tables: guide/table_extraction/extract_tables.md
   - Concepts:
     - Primatives: concepts/primatives.md
     - Nodes: concepts/nodes.md

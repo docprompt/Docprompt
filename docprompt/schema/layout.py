@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field, PlainSerializer
+from pydantic import BaseModel, ConfigDict, Field, PlainSerializer
 from typing_extensions import Annotated
 
 SegmentLevels = Literal["word", "line", "block"]
@@ -33,8 +33,7 @@ class NormBBox(BaseModel):
     x1: BoundedFloat
     bottom: BoundedFloat
 
-    class Config:
-        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
+    model_config: ConfigDict = {"json_encoders": {float: lambda v: round(v, 5)}}
 
     def as_tuple(self):
         return (self.x0, self.top, self.x1, self.bottom)
@@ -194,8 +193,7 @@ class Point(BaseModel):
     Represents a normalized bounding box with each value in the range [0, 1]
     """
 
-    class Config:
-        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
+    model_config: ConfigDict = {"json_encoders": {float: lambda v: round(v, 5)}}
 
     x: BoundedFloat
     y: BoundedFloat
@@ -229,8 +227,7 @@ class TextBlock(BaseModel):
     is normalized to the page size.
     """
 
-    class Config:
-        json_encoders = {float: lambda v: round(v, 5)}  # 1/10,000 increments is plenty
+    model_config: ConfigDict = {"json_encoders": {float: lambda v: round(v, 5)}}
 
     text: str
     type: SegmentLevels

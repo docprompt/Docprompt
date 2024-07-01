@@ -48,7 +48,6 @@ def get_pdfium_document(
     """
     with PDFIUM_LOAD_LOCK:
         pdf = pdfium.PdfDocument(fp, password=password, autoclose=False)
-
     try:
         yield pdf
     finally:

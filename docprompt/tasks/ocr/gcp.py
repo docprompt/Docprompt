@@ -3,13 +3,13 @@ import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from enum import Enum
 from threading import Lock
-from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, ClassVar, Dict, List, Literal, Optional, Union
 
 import tqdm
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-from docprompt.schema.document import Document
+from docprompt.schema.document import Document, PdfDocument
 from docprompt.schema.layout import (
     BoundingPoly,
     DirectionChoices,
@@ -20,11 +20,10 @@ from docprompt.schema.layout import (
     TextBlockMetadata,
     TextSpan,
 )
-from docprompt.schema.pipeline import DocumentNode
-from docprompt.tasks.base import AbstractTaskProvider
+from docprompt.tasks.capabilities import PageLevelCapabilities
+from docprompt.tasks.ocr.base import BaseOCRProvider
 from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
 
-from ..base import CAPABILITIES
 from .result import OcrPageResult
 
 logger = logging.getLogger(__name__)
@@ -33,7 +32,7 @@ if TYPE_CHECKING:
     from google.cloud import documentai
 
     from docprompt.schema.document import Document
-    from docprompt.schema.pipeline import DocumentNode
+    from docprompt.schema.pipeline.node.document import DocumentNode
 
 
 service_account_file_read_lock = Lock()
@@ -424,75 +423,56 @@ def gcp_documents_to_result(
         raise ValueError("Invalid mode for GCP document processing")
 
 
-class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
-    name = "Google Document AI"
+class GoogleOcrProvider(BaseOCRProvider):
+    name = "gcp_documentai"
+
     capabilities = [
-        CAPABILITIES.PAGE_TEXT_OCR.value,
-        CAPABILITIES.PAGE_LAYOUT_OCR.value,
-        CAPABILITIES.PAGE_RASTERIZATION.value,
+        PageLevelCapabilities.PAGE_TEXT_OCR,
+        PageLevelCapabilities.PAGE_LAYOUT_OCR,
+        PageLevelCapabilities.PAGE_RASTERIZATION,
     ]
 
-    max_bytes_per_request = (
+    max_bytes_per_request: ClassVar[int] = (
         1024 * 1024 * 20
     )  # 20MB is the max size for a single sync request
-    max_page_count = 15
+    max_page_count: ClassVar[int] = 15
+
+    project_id: str = Field(...)
+    processor_id: str = Field(...)
+
+    service_account_info: Optional[Dict[str, str]] = Field(None)
+    service_account_file: Optional[str] = Field(None)
+    location: str = Field("us")
+    max_workers: int = Field(multiprocessing.cpu_count() * 2)
+    exclude_bounding_poly: bool = Field(False)
+    return_images: bool = Field(False)
+    return_image_quality_scores: bool = Field(False)
+
+    _documentai: "documentai.DocumentProcessorServiceClient" = PrivateAttr()
 
     def __init__(
         self,
         project_id: str,
         processor_id: str,
-        *,
-        service_account_info: Optional[dict] = None,
-        service_account_file: Optional[str] = None,
-        location: str = "us",
-        max_workers: int = multiprocessing.cpu_count() * 2,
-        exclude_bounding_poly: bool = False,
-        return_images: bool = False,
-        return_image_quality_scores: bool = False,
+        **kwargs,
     ):
-        if service_account_info is None and service_account_file is None:
-            raise ValueError(
-                "You must provide either service_account_info or service_account_file"
-            )
-        if service_account_info is not None and service_account_file is not None:
-            raise ValueError(
-                "You must provide either service_account_info or service_account_file, not both"
-            )
+        super().__init__(project_id=project_id, processor_id=processor_id, **kwargs)
 
-        self.project_id = project_id
-        self.processor_id = processor_id
-        self.location = location
-
-        self.max_workers = max_workers
-
-        self.service_account_info = service_account_info
-        self.service_account_file = service_account_file
-
-        self.exclude_bounding_poly = exclude_bounding_poly
-        self.return_images = return_images
-        self.return_image_quality_scores = return_image_quality_scores
+        self.service_account_info = self._default_invoke_kwargs.get(
+            "service_account_info", None
+        )
+        self.service_account_file = self._default_invoke_kwargs.get(
+            "service_account_file", None
+        )
 
         try:
             from google.cloud import documentai
 
-            self.documentai = documentai
+            self._documentai = documentai
         except ImportError:
             raise ImportError(
                 "Please install 'google-cloud-documentai' to use the GoogleCloudVisionTextExtractionProvider"
             )
-
-    @classmethod
-    def from_service_account_file(
-        cls,
-        project_id: str,
-        processor_id: str,
-        service_account_file: str,
-    ):
-        return cls(
-            project_id,
-            processor_id,
-            service_account_file=service_account_file,
-        )
 
     def get_documentai_client(self, client_option_kwargs: dict = {}, **kwargs):
         from google.api_core.client_options import ClientOptions
@@ -510,13 +490,13 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
         }
 
         if self.service_account_info is not None:
-            return self.documentai.DocumentProcessorServiceClient.from_service_account_info(
+            return self._documentai.DocumentProcessorServiceClient.from_service_account_info(
                 info=self.service_account_info,
                 **base_service_client_kwargs,
             )
         elif self.service_account_file is not None:
             with service_account_file_read_lock:
-                return self.documentai.DocumentProcessorServiceClient.from_service_account_file(
+                return self._documentai.DocumentProcessorServiceClient.from_service_account_file(
                     filename=self.service_account_file,
                     **base_service_client_kwargs,
                 )
@@ -527,8 +507,8 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
         if not self.return_image_quality_scores:
             return None
 
-        return self.documentai.ProcessOptions(
-            ocr_config=self.documentai.OcrConfig(
+        return self._documentai.ProcessOptions(
+            ocr_config=self._documentai.OcrConfig(
                 enable_image_quality_scores=True,
             )
         )
@@ -551,7 +531,7 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
 
         @default_retry_decorator
         def process_byte_chunk(split_bytes: bytes) -> "documentai.Document":
-            raw_document = self.documentai.RawDocument(
+            raw_document = self._documentai.RawDocument(
                 content=split_bytes,
                 mime_type="application/pdf",
             )
@@ -566,7 +546,7 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
             if self.return_image_quality_scores:
                 field_mask += ",image_quality_scores"
 
-            request = self.documentai.ProcessRequest(
+            request = self._documentai.ProcessRequest(
                 name=processor_name,
                 raw_document=raw_document,
                 process_options=self._get_process_options(),
@@ -633,7 +613,7 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
 
         @default_retry_decorator
         def process_byte_chunk(split_bytes: bytes):
-            raw_document = self.documentai.RawDocument(
+            raw_document = self._documentai.RawDocument(
                 content=split_bytes,
                 mime_type="application/pdf",
             )
@@ -648,7 +628,7 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
             if self.return_image_quality_scores:
                 field_mask += ",image_quality_scores"
 
-            request = self.documentai.ProcessRequest(
+            request = self._documentai.ProcessRequest(
                 name=processor_name,
                 raw_document=raw_document,
                 process_options=self._get_process_options(),
@@ -689,19 +669,35 @@ class GoogleOcrProvider(AbstractTaskProvider[OcrPageResult]):
             return_images=self.return_images,
         )
 
-    def process_document_pages(
+    def _invoke(
         self,
-        document: Document,
+        input: List[PdfDocument],
+        config: None = None,
         start: Optional[int] = None,
         stop: Optional[int] = None,
         **kwargs,
-    ) -> Dict[int, OcrPageResult]:
-        return self._process_document_concurrent(document, start=start, stop=stop)
-
-    def contribute_to_document_node(
-        self, document_node: "DocumentNode", results: Dict[int, OcrPageResult]
-    ) -> None:
-        for page_number, result in results.items():
-            document_node.page_nodes[page_number - 1].ocr_results.results[self.name] = (
-                result
+    ):
+        if len(input) != 1:
+            raise ValueError(
+                "GoogleOcrProvider only supports processing a single document at a time."
             )
+
+        return self._process_document_concurrent(input[0], start=start, stop=stop)
+
+    def process_document_node(
+        self,
+        document_node: "DocumentNode",
+        task_config: None = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        contribute_to_document: bool = True,
+        **kwargs,
+    ) -> Dict[int, OcrPageResult]:
+        base_result = self.invoke(
+            [document_node.document.file_bytes], start=start, stop=stop, **kwargs
+        )
+
+        # For OCR, we also need to populate the ocr_results for powered search
+        self._populate_ocr_results(document_node, base_result)
+
+        return base_result

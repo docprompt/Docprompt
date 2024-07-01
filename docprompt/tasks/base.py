@@ -1,185 +1,196 @@
-import importlib
-from datetime import datetime
-from enum import Enum
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Dict,
     Generic,
+    Iterable,
     List,
-    Literal,
     Optional,
     TypeVar,
     Union,
 )
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, PrivateAttr, ValidationInfo, model_validator
+from typing_extensions import Self
 
-from docprompt.schema.document import Document
+from docprompt._decorators import flexible_methods
+
+from .capabilities import DocumentLevelCapabilities, PageLevelCapabilities
+from .result import BaseDocumentResult, BasePageResult
+from .util import _init_context_var, init_context
 
 if TYPE_CHECKING:
-    from langchain.schema import HumanMessage, SystemMessage
-
     from docprompt.schema.pipeline import DocumentNode
 
 
-class CAPABILITIES(Enum):
+TTaskInput = TypeVar("TTaskInput")  # What invoke requires
+TTaskConfig = TypeVar("TTaskConfig")  # Task specific config like classification labels
+TPageResult = TypeVar("TPageResult", bound=BasePageResult)
+TDocumentResult = TypeVar("TDocumentResult", bound=BaseDocumentResult)
+TTaskResult = TypeVar("TTaskResult", bound=Union[BasePageResult, BaseDocumentResult])
+
+Capabilites = TypeVar(
+    "Capabilities", bound=Union[DocumentLevelCapabilities, PageLevelCapabilities]
+)
+
+
+@flexible_methods(
+    ("process_document_node", "aprocess_document_node"),
+    ("_invoke", "_ainvoke"),
+)
+class AbstractTaskProvider(BaseModel, Generic[TTaskInput, TTaskConfig, TTaskResult]):
     """
-    Represents a capability that a provider can fulfill
-    """
+    A task provider performs a specific, repeatable task on a document or its pages.
 
-    PAGE_RASTERIZATION = "page-rasterization"
-    PAGE_LAYOUT_OCR = "page-layout-ocr"
-    PAGE_TEXT_OCR = "page-text-ocr"
-    PAGE_CLASSIFICATION = "page-classification"
-    PAGE_SEGMENTATION = "page-segmentation"
-    PAGE_VQA = "page-vqa"
-    PAGE_TABLE_IDENTIFICATION = "page-table-identification"
-    PAGE_TABLE_EXTRACTION = "page-table-extraction"
+    NOTE: Either the `process_document_pages` or `aprocess_document_pages` method must be implemented in
+    a valid subclass. The `process_document_pages` method is explicitly defined, while the `aprocess_document_pages`
+    method is an async version of the same method.
 
-
-class BaseResult(BaseModel):
-    provider_name: str = Field(
-        description="The name of the provider which produced the result"
-    )
-    when: datetime = Field(
-        default_factory=datetime.now, description="The time the result was produced"
-    )
-
-
-class BaseDocumentResult(BaseResult):
-    document_name: str = Field(description="The name of the document")
-    file_hash: str = Field(description="The hash of the document")
-
-
-class BasePageResult(BaseDocumentResult):
-    page_number: int = Field(description="The page number")
-
-
-PageTaskResult = TypeVar("PageTaskResult", bound=BasePageResult)
-DocumentTaskResult = TypeVar("DocumentTaskResult", bound=BaseDocumentResult)
-PageOrDocumentTaskResult = TypeVar("PageOrDocumentTaskResult", bound=BaseResult)
-
-
-class ResultContainer(BaseModel, Generic[PageOrDocumentTaskResult]):
-    """
-    Represents a container for results of a task
+    If you wish to provide seperate implementations for sync and async, you can define both methods individually, and
+    they will each use their own custom implementation when called. Otherwise, if you only implement one or the other of
+    a flexible method pair, the other will automatically be generated and provided for you at runtime.
     """
 
-    results: Dict[str, PageOrDocumentTaskResult] = Field(
-        description="The results of the task, keyed by provider", default_factory=dict
-    )
+    name: ClassVar[str]
+    capabilities: ClassVar[List[Capabilites]]
 
-    @property
-    def result(self):
-        return next(iter(self.results.values()), None)
+    # TODO: Potentially utilize context here during instantiation from Factory??
+    _default_invoke_kwargs: Dict[str, str] = PrivateAttr()
 
+    class Meta:
+        """The meta class is utilized by the flexible methods decorator.
 
-class AbstractTaskProvider(Generic[PageTaskResult]):
-    """
-    A task provider performs a specific, repeatable task on a document or its pages
-    """
+        For all classes that are not concrete implementations, we should set the
+        abstract attribute to True, which will prevent the check from failing when
+        the flexible methods decorator is looking for the implementation of the
+        methods.
+        """
 
-    name: str
-    capabilities: List[str]
+        abstract = True
 
-    def process_document_pages(
+    def __init__(self, invoke_kwargs: Dict[str, str] = None, **data):
+        with init_context({"invoke_kwargs": invoke_kwargs or {}}):
+            self.__pydantic_validator__.validate_python(
+                data,
+                self_instance=self,
+                context=_init_context_var.get(),
+            )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_class_vars(cls, data: Any) -> Any:
+        """
+        Ensure that the class has a name and capabilities defined.
+        """
+
+        if not hasattr(cls, "name"):
+            raise ValueError("Task providers must have a name defined")
+
+        if not hasattr(cls, "capabilities"):
+            raise ValueError("Task providers must have capabilities defined")
+
+        if not cls.capabilities:
+            raise ValueError("Task providers must have at least one capability defined")
+
+        return data
+
+    @model_validator(mode="after")
+    def set_invoke_kwargs(self, info: ValidationInfo) -> Self:
+        """
+        Set the default invoke kwargs for the task provider.
+        """
+        self._default_invoke_kwargs = info.context["invoke_kwargs"]
+        return self
+
+    async def _ainvoke(
         self,
-        document: Document,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
+        input: Iterable[TTaskInput],
+        config: Optional[TTaskConfig] = None,
         **kwargs,
-    ) -> Dict[int, PageTaskResult]:
+    ) -> List[TTaskResult]:
         raise NotImplementedError
 
-    def contribute_to_document_node(
+    async def ainvoke(
         self,
-        document_node: "DocumentNode",
-        results: Dict[int, PageTaskResult],
-    ) -> None:
-        """
-        Adds the results of this task to the document node and/or its page nodes
-        """
-        pass
+        input: Iterable[TTaskInput],
+        config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> List[TTaskResult]:
+        invoke_kwargs = {
+            **self._default_invoke_kwargs,
+            **kwargs,
+        }
+
+        return await self._ainvoke(input, config, **invoke_kwargs)
+
+    def _invoke(
+        self,
+        input: Iterable[TTaskInput],
+        config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> List[TTaskResult]:
+        raise NotImplementedError
+
+    def invoke(
+        self,
+        input: Iterable[TTaskInput],
+        config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> List[TTaskResult]:
+        invoke_kwargs = {
+            **self._default_invoke_kwargs,
+            **kwargs,
+        }
+
+        return self._invoke(input, config, **invoke_kwargs)
 
     def process_document_node(
         self,
         document_node: "DocumentNode",
+        task_config: Optional[TTaskConfig] = None,
         start: Optional[int] = None,
         stop: Optional[int] = None,
         contribute_to_document: bool = True,
         **kwargs,
-    ) -> Dict[int, PageTaskResult]:
-        results = self.process_document_pages(
-            document_node.document, start=start, stop=stop, **kwargs
-        )
+    ) -> Dict[int, TTaskResult]:
+        raise NotImplementedError
 
-        if contribute_to_document:
-            self.contribute_to_document_node(document_node, results)
+    async def aprocess_document_node(
+        self,
+        document_node: "DocumentNode",
+        task_config: Optional[TTaskConfig] = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        contribute_to_document: bool = True,
+        **kwargs,
+    ) -> Dict[int, TTaskResult]:
+        raise NotImplementedError
 
-        return results
 
-
-def attempt_import(name: str):
+class AbstractPageTaskProvider(AbstractTaskProvider):
     """
-    Attempts to import a module or class by name
-    """
-    package, obj = name.rsplit(".", 1)
-
-    try:
-        module = importlib.import_module(package)
-    except ImportError:
-        return None
-
-    return getattr(module, obj, None)
-
-
-SupportedModels = Literal["openai", "openai_async", "langchain"]
-
-
-def validate_language_model(model: Any):
-    langchain_chat_klass = attempt_import(
-        "langchain_core.language_models.chat_models.BaseChatModel"
-    )
-
-    if langchain_chat_klass and isinstance(model, langchain_chat_klass):
-        return "langchain"
-
-    openai_klass = attempt_import("openai.OpenAI")
-
-    if openai_klass and isinstance(model, openai_klass):
-        return "openai"
-
-    openai_async_klass = attempt_import("openai.OpenAIAsync")
-
-    if openai_async_klass and isinstance(model, openai_async_klass):
-        return "openai_async"
-
-    raise ValueError(
-        f"Model must be one of langchain_core.language_models.chat_models.BaseChatModel or openai.OpenAI. Got {type(model)}"
-    )
-
-
-SystemMessageLike = Union["SystemMessage", Dict[str, str], str]
-HumanMessageLike = Union["HumanMessage", Dict[str, Union[str, Dict[str, str]]], str]
-
-
-class AbstractLanguageModelTaskProvider(AbstractTaskProvider):
-    """
-    Provides additional methods for language model specific tasks
+    A page task provider performs a specific, repeatable task on a page.
     """
 
-    def __init__(self, language_model: Any, *, model_name: Optional[str] = None):
-        self.language_model = language_model
-        self.model_type = validate_language_model(language_model)
+    capabilities: ClassVar[List[PageLevelCapabilities]]
 
-        self.model_name = model_name
+    # NOTE: We need the stubs defined here for the flexible decorators to work
+    # for now
 
-        self._validate_kwargs()
+    class Meta:
+        abstract = True
 
-    def _validate_kwargs(self):
-        """
-        Validates the kwargs for the language model
-        """
-        if self.model_type == "openai" and self.model_name is None:
-            raise ValueError("model_name must be provided for OpenAI language models")
+
+class AbstractDocumentTaskProvider(AbstractTaskProvider):
+    """
+    A task provider performs a specific, repeatable task on a document.
+    """
+
+    capabilities: ClassVar[List[DocumentLevelCapabilities]]
+
+    # NOTE: We need the stubs defined here for the flexible decorators to work
+    # for now
+
+    class Meta:
+        abstract = True

@@ -1,10 +1,9 @@
 import hashlib
-import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from io import BytesIO
 from os import PathLike
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 from urllib.parse import unquote, urlparse
 
 import filetype
@@ -12,6 +11,9 @@ import fsspec
 
 from docprompt._pdfium import get_pdfium_document
 from docprompt.schema.document import PdfDocument
+
+if TYPE_CHECKING:
+    from docprompt.schema.pipeline.node.document import DocumentNode
 
 
 def is_pdf(fd: Union[Path, PathLike, bytes]) -> bool:
@@ -78,10 +80,11 @@ def determine_pdf_name_from_bytes(file_bytes: bytes) -> str:
     return f"document-{hash_from_bytes(file_bytes)}.pdf"
 
 
-def load_document(
+def load_pdf_document(
     fp: Union[Path, PathLike, bytes],
     *,
     file_name: Optional[str] = None,
+    password: Optional[str] = None,
 ) -> PdfDocument:
     """
     Loads a document from a file path
@@ -98,14 +101,18 @@ def load_document(
         raise ValueError("File is not a PDF")
 
     return PdfDocument(
-        name=unquote(file_name), file_path=str(fp), file_bytes=file_bytes
+        name=unquote(file_name),
+        file_path=str(fp),
+        file_bytes=file_bytes,
+        password=password,
     )
 
 
-def load_documents(
+def load_pdf_documents(
     fps: List[Union[Path, PathLike, bytes]],
     *,
     max_threads: int = 12,
+    passwords: Optional[List[str]] = None,
 ):
     """
     Loads multiple documents from file paths, using a thread pool
@@ -126,12 +133,21 @@ def load_documents(
     return results
 
 
-def load_document_from_url(url: str, **kwargs):
-    warnings.warn(
-        "load_document_from_url is deprecated and will be removed in a future release. Use load_document instead.",
-        DeprecationWarning,
-    )
-    return load_document(url, **kwargs)
+def load_document_node(
+    fp: Union[Path, PathLike, bytes],
+    *,
+    file_name: Optional[str] = None,
+    password: Optional[str] = None,
+) -> "DocumentNode":
+    from docprompt.schema.pipeline.node.document import DocumentNode
+
+    document = load_pdf_document(fp, file_name=file_name, password=password)
+
+    return DocumentNode.from_document(document)
+
+
+load_document = load_pdf_document
+load_documents = load_pdf_documents
 
 
 def hash_from_bytes(
@@ -142,6 +158,9 @@ def hash_from_bytes(
     to avoid memory issues. The default hash function is MD5 with a threshold of 128MB which is optimal
     for most machines and use cases.
     """
+    if len(byte_data) < 1024 * 1024 * 10:  # 10MB
+        return hashlib.md5(byte_data).hexdigest()
+
     hash = hash_func()
 
     if len(byte_data) > threshold:

@@ -40,6 +40,10 @@ class DocumentProvenanceLocator:
 
     @classmethod
     def from_document_node(cls, document_node: "DocumentNode"):
+        # TODO: See if we can remove the ocr_results attribute from the
+        # PageNode and just use the metadata.task_result["<provider>_ocr"],
+        # result of the OCR task instead.
+
         index = create_tantivy_document_wise_block_index()
         block_mapping_dict = {}
         geo_index_dict: DocumentProvenanceGeoMap = {}

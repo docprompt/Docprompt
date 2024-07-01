@@ -5,8 +5,7 @@ from PIL import Image
 
 from docprompt import DocumentNode, load_document
 from docprompt._pdfium import rasterize_pdfs_with_pdfium
-
-from .fixtures import PDF_FIXTURES
+from tests.fixtures import PDF_FIXTURES
 
 
 def test_rasterize_via_page_node():
