@@ -1,15 +1,14 @@
+import asyncio
 import logging
 import multiprocessing
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional
 
 import tqdm
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from tenacity import retry, stop_after_attempt, wait_exponential
 from typing_extensions import Self
 
-from docprompt.schema.document import Document
 from docprompt.schema.layout import (
     BoundingPoly,
     NormBBox,
@@ -21,8 +20,7 @@ from docprompt.schema.layout import (
 )
 from docprompt.schema.pipeline import DocumentNode
 from docprompt.tasks.capabilities import PageLevelCapabilities
-from docprompt.tasks.ocr.base import BaseOCRProvider
-from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
+from docprompt.tasks.ocr.base import BaseOCRProvider, ImageBytes
 
 from .result import OcrPageResult
 
@@ -80,7 +78,7 @@ def text_block_from_item(item: Dict, block_type: SegmentLevels) -> TextBlock:
 
 
 def process_page(
-    page: Dict,
+    document: Dict,
     doc_page_num: int,
     provider_name: str,
     document_name: str,
@@ -88,15 +86,26 @@ def process_page(
     exclude_bounding_poly: bool = False,
     return_image: bool = False,
 ) -> OcrPageResult:
-    word_boxes = [text_block_from_item(word, "word") for word in page.get("Words", [])]
-    line_boxes = [text_block_from_item(line, "line") for line in page.get("Lines", [])]
+    blocks = document.get("Blocks", [])
+    word_boxes = [
+        text_block_from_item(block, "word")
+        for block in blocks
+        if block["BlockType"] == "WORD"
+    ]
+    line_boxes = [
+        text_block_from_item(block, "line")
+        for block in blocks
+        if block["BlockType"] == "LINE"
+    ]
     block_boxes = [
         text_block_from_item(block, "block")
-        for block in page.get("Blocks", [])
+        for block in blocks
         if block["BlockType"] == "LINE"
     ]
 
-    page_text = " ".join([word["Text"] for word in page.get("Words", [])])
+    page_text = " ".join(
+        [block["Text"] for block in blocks if block["BlockType"] == "WORD"]
+    )
 
     return OcrPageResult(
         provider_name=provider_name,
@@ -121,23 +130,18 @@ def textract_documents_to_result(
     return_images: bool = False,
 ) -> Dict[int, OcrPageResult]:
     results: Dict[int, OcrPageResult] = {}
-    page_offset = 1  # We want pages to be 1-indexed
 
-    for document in documents:
-        for doc_page_num, page in enumerate(document["Blocks"]):
-            if page["BlockType"] == "PAGE":
-                page_result = process_page(
-                    page,
-                    page_offset + doc_page_num,
-                    provider_name,
-                    document_name,
-                    file_hash,
-                    exclude_bounding_poly=exclude_bounding_poly,
-                    return_image=return_images,
-                )
-                results[page_offset + doc_page_num] = page_result
-
-        page_offset += doc_page_num + 1
+    for page_num, document in enumerate(documents, start=1):
+        page_result = process_page(
+            document,
+            page_num,
+            provider_name,
+            document_name,
+            file_hash,
+            exclude_bounding_poly=exclude_bounding_poly,
+            return_image=return_images,
+        )
+        results[page_num] = page_result
 
     return results
 
@@ -156,9 +160,9 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
     max_page_count: ClassVar[int] = 15
 
     aws_access_key_id: Optional[str] = Field(None)
-    aws_secret_access_key: Optional[str] = Field(None)
+    aws_secret_access_key: Optional[SecretStr] = Field(None)
     region_name: Optional[str] = Field(None)
-    aws_session_token: Optional[str] = Field(None)
+    aws_session_token: Optional[SecretStr] = Field(None)
 
     max_workers: int = Field(multiprocessing.cpu_count() * 2)
     exclude_bounding_poly: bool = Field(False)
@@ -167,6 +171,9 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
     @model_validator(mode="after")
     def validate_aws_credentials(self) -> Self:
         # Set the AWS credentials from the environment if not provided
+        if self.aws_session_token is not None:
+            return self
+
         if self.aws_access_key_id is None:
             self.aws_access_key_id = self._default_invoke_kwargs.get(
                 "aws_access_key_id", None
@@ -187,7 +194,7 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
             )
 
         # Ensure that we have valid AWS credentials
-        if not (_explict_keys_provided or self.aws_session_token):
+        if not (_explict_keys_provided and not self.aws_session_token):
             raise ValueError(
                 "You must provide either an AWS session token or an access key and secret key."
             )
@@ -203,83 +210,80 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
                 "The aioboto3 library is required to use the AWS Textract provider."
             ) from e
 
-    @default_retry_decorator
-    async def process_byte_chunk(self, split_bytes: bytes):
+    def _get_session(self):
         import aioboto3
 
-        session = aioboto3.Session(
+        return aioboto3.Session(
             aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key,
+            aws_secret_access_key=self.aws_secret_access_key.get_secret_value()
+            if self.aws_secret_access_key
+            else None,
             region_name=self.region_name,
-            aws_session_token=self.aws_session_token,
+            aws_session_token=self.aws_session_token.get_secret_value()
+            if self.aws_session_token
+            else None,
         )
 
+    @default_retry_decorator
+    async def process_byte_chunk(self, image_bytes: bytes):
+        session = self._get_session()
+
         async with session.client("textract") as textract_client:
-            response = await textract_client.analyze_document(
-                Document={"Bytes": split_bytes}, FeatureTypes=["FORMS", "TABLES"]
+            response = await textract_client.detect_document_text(
+                Document={"Bytes": image_bytes}
             )
 
         return response
 
-    def _process_document_concurrent(
+    async def _process_document_concurrent(
         self,
-        document: Document,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
+        document_images: List[ImageBytes],
+        document_name: Optional[str] = None,
+        document_hash: Optional[str] = None,
     ):
-        file_bytes = document.get_bytes()
+        tasks = [
+            self.process_byte_chunk(image_bytes) for image_bytes in document_images
+        ]
 
-        logger.info("Splitting document into chunks...")
-        document_byte_splits = list(
-            pdf_split_iter_with_max_bytes(
-                file_bytes,
-                max_page_count=self.max_page_count,
-                max_bytes=self.max_bytes_per_request,
-            )
-        )
-
-        max_workers = min(len(document_byte_splits), self.max_workers)
-
-        logger.info(f"Processing {len(document_byte_splits)} chunks...")
-        with tqdm.tqdm(
-            total=len(document_byte_splits), desc="Processing document"
-        ) as pbar:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                future_to_index = {
-                    executor.submit(self.process_byte_chunk, split): index
-                    for index, split in enumerate(document_byte_splits)
-                }
-
-                documents: List[Dict] = [None] * len(document_byte_splits)
-
-                for future in as_completed(future_to_index):
-                    index = future_to_index[future]
-                    documents[index] = future.result()
-                    pbar.update(1)
+        documents = []
+        for task in tqdm.tqdm(
+            asyncio.as_completed(tasks), total=len(tasks), desc="Processing document"
+        ):
+            result = await task
+            documents.append(result)
 
         logger.info("Recombining OCR results...")
         return textract_documents_to_result(
             documents,
             self.name,
-            document_name=document.name,
-            file_hash=document.document_hash,
+            document_name=document_name,
+            file_hash=document_hash,
             exclude_bounding_poly=self.exclude_bounding_poly,
             return_images=self.return_images,
         )
 
-    def process_document_pages(
+    async def _ainvoke(
         self,
-        document: Document,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
+        input: List[ImageBytes],
+        config: None = None,
+        **kwargs,
+    ):
+        return await self._process_document_concurrent(input)
+
+    def process_document_node(
+        self,
+        document_node: "DocumentNode",
+        task_config: None = None,
+        start: int | None = None,
+        stop: int | None = None,
+        contribute_to_document: bool = True,
         **kwargs,
     ) -> Dict[int, OcrPageResult]:
-        return self._process_document_concurrent(document, start=start, stop=stop)
+        rasterized_images = document_node.rasterizer.rasterize("default")
 
-    def contribute_to_document_node(
-        self, document_node: "DocumentNode", results: Dict[int, OcrPageResult]
-    ) -> None:
-        for page_number, result in results.items():
-            document_node.page_nodes[page_number - 1].ocr_results.results[self.name] = (
-                result
-            )
+        base_result = self.invoke(rasterized_images, start=start, stop=stop, **kwargs)
+
+        # For OCR, we also need to populate the ocr_results for powered search
+        self._populate_ocr_results(document_node, base_result)
+
+        return base_result

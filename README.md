@@ -39,20 +39,21 @@ Docprompt is a library for Document AI. It aims to make enterprise-level documen
   * Document Search, powered by Rust :fire:
 * Support for most OCR providers with batched inference
   * Google :white_check_mark:
+  * Amazon Textract :white_check_mark:
+  * Tesseract :white_check_mark:
   * Azure Document Intelligence :red_circle:
-  * Amazon Textract :red_circle:
-  * Tesseract :red_circle:
 * Prompt Garden for common document analysis tasks **zero-shot**, including:
+  * Markerization (Pdf2Markdown)
   * Table Extraction
   * Page Classification
-  * Segmentation
-  * Key-value extraction
+  * Key-value extraction (Coming soon)
+  * Segmentation (Coming soon)
 
 
 Documents and large language models
 
 
-* Documentation: <https://docprompt.github.io/Docprompt/>
+* Documentation: <https://docs.docprompt.io>
 * GitHub: <https://github.com/docprompt/docprompt>
 * PyPI: <https://pypi.org/project/docprompt/>
 * Free software: Apache-2.0
@@ -63,6 +64,7 @@ Documents and large language models
 * Representations for common document layout types - `TextBlock`, `BoundingBox`, etc
 * Generic implementations of OCR providers
 * Document Search powered by Rust and R-trees :fire:
+* Table Extraction, Page Classification, PDF2Markdown
 
 ## Installation
 
@@ -101,6 +103,35 @@ rastered = document.rasterize_page(page_number, dpi=120)
 
 # Split a pdf based on a page range
 document_2 = document.split(start=125, stop=130)
+```
+
+
+### Converting a PDF to markdown
+
+Coverting documents into markdown is a great way to prepare documents for downstream chunking or ingestion into a RAG system.
+
+```python
+from docprompt import load_document_node
+from docprompt.tasks.markerize import AnthropicMarkerizeProvider
+
+document_node = load_document_node("path/to/my.pdf")
+markerize_provider = AnthropicMarkerizeProvider()
+
+markerized_document = markerize_provider.process_document_node(document_node)
+```
+
+### Extracting Tables
+
+Extract tables with SOTA speed and accuracy.
+
+```python
+from docprompt import load_document_node
+from docprompt.tasks.table_extraction import AnthropicTableExtractionProvider
+
+document_node = load_document_node("path/to/my.pdf")
+table_extraction_provider = AnthropicTableExtractionProvider()
+
+extracted_tables = table_extraction_provider.process_document_node(document_node)
 ```
 
 ### Performing OCR
