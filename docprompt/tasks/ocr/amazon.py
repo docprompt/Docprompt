@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     pass
 
 # TODO: Fix this
-logger = logging.getLogger("TEST-LOGGER")
+logger = logging.getLogger(__name__)
 
 service_account_file_read_lock = Lock()
 
@@ -129,10 +129,13 @@ def textract_documents_to_result(
     *,
     exclude_bounding_poly: bool = False,
     return_images: bool = False,
+    start: Optional[int] = None,
+    stop: Optional[int] = None,
 ) -> Dict[int, OcrPageResult]:
     results: Dict[int, OcrPageResult] = {}
 
-    for page_num, document in enumerate(documents, start=1):
+    page_range = range(start or 1, (stop or len(documents)) + 1)
+    for page_num, document in zip(page_range, documents):
         page_result = process_page(
             document,
             page_num,
@@ -226,7 +229,7 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
         )
 
     @default_retry_decorator
-    async def process_byte_chunk(self, image_bytes: bytes):
+    async def process_byte_chunk(self, image_bytes: bytes, index: int):
         session = self._get_session()
 
         size = len(image_bytes)
@@ -259,26 +262,28 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
                 )
                 raise e
 
-        return response
+        return response, index
 
     async def _process_document_concurrent(
         self,
         document_images: List[ImageBytes],
         document_name: Optional[str] = None,
         document_hash: Optional[str] = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
     ):
         tasks = [
-            self.process_byte_chunk(image_bytes)
+            self.process_byte_chunk(image_bytes, i)
             for i, image_bytes in enumerate(document_images)
         ]
 
-        documents = []
+        documents = {}
         errors = []
         with tqdm.tqdm(total=len(tasks), desc="Processing document") as pbar:
             for task in asyncio.as_completed(tasks):
                 try:
-                    result = await task
-                    documents.append(result)
+                    result, index = await task
+                    documents[index] = result
                     pbar.update(1)
                 except Exception as e:
                     errors.append(e)
@@ -290,13 +295,16 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
             )
 
         logger.info("Recombining OCR results...")
+        ordered_documents = [documents[i] for i in range(len(document_images))]
         return textract_documents_to_result(
-            documents,
+            ordered_documents,
             self.name,
             document_name=document_name,
             file_hash=document_hash,
             exclude_bounding_poly=self.exclude_bounding_poly,
             return_images=self.return_images,
+            start=start,
+            stop=stop,
         )
 
     async def _ainvoke(
@@ -305,7 +313,9 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
         config: None = None,
         **kwargs,
     ):
-        return await self._process_document_concurrent(input)
+        return await self._process_document_concurrent(
+            input, start=kwargs.get("start", None), stop=kwargs.get("stop", None)
+        )
 
     async def aprocess_document_node(
         self,
@@ -318,11 +328,17 @@ class AmazonTextractOCRProvider(BaseOCRProvider):
     ) -> Dict[int, OcrPageResult]:
         rasterized_images = document_node.rasterizer.rasterize("default")
 
-        base_result = await self.ainvoke(
-            rasterized_images, start=start, stop=stop, **kwargs
-        )
+        # Get the start and stop range (in pages not indexes)
+        start = start or 1
+        stop = stop or len(document_node)
+
+        page_range = range(start, stop + 1)
+        rasterized_images = [rasterized_images[i - 1] for i in page_range]
+
+        result = await self.ainvoke(rasterized_images, start=start, stop=stop, **kwargs)
 
         # For OCR, we also need to populate the ocr_results for powered search
-        self._populate_ocr_results(document_node, base_result)
+        if contribute_to_document:
+            self._populate_ocr_results(document_node, result)
 
-        return base_result
+        return result

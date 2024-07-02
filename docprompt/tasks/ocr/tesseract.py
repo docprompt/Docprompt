@@ -125,13 +125,23 @@ class TesseractOcrProvider(BaseOCRProvider):
         PageLevelCapabilities.PAGE_TEXT_OCR,
     ]
 
-    def __init__(self):
+    def __init__(self, **data):
+        super().__init__(**data)
         if not check_tesseract_installed():
             raise RuntimeError(
                 "Tesseract is not installed. Please install Tesseract to use this provider."
             )
 
-    def _process_images(self, images: List[bytes]) -> List[OcrPageResult]:
+            # Need to set this since we aren't instantiaed from a factory
+        self._default_invoke_kwargs = {}
+
+    def _process_images(
+        self,
+        images: List[bytes],
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        **kwargs,
+    ) -> List[OcrPageResult]:
         results = []
 
         ctx = mp.get_context("spawn")
@@ -140,7 +150,9 @@ class TesseractOcrProvider(BaseOCRProvider):
             for result in executor.map(_process_image_to_page_result, images):
                 results.append(result)
 
-        return results
+        # Page range is used here for the indexing of results
+        page_range = range(start or 1, (stop or len(images)) + 1)
+        return {page_i: results[real_i] for real_i, page_i in enumerate(page_range)}
 
     def _invoke(
         self,
@@ -148,7 +160,7 @@ class TesseractOcrProvider(BaseOCRProvider):
         config: None = None,
         **kwargs,
     ):
-        return self._process_images(input)
+        return self._process_images(input, **kwargs)
 
     def process_document_node(
         self,
@@ -161,9 +173,13 @@ class TesseractOcrProvider(BaseOCRProvider):
     ) -> Dict[int, OcrPageResult]:
         rasterized_images = document_node.rasterizer.rasterize("default")
 
-        base_result = self.invoke(rasterized_images, start=start, stop=stop, **kwargs)
+        # Trim the rasterized images by the start and stop
+        page_range = range(start or 1, (stop or len(document_node)) + 1)
+        rasterized_images = [rasterized_images[i - 1] for i in page_range]
+
+        result = self.invoke(rasterized_images, start=start, stop=stop, **kwargs)
 
         # For OCR, we also need to populate the ocr_results for powered search
-        self._populate_ocr_results(document_node, base_result)
+        self._populate_ocr_results(document_node, result)
 
-        return base_result
+        return result

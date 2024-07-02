@@ -17,22 +17,23 @@ from .base import (
 
 PAGE_CLASSIFICATION_SYSTEM_PROMPT = Template(
     """
-You are a classification expert. Your are given a single page to perform a classification task on.
+You are a classification expert. You are given a single page to perform a classification task on.
 
-Task Instructions:
 {% if input.instructions %}\
+Task Instructions:
 {{ input.instructions }}
-{% endif %}\
 
+{% endif %}\
 {% if input.type == "binary" %}\
 You must classify the page with a binary label:
-YES/NO
+"YES"/"NO"
 {% else %}\
 Classify the page as {% if input.type == 'multi_label' %}all labels that apply{% else %}one of the following{% endif %}:
-
 {% for label in input.formatted_labels %}
 - {{ label }}
 {% endfor %}\
+
+These are the only label values you may use when providing your classifications!
 {% endif %}\
 
 It is crucial that your response is accurate and provides a valid answer using \
@@ -47,15 +48,17 @@ Answer in the following format:
 
 Reasoning: { your reasoning and analysis }
 {% if input.type == "binary" %}\
-Answer: { YES/NO }
+Answer: { "YES" or "NO" }
 {% elif input.type == "single_label" %}\
-Answer: { label }
+Answer: { "label-value" }
 {% else %}\
-Answer: { label1, label2, ... }
+Answer: { "label-value", "label-value", ... }
 {% endif %}\
 {% if input.confidence %}\
 Confidence: { low, medium, high }
 {% endif %}\
+
+You MUST ONLY use the labels provided and described above. Do not use ANY additional labels.
 """.strip()
 )
 
@@ -65,7 +68,7 @@ class AnthropicPageClassificationOutputParser(BasePageClassificationOutputParser
 
     def parse(self, text: str) -> ClassificationOutput:
         """Parse the results of the classification task."""
-        pattern = re.compile(r"Answer: (.+)")
+        pattern = re.compile(r"Answer:\s*(?:['\"`]?)(.+?)(?:['\"`]?)\s*$", re.MULTILINE)
         match = pattern.search(text)
 
         result = self.resolve_match(match)
@@ -124,9 +127,13 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
         self, input: Iterable[bytes], config: ClassificationConfig = None, **kwargs
     ) -> List[ClassificationOutput]:
         messages = _prepare_messages(input, config)
+
         parser = AnthropicPageClassificationOutputParser.from_task_input(
             config, provider_name=self.name
         )
 
-        completions = await inference.run_batch_inference_anthropic(messages, **kwargs)
+        model_name = kwargs.get("model_name", "claude-3-haiku-20240307")
+        completions = await inference.run_batch_inference_anthropic(
+            model_name, messages, **kwargs
+        )
         return [parser.parse(res) for res in completions]

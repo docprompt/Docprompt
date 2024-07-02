@@ -97,14 +97,19 @@ async def run_batch_inference_anthropic(
     retry_decorator = get_anthropic_retry_decorator()
 
     @retry_decorator
-    async def process_message_set(msg_set):
-        return await run_inference_anthropic(model_name, msg_set, **kwargs)
+    async def process_message_set(msg_set, index: int):
+        return await run_inference_anthropic(model_name, msg_set, **kwargs), index
 
-    tasks = [process_message_set(msg_set) for msg_set in messages]
+    tasks = [process_message_set(msg_set, i) for i, msg_set in enumerate(messages)]
 
+    # TODO: Need cleaner implementation to ensure message ordering is perserved
     responses: List[str] = []
     for f in tqdm(asyncio.as_completed(tasks), desc="Processing messages"):
-        response = await f
-        responses.append(response)
+        response, index = await f
+        responses.append((response, index))
+
+    # Sort and extract the responses
+    responses.sort(key=lambda x: x[1])
+    responses = [r[0] for r in responses]
 
     return responses
