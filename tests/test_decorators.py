@@ -236,3 +236,108 @@ def test_inheritance_and_overriding(run_async):
 
     assert child2.method() == "child2_sync"
     assert run_async(child2.method_async()) == "child2_sync"
+
+
+def test_abstract_base_class():
+    from abc import ABC, abstractmethod
+
+    @flexible_methods(("abstract_method", "abstract_method_async"))
+    class AbstractBase(ABC):
+        @abstractmethod
+        def abstract_method(self):
+            pass
+
+    class ConcreteSync(AbstractBase):
+        def abstract_method(self):
+            return "concrete_sync"
+
+    class ConcreteAsync(AbstractBase):
+        async def abstract_method_async(self):
+            return "concrete_async"
+
+    with pytest.raises(TypeError):
+        AbstractBase()
+
+    sync_instance = ConcreteSync()
+    assert sync_instance.abstract_method() == "concrete_sync"
+    assert asyncio.run(sync_instance.abstract_method_async()) == "concrete_sync"
+
+    async_instance = ConcreteAsync()
+    assert async_instance.abstract_method() == "concrete_async"
+    assert asyncio.run(async_instance.abstract_method_async()) == "concrete_async"
+
+
+def test_multiple_inheritance():
+    @flexible_methods(("method1", "method1_async"))
+    class Base1:
+        def method1(self):
+            return "base1"
+
+    @flexible_methods(("method2", "method2_async"))
+    class Base2:
+        async def method2_async(self):
+            return "base2"
+
+    class Child(Base1, Base2):
+        async def method1_async(self):
+            return "child1"
+
+        def method2(self):
+            return "child2"
+
+    child = Child()
+    assert child.method1() == "child1"
+    assert asyncio.run(child.method1_async()) == "child1"
+    assert child.method2() == "child2"
+    assert asyncio.run(child.method2_async()) == "child2"
+
+    # Test that Base1 and Base2 methods are not affected
+    base1 = Base1()
+    base2 = Base2()
+    assert base1.method1() == "base1"
+    assert asyncio.run(base1.method1_async()) == "base1"
+    assert asyncio.run(base2.method2_async()) == "base2"
+    assert base2.method2() == "base2"
+
+
+def test_preserve_signature_and_docstring(run_async):
+    @flexible_methods(("method", "method_async"))
+    class PreserveMetadata:
+        def method(self, arg1: int, arg2: str = "default") -> str:
+            """This is a test method."""
+            return f"{arg1} {arg2}"
+
+    instance = PreserveMetadata()
+    assert instance.method.__doc__ == "This is a test method."
+    assert instance.method.__annotations__ == {"arg1": int, "arg2": str, "return": str}
+    assert instance.method_async.__doc__ == "This is a test method."
+    assert instance.method_async.__annotations__ == {
+        "arg1": int,
+        "arg2": str,
+        "return": str,
+    }
+
+    assert instance.method(1, "test") == "1 test"
+    assert run_async(instance.method_async(2, "async")) == "2 async"
+
+
+@pytest.mark.skip(reason="Not implemented yet")
+def test_static_methods():
+    @flexible_methods(
+        ("class_method", "class_method_async"), ("static_method", "static_method_async")
+    )
+    class MethodTypes:
+        @classmethod
+        def class_method(cls):
+            return f"class {cls.__name__}"
+
+        @staticmethod
+        def static_method():
+            return "static"
+
+    assert MethodTypes.static_method() == "static"
+    assert asyncio.run(MethodTypes.static_method_async()) == "static"
+
+    instance = MethodTypes()
+    assert instance.static_method() == "static"
+    assert asyncio.run(instance.static_method_async()) == "static"
