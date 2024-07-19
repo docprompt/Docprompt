@@ -31,7 +31,7 @@ azure = ["azure-ai-formrecognizer>=3.3.0"]
 search = [
   "tantivy<1.0.0,>=0.21.0",
   "rtree<3.0.0,>=1.2.0",
-  "networkx<4.0.0,>=2.8.8",
+  "networkx<4.0.0,>=2.5.0",
   "rapidfuzz>=3.0.0"
 ]
 anthropic = [
@@ -104,18 +104,15 @@ test = [
 ]
 dev = [
   "tox<4.0.0,>=3.20.1",
-  "virtualenv<21.0.0,>=20.2.2",
+  "virtualenv<25.0.0,>=20.2.2",
   "pip<21.0.0,>=20.3.1",
   "twine<4.0.0,>=3.3.0",
   "pre-commit<3.0.0,>=2.12.0",
   "toml<1.0.0,>=0.10.2",
   "bump2version<2.0.0,>=1.0.1",
-  "ipython>=8.12.3",
+  "ipython>=7.12.0",
   "python-dotenv>=1.0.1",
   "ipykernel>=6.29.4",
-  "matplotlib>=3.7.5",
-  "pandas>=2.0.3",
-  "seaborn>=0.13.2",
   "pytest-asyncio>=0.23.7"
 ]
 docs = [
