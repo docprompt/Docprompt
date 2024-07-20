@@ -1,6 +1,7 @@
 from typing import Iterable, List, Optional
 
 from bs4 import BeautifulSoup
+from pydantic import Field
 
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
@@ -53,12 +54,17 @@ def _prepare_messages(
 class AnthropicMarkerizeProvider(BaseMarkerizeProvider):
     name = "anthropic"
 
+    model_name: str = Field("claude-3-haiku-20240307")
+
     async def _ainvoke(
         self, input: Iterable[bytes], config: Optional[None] = None, **kwargs
     ) -> List[MarkerizeResult]:
         messages = _prepare_messages(input)
 
-        completions = await inference.run_batch_inference_anthropic(messages, **kwargs)
+        model_name = kwargs.get("model_name", self.model_name)
+        completions = await inference.run_batch_inference_anthropic(
+            model_name, messages, **kwargs
+        )
 
         return [
             MarkerizeResult(raw_markdown=_parse_result(x), provider_name=self.name)

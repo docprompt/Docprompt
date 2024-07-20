@@ -4,6 +4,7 @@ import re
 from typing import Iterable, List
 
 from jinja2 import Template
+from pydantic import Field
 
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
@@ -123,6 +124,8 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
 
     name = "anthropic"
 
+    model_name: str = Field("claude-3-haiku-20240307")
+
     async def _ainvoke(
         self, input: Iterable[bytes], config: ClassificationConfig = None, **kwargs
     ) -> List[ClassificationOutput]:
@@ -132,7 +135,7 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
             config, provider_name=self.name
         )
 
-        model_name = kwargs.get("model_name", "claude-3-haiku-20240307")
+        model_name = kwargs.get("model_name", self.model_name)
         completions = await inference.run_batch_inference_anthropic(
             model_name, messages, **kwargs
         )
