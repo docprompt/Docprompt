@@ -124,7 +124,7 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
 
     name = "anthropic"
 
-    model_name: str = Field("claude-3-haiku-20240307")
+    anthropic_model_name: str = Field("claude-3-haiku-20240307")
 
     async def _ainvoke(
         self, input: Iterable[bytes], config: ClassificationConfig = None, **kwargs
@@ -135,7 +135,7 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
             config, provider_name=self.name
         )
 
-        model_name = kwargs.pop("model_name", self.model_name)
+        model_name = kwargs.pop("model_name", self.anthropic_model_name)
         completions = await inference.run_batch_inference_anthropic(
             model_name, messages, **kwargs
         )
