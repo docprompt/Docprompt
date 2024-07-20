@@ -24,7 +24,7 @@ def _parse_result(raw_markdown: str) -> Optional[str]:
     return md.text.strip() if md else ""  # TODO Fix bad extractions
 
 
-async def _prepare_messages(
+def _prepare_messages(
     document_images: Iterable[bytes],
     start: Optional[int] = None,
     stop: Optional[int] = None,
@@ -54,11 +54,11 @@ class AnthropicMarkerizeProvider(BaseMarkerizeProvider):
     name = "anthropic"
 
     async def _ainvoke(
-        self, input: Iterable[bytes], config: Optional[None] = None
+        self, input: Iterable[bytes], config: Optional[None] = None, **kwargs
     ) -> List[MarkerizeResult]:
         messages = _prepare_messages(input)
 
-        completions = await inference.run_batch_inference_anthropic(messages)
+        completions = await inference.run_batch_inference_anthropic(messages, **kwargs)
 
         return [
             MarkerizeResult(raw_markdown=_parse_result(x), provider_name=self.name)

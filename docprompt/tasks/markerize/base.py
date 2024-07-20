@@ -33,6 +33,9 @@ class BaseMarkerizeProvider(AbstractPageTaskProvider[bytes, None, MarkerizeResul
             ].rasterizer.rasterize("default")
             raster_bytes.append(image_bytes)
 
+        # TODO: This is a somewhat dangerous way of requiring these kwargs to be drilled
+        # through, potentially a decorator solution to be had here
+        kwargs = {**self._default_invoke_kwargs, **kwargs}
         results = self._invoke(raster_bytes, config=task_config, **kwargs)
 
         return {

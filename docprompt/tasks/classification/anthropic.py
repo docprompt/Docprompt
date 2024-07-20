@@ -87,7 +87,7 @@ class AnthropicPageClassificationOutputParser(BasePageClassificationOutputParser
         )
 
 
-async def _prepare_messages(
+def _prepare_messages(
     document_images: Iterable[bytes],
     config: ClassificationConfig,
 ):
@@ -124,11 +124,9 @@ class AnthropicClassificationProvider(BaseClassificationProvider):
         self, input: Iterable[bytes], config: ClassificationConfig = None, **kwargs
     ) -> List[ClassificationOutput]:
         messages = _prepare_messages(input, config)
-
         parser = AnthropicPageClassificationOutputParser.from_task_input(
             config, provider_name=self.name
         )
 
-        completions = await inference.run_batch_inference_anthropic(messages)
-
+        completions = await inference.run_batch_inference_anthropic(messages, **kwargs)
         return [parser.parse(res) for res in completions]
