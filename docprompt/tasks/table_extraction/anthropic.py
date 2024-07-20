@@ -135,7 +135,7 @@ class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
     ) -> List[TableExtractionPageResult]:
         messages = _prepare_messages(input)
 
-        model_name = kwargs.get("model_name", self.model_name)
+        model_name = kwargs.pop("model_name", self.model_name)
         completions = await inference.run_batch_inference_anthropic(
             model_name, messages, **kwargs
         )
