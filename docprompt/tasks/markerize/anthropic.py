@@ -17,7 +17,17 @@ You ALWAYS respond by wrapping the markdown in <md> </md> tags.
 """.strip()
 
 
+def ensure_single_root(xml_data: str) -> str:
+    """Ensure the XML data has a single root element."""
+    if not xml_data.strip().startswith("<root>") and not xml_data.strip().endswith(
+        "</root>"
+    ):
+        return f"<root>{xml_data}</root>"
+    return xml_data
+
+
 def _parse_result(raw_markdown: str) -> Optional[str]:
+    raw_markdown = ensure_single_root(raw_markdown)
     soup = BeautifulSoup(raw_markdown, "xml")
 
     md = soup.find("md")
