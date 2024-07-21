@@ -1,9 +1,9 @@
 """The credentials module defines a simple model schema for storing credentials."""
 
 import os
-from typing import Dict, Optional
+from typing import Dict, Mapping, Optional
 
-from pydantic import BaseModel, Field, SecretStr, model_validator
+from pydantic import BaseModel, Field, HttpUrl, SecretStr, model_validator
 from typing_extensions import Self
 
 
@@ -23,13 +23,26 @@ class BaseCredentials(BaseModel):
 class APIKeyCredential(BaseCredentials):
     """The API key credential model."""
 
-    api_key: SecretStr = Field(...)
+    api_key: SecretStr
 
     def __init__(self, environ_path: Optional[str] = None, **data):
         api_key = data.get("api_key", None)
         if api_key is None and environ_path:
             api_key = os.environ.get(environ_path, None)
-        super().__init__(api_key=api_key)
+            data["api_key"] = api_key
+
+        super().__init__(**data)
+
+
+class GenericOpenAICredentials(APIKeyCredential):
+    """Credentials that are common for OpenAI API requests."""
+
+    base_url: Optional[HttpUrl] = Field(None)
+    timeout: Optional[int] = Field(None)
+    max_retries: Optional[int] = Field(None)
+
+    default_headers: Optional[Mapping[str, str]] = Field(None)
+    default_query_params: Optional[Mapping[str, object]] = Field(None)
 
 
 class AWSCredentials(BaseCredentials):

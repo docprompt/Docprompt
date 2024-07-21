@@ -48,7 +48,8 @@ async def run_inference_anthropic(
     from anthropic import AsyncAnthropic
 
     api_key = kwargs.pop("api_key", os.environ.get("ANTHROPIC_API_KEY"))
-    client = AsyncAnthropic(api_key=api_key)
+    base_url = kwargs.pop("base_url", os.environ.get("ANTHROPIC_BASE_URL"))
+    client = AsyncAnthropic(api_key=api_key, base_url=base_url)
 
     system = None
     if messages and messages[0].role == "system":

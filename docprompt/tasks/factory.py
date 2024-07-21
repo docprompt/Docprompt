@@ -13,9 +13,9 @@ from docprompt.tasks.capabilities import (
 
 from .base import AbstractPageTaskProvider
 from .credentials import (
-    APIKeyCredential,
     AWSCredentials,
     GCPServiceFileCredentials,
+    GenericOpenAICredentials,
 )
 from .util import _init_context_var, init_context
 
@@ -155,13 +155,13 @@ class AnthropicTaskProviderFactory(
     that a user wants to utilize the standard Anthropic API.
     """
 
-    _credentials: APIKeyCredential = PrivateAttr()
+    _credentials: GenericOpenAICredentials = PrivateAttr()
 
     @model_validator(mode="after")
     def _validate_provider(self, info: ValidationInfo) -> Self:
         """Validate the provider before returning it."""
         _payload = info.context["payload"]
-        self._credentials = APIKeyCredential(
+        self._credentials = GenericOpenAICredentials(
             environ_path="ANTHROPIC_API_KEY", **_payload
         )
         return self
