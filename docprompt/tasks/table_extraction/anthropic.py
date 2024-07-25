@@ -2,6 +2,7 @@ import re
 from typing import Iterable, List, Optional, Union
 
 from bs4 import BeautifulSoup, Tag
+from pydantic import Field
 
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
@@ -98,7 +99,7 @@ def parse_response(response: str, **kwargs) -> TableExtractionPageResult:
     return result
 
 
-async def _prepare_messages(
+def _prepare_messages(
     document_images: Iterable[bytes],
     start: Optional[int] = None,
     stop: Optional[int] = None,
@@ -127,11 +128,16 @@ async def _prepare_messages(
 class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
     name = "anthropic"
 
-    async def _ainvoke(
-        self, input: Iterable[bytes], config: Optional[None] = None
-    ) -> List[TableExtractionPageResult]:
-        messages = await _prepare_messages(input)
+    anthropic_model_name: str = Field("claude-3-haiku-20240307")
 
-        completions = await inference.run_batch_inference_anthropic(messages)
+    async def _ainvoke(
+        self, input: Iterable[bytes], config: Optional[None] = None, **kwargs
+    ) -> List[TableExtractionPageResult]:
+        messages = _prepare_messages(input)
+
+        model_name = kwargs.pop("model_name", self.anthropic_model_name)
+        completions = await inference.run_batch_inference_anthropic(
+            model_name, messages, **kwargs
+        )
 
         return [parse_response(x, provider_name=self.name) for x in completions]

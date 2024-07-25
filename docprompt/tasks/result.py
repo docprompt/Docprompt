@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, ClassVar, Dict, Generic, Optional, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Optional, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -61,18 +61,3 @@ TTaskConfig = TypeVar("TTaskConfig")  # Task specific config like classification
 PageTaskResult = TypeVar("PageTaskResult", bound=BasePageResult)
 DocumentTaskResult = TypeVar("DocumentTaskResult", bound=BaseDocumentResult)
 PageOrDocumentTaskResult = TypeVar("PageOrDocumentTaskResult", bound=BaseResult)
-
-
-# TODO: Will likely depricate this now in favor of the Task Result Descriptor on the BaseMetadata
-class ResultContainer(BaseModel, Generic[PageOrDocumentTaskResult]):
-    """
-    Represents a container for results of a task
-    """
-
-    results: Dict[str, PageOrDocumentTaskResult] = Field(
-        description="The results of the task, keyed by provider", default_factory=dict
-    )
-
-    @property
-    def result(self):
-        return next(iter(self.results.values()), None)

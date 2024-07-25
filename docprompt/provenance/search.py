@@ -40,10 +40,6 @@ class DocumentProvenanceLocator:
 
     @classmethod
     def from_document_node(cls, document_node: "DocumentNode"):
-        # TODO: See if we can remove the ocr_results attribute from the
-        # PageNode and just use the metadata.task_result["<provider>_ocr"],
-        # result of the OCR task instead.
-
         index = create_tantivy_document_wise_block_index()
         block_mapping_dict = {}
         geo_index_dict: DocumentProvenanceGeoMap = {}
@@ -51,13 +47,16 @@ class DocumentProvenanceLocator:
         writer = index.writer()
 
         for page_node in document_node.page_nodes:
-            if (
-                not page_node.ocr_results.result
-                or not page_node.ocr_results.result.block_level_blocks
-            ):
+            task_keys = page_node.metadata.task_results.keys()
+            ocr_keys = [key for key in task_keys if key.endswith("_ocr")]
+
+            if not ocr_keys:
                 continue
 
-            ocr_result = page_node.ocr_results.result
+            results = [page_node.metadata.task_results[key] for key in ocr_keys]
+
+            # Get the result with the most recent `when` attribute
+            ocr_result = sorted(results, key=lambda x: x.when)[0]
 
             for idx, text_block in enumerate(ocr_result.block_level_blocks):
                 writer.add_document(

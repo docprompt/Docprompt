@@ -3,7 +3,7 @@ import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from enum import Enum
 from threading import Lock
-from typing import TYPE_CHECKING, ClassVar, Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Literal, Optional, Union
 
 import tqdm
 from pydantic import BaseModel, Field, PrivateAttr
@@ -26,7 +26,7 @@ from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
 
 from .result import OcrPageResult
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("TEST-LOGGER")
 
 if TYPE_CHECKING:
     from google.cloud import documentai
@@ -276,7 +276,7 @@ def process_page(
     else:
         image = None
 
-    return OcrPageResult[GCPPageMetadata](
+    return OcrPageResult(
         provider_name=provider_name,
         document_name=document_name,
         file_hash=file_hash,
@@ -286,7 +286,7 @@ def process_page(
         line_level_blocks=line_boxes,
         block_level_blocks=block_boxes,
         raster_image=image,
-        extra=metadata,
+        extra=metadata.model_dump(),
     )
 
 
@@ -513,109 +513,20 @@ class GoogleOcrProvider(BaseOCRProvider):
             )
         )
 
-    def _process_document_sync(self, document: Document):
-        """
-        Split the document into chunks of 15 pages or less, and process each chunk
-        synchronously.
-        """
-        client = self.get_documentai_client()
-        processor_name = client.processor_path(
-            project=self.project_id,
-            location=self.location,
-            processor=self.processor_id,
-        )
-
-        documents: List["documentai.Document"] = []
-
-        file_bytes = document.get_bytes()
-
-        @default_retry_decorator
-        def process_byte_chunk(split_bytes: bytes) -> "documentai.Document":
+    @default_retry_decorator
+    def process_byte_chunk(
+        self, split_bytes: bytes, client: Any
+    ):  # TODO: Fix `client` typing
+        try:
             raw_document = self._documentai.RawDocument(
                 content=split_bytes,
                 mime_type="application/pdf",
             )
 
-            field_mask = (
-                "text,pages.layout,pages.words,pages.lines,pages.tokens,pages.blocks"
-            )
-
-            if self.return_images:
-                field_mask += ",pages.image"
-
-            if self.return_image_quality_scores:
-                field_mask += ",image_quality_scores"
-
-            request = self._documentai.ProcessRequest(
-                name=processor_name,
-                raw_document=raw_document,
-                process_options=self._get_process_options(),
-            )
-
-            result = client.process_document(request=request)
-
-            return result.document
-
-        with tqdm.tqdm(
-            total=len(file_bytes), unit="B", unit_scale=True, desc="Processing document"
-        ) as pbar:
-            for split_bytes in pdf_split_iter_with_max_bytes(
-                file_bytes,
-                max_page_count=self.max_page_count,
-                max_bytes=self.max_bytes_per_request,
-            ):
-                document = process_byte_chunk(split_bytes)
-
-                documents.append(document)
-
-                pbar.update(len(split_bytes))
-
-        return gcp_documents_to_result(
-            documents,
-            self.name,
-            document_name=document.name,
-            file_hash=document.document_hash,
-            exclude_bounding_poly=self.exclude_bounding_poly,
-            return_images=self.return_images,
-        )
-
-    def _process_document_concurrent(
-        self,
-        document: Document,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
-        include_raster: bool = False,
-    ):
-        # Process page chunks concurrently
-        client = self.get_documentai_client()
-        processor_name = client.processor_path(
-            project=self.project_id,
-            location=self.location,
-            processor=self.processor_id,
-        )
-
-        file_bytes = document.file_bytes
-
-        if document.bytes_per_page > 1024 * 1024 * 2:
-            logger.info("Document has few pages but is large, compressing first")
-            file_bytes = document.to_compressed_bytes()
-
-        logger.info("Splitting document into chunks...")
-        document_byte_splits = list(
-            pdf_split_iter_with_max_bytes(
-                file_bytes,
-                max_page_count=self.max_page_count,
-                max_bytes=self.max_bytes_per_request,
-            )
-        )
-
-        max_workers = min(len(document_byte_splits), self.max_workers)
-
-        @default_retry_decorator
-        def process_byte_chunk(split_bytes: bytes):
-            raw_document = self._documentai.RawDocument(
-                content=split_bytes,
-                mime_type="application/pdf",
+            processor_name = client.processor_path(
+                project=self.project_id,
+                location=self.location,
+                processor=self.processor_id,
             )
 
             field_mask = (
@@ -639,6 +550,39 @@ class GoogleOcrProvider(BaseOCRProvider):
             document = result.document
 
             return document
+        except Exception as exp:
+            logger.error("Error processing byte chunk %s", exp, exc_info=True)
+            raise exp
+
+    def _process_document_concurrent(
+        self,
+        document: Document,
+        include_raster: bool = False,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        **kwargs,
+    ):
+        # Process page chunks concurrently
+        client = self.get_documentai_client()
+
+        # NEED TO USE START AND STOP
+
+        file_bytes = document.file_bytes
+
+        if document.bytes_per_page > 1024 * 1024 * 2:
+            logger.info("Document has few pages but is large, compressing first")
+            file_bytes = document.to_compressed_bytes()
+
+        logger.info("Splitting document into chunks...")
+        document_byte_splits = list(
+            pdf_split_iter_with_max_bytes(
+                file_bytes,
+                max_page_count=self.max_page_count,
+                max_bytes=self.max_bytes_per_request,
+            )
+        )
+
+        max_workers = min(len(document_byte_splits), self.max_workers)
 
         logger.info(f"Processing {len(document_byte_splits)} chunks...")
         with tqdm.tqdm(
@@ -646,7 +590,7 @@ class GoogleOcrProvider(BaseOCRProvider):
         ) as pbar:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 future_to_index = {
-                    executor.submit(process_byte_chunk, split): index
+                    executor.submit(self.process_byte_chunk, split, client): index
                     for index, split in enumerate(document_byte_splits)
                 }
 
@@ -682,7 +626,9 @@ class GoogleOcrProvider(BaseOCRProvider):
                 "GoogleOcrProvider only supports processing a single document at a time."
             )
 
-        return self._process_document_concurrent(input[0], start=start, stop=stop)
+        return self._process_document_concurrent(
+            input[0], start=start, stop=stop, **kwargs
+        )
 
     def process_document_node(
         self,
@@ -693,11 +639,14 @@ class GoogleOcrProvider(BaseOCRProvider):
         contribute_to_document: bool = True,
         **kwargs,
     ) -> Dict[int, OcrPageResult]:
-        base_result = self.invoke(
-            [document_node.document.file_bytes], start=start, stop=stop, **kwargs
-        )
+        if start or stop:
+            logger.warning(
+                "GoogleOcrProvider does not currently support `start` and `stop`."
+            )
+
+        result = self.invoke([document_node.document], start=start, stop=stop, **kwargs)
 
         # For OCR, we also need to populate the ocr_results for powered search
-        self._populate_ocr_results(document_node, base_result)
+        self._populate_ocr_results(document_node, result)
 
-        return base_result
+        return result

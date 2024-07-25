@@ -1,6 +1,7 @@
 from typing import Iterable, List, Optional
 
 from bs4 import BeautifulSoup
+from pydantic import Field
 
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
@@ -16,7 +17,17 @@ You ALWAYS respond by wrapping the markdown in <md> </md> tags.
 """.strip()
 
 
+def ensure_single_root(xml_data: str) -> str:
+    """Ensure the XML data has a single root element."""
+    if not xml_data.strip().startswith("<root>") and not xml_data.strip().endswith(
+        "</root>"
+    ):
+        return f"<root>{xml_data}</root>"
+    return xml_data
+
+
 def _parse_result(raw_markdown: str) -> Optional[str]:
+    raw_markdown = ensure_single_root(raw_markdown)
     soup = BeautifulSoup(raw_markdown, "xml")
 
     md = soup.find("md")
@@ -24,7 +35,7 @@ def _parse_result(raw_markdown: str) -> Optional[str]:
     return md.text.strip() if md else ""  # TODO Fix bad extractions
 
 
-async def _prepare_messages(
+def _prepare_messages(
     document_images: Iterable[bytes],
     start: Optional[int] = None,
     stop: Optional[int] = None,
@@ -53,12 +64,17 @@ async def _prepare_messages(
 class AnthropicMarkerizeProvider(BaseMarkerizeProvider):
     name = "anthropic"
 
+    anthropic_model_name: str = Field("claude-3-haiku-20240307")
+
     async def _ainvoke(
-        self, input: Iterable[bytes], config: Optional[None] = None
+        self, input: Iterable[bytes], config: Optional[None] = None, **kwargs
     ) -> List[MarkerizeResult]:
         messages = _prepare_messages(input)
 
-        completions = await inference.run_batch_inference_anthropic(messages)
+        model_name = kwargs.pop("model_name", self.anthropic_model_name)
+        completions = await inference.run_batch_inference_anthropic(
+            model_name, messages, **kwargs
+        )
 
         return [
             MarkerizeResult(raw_markdown=_parse_result(x), provider_name=self.name)

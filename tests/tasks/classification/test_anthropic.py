@@ -107,7 +107,12 @@ class TestAnthropicClassificationProvider:
             ) as mock_inference:
                 mock_inference.return_value = mock_completions
 
-                results = await provider._ainvoke(mock_input, mock_config)
+                test_kwargs = {
+                    "test": "test"
+                }  # Test that kwargs are passed through to inference
+                results = await provider._ainvoke(
+                    mock_input, mock_config, **test_kwargs
+                )
 
         assert len(results) == 2
         assert all(isinstance(result, ClassificationOutput) for result in results)
@@ -115,6 +120,9 @@ class TestAnthropicClassificationProvider:
         assert results[0].score == ConfidenceLevel.HIGH
         assert results[1].labels == "B"
         assert results[1].score == ConfidenceLevel.MEDIUM
+
+        mock_prepare.assert_called_once_with(mock_input, mock_config)
+        mock_inference.assert_called_once_with("mock_messages", **test_kwargs)
 
     @pytest.mark.asyncio()
     async def test_ainvoke_with_error(self, provider, mock_config):
@@ -135,12 +143,11 @@ class TestAnthropicClassificationProvider:
                 with pytest.raises(ValueError, match="Invalid label: Invalid"):
                     await provider._ainvoke(mock_input, mock_config)
 
-    @pytest.mark.asyncio()
-    async def test_prepare_messages(self, mock_config):
+    def test_prepare_messages(self, mock_config):
         imgs = [b"image1", b"image2"]
         config = mock_config
 
-        result = await _prepare_messages(imgs, config)
+        result = _prepare_messages(imgs, config)
 
         assert len(result) == 2
         for msg_group in result:

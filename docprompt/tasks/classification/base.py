@@ -88,9 +88,10 @@ class ClassificationConfig(BaseModel):
         raw_labels = self.labels
         if self.descriptions:
             for label, description in zip(raw_labels, self.descriptions):
-                yield f"{label}: {description}"
+                yield f'"{label}": {description}'
         else:
-            yield from raw_labels
+            for label in self.labels:
+                yield f'"{label}"'
 
 
 class ClassificationOutput(BasePageResult):
@@ -171,7 +172,7 @@ class BaseClassificationProvider(
     class Meta:
         abstract = True
 
-    def process_document_node(
+    async def aprocess_document_node(
         self,
         document_node: "DocumentNode",
         task_config: ClassificationConfig = None,
@@ -188,13 +189,13 @@ class BaseClassificationProvider(
         for page_number in range(start or 1, (stop or len(document_node)) + 1):
             image_bytes = document_node.page_nodes[
                 page_number - 1
-            ].rasterizer.rasterize("default")
+            ].rasterizer.rasterize_to_data_uri("default")
             raster_bytes.append(image_bytes)
 
         # TODO: This is a somewhat dangerous way of requiring these kwargs to be drilled
         # through, potentially a decorator solution to be had here
         kwargs = {**self._default_invoke_kwargs, **kwargs}
-        results = self._invoke(raster_bytes, config=task_config, **kwargs)
+        results = await self._ainvoke(raster_bytes, config=task_config, **kwargs)
 
         return {
             i: res
