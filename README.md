@@ -42,6 +42,8 @@ Docprompt is a library for Document AI. It aims to make enterprise-level documen
   * Amazon Textract :white_check_mark:
   * Tesseract :white_check_mark:
   * Azure Document Intelligence :red_circle:
+* Layout Aware Page Representation
+  * Run Document Layout Analysis with text-only LLM's!
 * Prompt Garden for common document analysis tasks **zero-shot**, including:
   * Markerization (Pdf2Markdown)
   * Table Extraction
