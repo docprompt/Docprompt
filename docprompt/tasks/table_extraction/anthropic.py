@@ -85,7 +85,7 @@ def parse_response(response: str, **kwargs) -> TableExtractionPageResult:
     for table_start, table_end in zip(table_start_indices, table_end_indices):
         table_str = response[table_start:table_end]
 
-        soup = BeautifulSoup(table_str, "xml")
+        soup = BeautifulSoup(table_str, "html.parser")
 
         table_element = soup.find("table")
 

@@ -28,7 +28,7 @@ def ensure_single_root(xml_data: str) -> str:
 
 def _parse_result(raw_markdown: str) -> Optional[str]:
     raw_markdown = ensure_single_root(raw_markdown)
-    soup = BeautifulSoup(raw_markdown, "xml")
+    soup = BeautifulSoup(raw_markdown, "html.parser")
 
     md = soup.find("md")
 

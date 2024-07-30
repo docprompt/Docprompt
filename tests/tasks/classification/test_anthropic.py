@@ -122,7 +122,9 @@ class TestAnthropicClassificationProvider:
         assert results[1].score == ConfidenceLevel.MEDIUM
 
         mock_prepare.assert_called_once_with(mock_input, mock_config)
-        mock_inference.assert_called_once_with("mock_messages", **test_kwargs)
+        mock_inference.assert_called_once_with(
+            "claude-3-haiku-20240307", "mock_messages", **test_kwargs
+        )
 
     @pytest.mark.asyncio()
     async def test_ainvoke_with_error(self, provider, mock_config):

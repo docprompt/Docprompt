@@ -57,7 +57,9 @@ class TestAnthropicMarkerizeProvider:
             assert all(r.provider_name == "anthropic" for r in result)
 
             mock_prepare.assert_called_once_with([mock_image_bytes, mock_image_bytes])
-            mock_inference.assert_called_once_with("mock_messages", **test_kwargs)
+            mock_inference.assert_called_once_with(
+                "claude-3-haiku-20240307", "mock_messages", **test_kwargs
+            )
 
 
 def test_prepare_messages(mock_image_bytes):

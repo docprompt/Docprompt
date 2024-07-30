@@ -8,6 +8,7 @@ from docprompt.rasterize import ProviderResizeRatios
 from docprompt.schema.document import Document, PdfDocument  # noqa
 from docprompt.schema.layout import NormBBox, TextBlock  # noqa
 from docprompt.schema.pipeline import DocumentCollection, DocumentNode, PageNode  # noqa
+from docprompt.tasks.ocr.result import OcrPageResult  # noqa
 from docprompt.utils import (  # noqa
     hash_from_bytes,
     load_document,
@@ -17,7 +18,7 @@ from docprompt.utils import (  # noqa
     load_pdf_documents,
 )
 
-PdfDocument.model_rebuild()
+# PdfDocument.model_rebuild()
 DocumentNode.model_rebuild()
 
 

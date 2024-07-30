@@ -1,6 +1,7 @@
 from abc import abstractmethod
+from collections.abc import MutableMapping
 from datetime import datetime
-from typing import TYPE_CHECKING, ClassVar, Optional, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Dict, Generic, Optional, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -61,3 +62,37 @@ TTaskConfig = TypeVar("TTaskConfig")  # Task specific config like classification
 PageTaskResult = TypeVar("PageTaskResult", bound=BasePageResult)
 DocumentTaskResult = TypeVar("DocumentTaskResult", bound=BaseDocumentResult)
 PageOrDocumentTaskResult = TypeVar("PageOrDocumentTaskResult", bound=BaseResult)
+
+
+class ResultContainer(BaseModel, MutableMapping, Generic[PageOrDocumentTaskResult]):
+    results: Dict[str, PageOrDocumentTaskResult] = Field(
+        description="The results of the task", default_factory=dict
+    )
+
+    @property
+    def result(self):
+        return next(iter(self.results.values()), None)
+
+    def __setitem__(self, key, value):
+        if key in self.results:
+            raise ValueError(f"Result with key {key} already exists")
+
+        self.results[key] = value
+
+    def __delitem__(self, key):
+        del self.results[key]
+
+    def __getitem__(self, key):
+        return self.results[key]
+
+    def __iter__(self):
+        return iter(self.results)
+
+    def __len__(self):
+        return len(self.results)
+
+    def __contains__(self, item):
+        return item in self.results
+
+    def __bool__(self):
+        return bool(self.results)

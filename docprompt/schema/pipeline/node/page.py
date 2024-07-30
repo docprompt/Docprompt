@@ -1,15 +1,28 @@
-from typing import TYPE_CHECKING, Any, Dict, Generic
+from typing import TYPE_CHECKING, Any, Dict, Generic, Union
 
 from pydantic import Field, PositiveInt, PrivateAttr
 
 from docprompt.schema.pipeline.metadata import BaseMetadata
 from docprompt.schema.pipeline.rasterizer import PageRasterizer
+from docprompt.tasks.result import ResultContainer
 
 from .base import BaseNode
 from .typing import PageNodeMetadata
 
 if TYPE_CHECKING:
+    from docprompt.tasks.ocr.result import OcrPageResult
+
     from .document import DocumentNode
+
+
+class SimplePageNodeMetadata(BaseMetadata):
+    """
+    A simple metadata class for a page node
+    """
+
+    ocr_results: ResultContainer["OcrPageResult"] = Field(
+        description="The OCR results for the page", default_factory=ResultContainer
+    )
 
 
 class PageNode(BaseNode, Generic[PageNodeMetadata]):
@@ -19,9 +32,9 @@ class PageNode(BaseNode, Generic[PageNodeMetadata]):
 
     document: "DocumentNode" = Field(exclude=True, repr=False)
     page_number: PositiveInt = Field(description="The page number")
-    metadata: PageNodeMetadata = Field(
+    metadata: Union[PageNodeMetadata, SimplePageNodeMetadata] = Field(
         description="Application-specific metadata for the page",
-        default_factory=BaseMetadata,
+        default_factory=SimplePageNodeMetadata,
     )
     extra: Dict[str, Any] = Field(
         description="Extra data that can be stored on the page node",
@@ -40,6 +53,22 @@ class PageNode(BaseNode, Generic[PageNodeMetadata]):
     @property
     def rasterizer(self):
         return PageRasterizer(self._raster_cache, self)
+
+    @property
+    def ocr_results(self):
+        if not hasattr(self.metadata, "ocr_results"):
+            return None
+
+        return self.metadata.ocr_results
+
+    @ocr_results.setter
+    def ocr_results(self, value):
+        if not hasattr(self.metadata, "ocr_results"):
+            raise AttributeError(
+                "Page metadata does not have an `ocr_results` attribute"
+            )
+
+        self.metadata.ocr_results = value
 
     def search(
         self, query: str, refine_to_words: bool = True, require_exact_match: bool = True

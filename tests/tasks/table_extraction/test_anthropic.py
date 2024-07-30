@@ -64,7 +64,9 @@ class TestAnthropicTableExtractionProvider:
             assert all(r.provider_name == "anthropic" for r in result)
 
             mock_prepare.assert_called_once_with([mock_image_bytes, mock_image_bytes])
-            mock_inference.assert_called_once_with("mock_messages")
+            mock_inference.assert_called_once_with(
+                "claude-3-haiku-20240307", "mock_messages"
+            )
 
 
 def test_prepare_messages(mock_image_bytes):
@@ -115,31 +117,29 @@ def test_parse_response():
 
 
 def test_title_from_tree():
-    soup = BeautifulSoup("<table><title>Test Title</title></table>", "xml")
+    soup = BeautifulSoup("<table><title>Test Title</title></table>")
     assert _title_from_tree(soup.table) == "Test Title"
 
-    soup = BeautifulSoup("<table></table>", "xml")
+    soup = BeautifulSoup("<table></table>")
     assert _title_from_tree(soup.table) is None
 
 
 def test_headers_from_tree():
     soup = BeautifulSoup(
         "<table><headers><header>Col1</header><header>Col2</header></headers></table>",
-        "xml",
     )
     headers = _headers_from_tree(soup.table)
     assert len(headers) == 2
     assert all(isinstance(h, TableHeader) for h in headers)
     assert headers[0].text == "Col1"
 
-    soup = BeautifulSoup("<table></table>", "xml")
+    soup = BeautifulSoup("<table></table>")
     assert _headers_from_tree(soup.table) == []
 
 
 def test_rows_from_tree():
     soup = BeautifulSoup(
         "<table><rows><row><column>Data1</column><column>Data2</column></row></rows></table>",
-        "xml",
     )
     rows = _rows_from_tree(soup.table)
     assert len(rows) == 1
@@ -148,7 +148,7 @@ def test_rows_from_tree():
     assert all(isinstance(c, TableCell) for c in rows[0].cells)
     assert rows[0].cells[0].text == "Data1"
 
-    soup = BeautifulSoup("<table></table>", "xml")
+    soup = BeautifulSoup("<table></table>")
     assert _rows_from_tree(soup.table) == []
 
 
