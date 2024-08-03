@@ -92,9 +92,10 @@ def load_pdf_document(
     if isinstance(fp, bytes):
         file_bytes = fp
         file_name = file_name or determine_pdf_name_from_bytes(file_bytes)
+        file_path = None
     else:
         file_name = name_from_path(fp) if file_name is None else file_name
-
+        file_path = str(fp)
         file_bytes = read_pdf_bytes_from_path(fp)
 
     if not is_pdf(file_bytes):
@@ -102,7 +103,7 @@ def load_pdf_document(
 
     return PdfDocument(
         name=unquote(file_name),
-        file_path=str(fp),
+        file_path=file_path,
         file_bytes=file_bytes,
         password=password,
     )
