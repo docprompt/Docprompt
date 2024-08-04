@@ -168,7 +168,7 @@ class AnthropicTaskProviderFactory(
 
     def get_page_classification_provider(self, **kwargs) -> TTaskProvider:
         """Get the page classification provider."""
-        from docprompt.tasks.classification.anthropic import (
+        from docprompt.tasks.classification.image import (
             AnthropicClassificationProvider,
         )
 
@@ -176,7 +176,7 @@ class AnthropicTaskProviderFactory(
 
     def get_page_table_extraction_provider(self, **kwargs) -> TTaskProvider:
         """Get the page table extraction provider."""
-        from docprompt.tasks.table_extraction.anthropic import (
+        from docprompt.tasks.table_extraction.image_xml import (
             AnthropicTableExtractionProvider,
         )
 
@@ -186,7 +186,7 @@ class AnthropicTaskProviderFactory(
 
     def get_page_markerization_provider(self, **kwargs) -> TTaskProvider:
         """Get the page markerization provider."""
-        from docprompt.tasks.markerize.anthropic import AnthropicMarkerizeProvider
+        from docprompt.tasks.markerize.image import AnthropicMarkerizeProvider
 
         return AnthropicMarkerizeProvider(
             invoke_kwargs=self._credentials.kwargs, **kwargs

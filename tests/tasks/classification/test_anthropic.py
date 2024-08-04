@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from docprompt.tasks.classification.anthropic import (
+from docprompt.tasks.classification.image import (
     AnthropicClassificationProvider,
     AnthropicPageClassificationOutputParser,
     _prepare_messages,

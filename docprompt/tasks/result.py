@@ -23,7 +23,6 @@ class BaseResult(BaseModel):
     def task_key(self):
         return f"{self.provider_name}_{self.task_name}"
 
-    @abstractmethod
     def contribute_to_document_node(
         self, document_node: "DocumentNode", **kwargs
     ) -> None:
@@ -50,7 +49,7 @@ class BasePageResult(BaseResult):
             page_number is not None
         ), "Page number must be provided for page level results"
         assert (
-            0 < page_number <= len(document_node)
+            0 < page_number <= len(docume Bnt_node)
         ), "Page number must be less than or equal to the number of pages in the document"
 
         page_node = document_node.page_nodes[page_number - 1]

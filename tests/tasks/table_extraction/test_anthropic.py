@@ -8,7 +8,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
-from docprompt.tasks.table_extraction.anthropic import (
+from docprompt.tasks.table_extraction.image_xml import (
     AnthropicTableExtractionProvider,
     _headers_from_tree,
     _prepare_messages,
@@ -161,7 +161,7 @@ def test_rows_from_tree():
     ],
 )
 def test_find_start_indices(input_str, sub_str, expected):
-    from docprompt.tasks.table_extraction.anthropic import _find_start_indices
+    from docprompt.tasks.table_extraction.image_xml import _find_start_indices
 
     assert _find_start_indices(input_str, sub_str) == expected
 
@@ -175,6 +175,6 @@ def test_find_start_indices(input_str, sub_str, expected):
     ],
 )
 def test_find_end_indices(input_str, sub_str, expected):
-    from docprompt.tasks.table_extraction.anthropic import _find_end_indices
+    from docprompt.tasks.table_extraction.image_xml import _find_end_indices
 
     assert _find_end_indices(input_str, sub_str) == expected

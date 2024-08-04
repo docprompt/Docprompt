@@ -1,7 +1,10 @@
+from abc import abstractmethod
 from typing import (
     TYPE_CHECKING,
     Any,
+    Callable,
     ClassVar,
+    Coroutine,
     Dict,
     Generic,
     Iterable,
@@ -10,6 +13,7 @@ from typing import (
     TypeVar,
     Union,
 )
+from typing_extensions import ParamSpecKwargs
 
 from pydantic import BaseModel, PrivateAttr, ValidationInfo, model_validator
 from typing_extensions import Self
@@ -21,7 +25,7 @@ from .result import BaseDocumentResult, BasePageResult
 from .util import _init_context_var, init_context
 
 if TYPE_CHECKING:
-    from docprompt.schema.pipeline import DocumentNode
+    from docprompt.schema.pipeline import DocumentNode, PageNode
 
 
 TTaskInput = TypeVar("TTaskInput")  # What invoke requires
@@ -167,6 +171,172 @@ class AbstractTaskProvider(BaseModel, Generic[TTaskInput, TTaskConfig, TTaskResu
     ) -> Dict[int, TTaskResult]:
         raise NotImplementedError
 
+
+@flexible_methods(
+    ("get_openai_messages", "aget_openai_messages"),
+)
+class SupportsOpenAIMessages(Generic[TTaskInput]):
+    """
+    Mixin for task providers that support OpenAI.
+    """
+
+    def get_openai_messages(self, input: TTaskInput, **kwargs) -> List[Dict[str, Any]]:
+        raise NotImplementedError
+    
+    async def aget_openai_messages(self, input: TTaskInput, **kwargs) -> Coroutine[None, None, Dict[str, Any]]:
+        raise NotImplementedError
+
+
+
+@flexible_methods(
+    ("parse", "aparse"),
+)
+class SupportsParsing(Generic[TTaskResult]):
+    """
+    Mixin for task providers that support parsing.
+    """
+
+    def parse(self, response: str, **kwargs) -> TTaskResult:
+        raise NotImplementedError
+
+    async def aparse(self, response: str, **kwargs) -> TTaskResult:
+        raise NotImplementedError
+    
+
+@flexible_methods(
+    ("process_page_node", "aprocess_page_node"),
+)
+class SupportsPageNode(Generic[TTaskConfig, TPageResult]):
+    """
+    Mixin for task providers that support page processing.
+    """
+
+    def process_page_node(
+        self,
+        page_node: "PageNode",
+        task_config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> TPageResult:
+        raise NotImplementedError
+
+    async def aprocess_page_node(
+        self,
+        page_node: "PageNode",
+        task_config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> TPageResult:
+        raise NotImplementedError
+    
+
+@flexible_methods(
+    ("invoke", "ainvoke")
+)
+class SupportsDirectInvocation(Generic[TTaskConfig, TTaskResult]):
+    """
+    Mixin for task providers that support direct invocation on
+    non-node based items.s
+    """
+
+    def invoke(
+        self,
+        input: TTaskInput,
+        task_config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> TTaskResult:
+        raise NotImplementedError
+
+    async def ainvoke(
+        self,
+        input: TTaskInput,
+        task_config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> TTaskResult:
+        raise NotImplementedError
+    
+
+@flexible_methods(
+    ("process_document_node", "aprocess_document_node"),
+)
+class SupportsDocumentNode(Generic[TTaskInput, TDocumentResult]):
+    """
+    Mixin for task providers that support document processing.
+    """
+
+    def process_document_node(
+        self,
+        document_node: "DocumentNode",
+        task_config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> TDocumentResult:
+        raise NotImplementedError
+
+    async def aprocess_document_node(
+        self,
+        document_node: "DocumentNode",
+        task_config: Optional[TTaskConfig] = None,
+        **kwargs,
+    ) -> TDocumentResult:
+        raise NotImplementedError
+
+@flexible_methods(
+    ("process_image", "aprocess_image"),
+)
+class SupportsImage(Generic[TTaskInput, TTaskResult]):
+    """
+    Mixin for task providers that support image processing.
+    """
+
+    def process_image(self, input: TTaskInput, **kwargs) -> TTaskResult:
+        raise NotImplementedError
+
+    async def aprocess_image(self, input: TTaskInput, **kwargs) -> TTaskResult:
+        raise NotImplementedError
+    
+
+
+SyncOAICallable = Callable[[List[Dict[str, Any]]], Dict[str, Any]]
+AsyncOAICallable = Coroutine[List[Dict[str, Any]], Dict[str, Any]]
+
+class ProviderAgnosticOAI:
+    def __init__(self, *args, sync_callable: SyncOAICallable = None, async_callable: AsyncOAICallable = None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.sync_callable = sync_callable
+        self.async_callable = async_callable
+
+        if not self.sync_callable and not self.async_callable:
+            raise ValueError(f"{self.__class__.__name__} must be initialized with either `sync_callable` and/or `async_callable`")
+
+
+@flexible_methods(
+    ("process_webpage", "aprocess_webpage"),
+)
+class SupportsWebPage(Generic[TTaskInput, TPageResult]):
+    """
+    Mixin for task providers that support webpage processing.
+    """
+
+    def process_webpage(self, input: TTaskInput, **kwargs) -> TPageResult:
+        raise NotImplementedError
+
+    async def aprocess_webpage(self, input: TTaskInput, **kwargs) -> TPageResult:
+        raise NotImplementedError
+
+
+class SupportsTaskConfig(Generic[TTaskConfig]):
+    def __init__(self, *args, task_config: TTaskConfig = None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.task_config = task_config
+
+        if not self.task_config:
+            raise ValueError(f"{self.__class__.__name__} must be initialized with `task_config`")
+
+class BaseLLMTask(SupportsOpenAIMessages, SupportsTaskConfig, ProviderAgnosticOAI, SupportsParsing, SupportsDirectInvocation, Generic[TTaskInput, TTaskConfig, TTaskResult]):
+    """
+    Base class for LLM related tasks
+    """
+    name: ClassVar[str]
 
 class AbstractPageTaskProvider(AbstractTaskProvider):
     """

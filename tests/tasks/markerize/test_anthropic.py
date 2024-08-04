@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from docprompt.tasks.markerize.anthropic import (
+from docprompt.tasks.markerize.image import (
     AnthropicMarkerizeProvider,
     _parse_result,
     _prepare_messages,
