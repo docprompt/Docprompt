@@ -119,7 +119,12 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
                     metadata=page_metadata[page_number - 1],
                 )
             else:
-                page_node = PageNode(document=document_node, page_number=page_number)
+                page_metadata = cls.page_metadata_class()(**{})
+                page_node = PageNode(
+                    document=document_node,
+                    page_number=page_number,
+                    metadata=page_metadata,
+                )
 
             document_node.page_nodes.append(page_node)
 
