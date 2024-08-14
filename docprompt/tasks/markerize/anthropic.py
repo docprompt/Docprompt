@@ -3,7 +3,7 @@ from typing import Iterable, List, Optional
 from bs4 import BeautifulSoup
 from pydantic import Field
 
-from docprompt.tasks import utils as task_utils
+from docprompt.tasks import util as task_utils
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
 

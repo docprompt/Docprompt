@@ -6,7 +6,7 @@ from typing import Iterable, List
 from jinja2 import Template
 from pydantic import Field
 
-from docprompt.tasks import utils as task_utils
+from docprompt.tasks import util as task_utils
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
 
