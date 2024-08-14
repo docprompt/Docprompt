@@ -174,7 +174,7 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         # the SECOND of the two arguments in the `Union` annotation
         page_node_metadata_field_annotation = page_nodes_field_class.model_fields[
             "metadata"
-        ].annotation
+        ].annotation.__args__[0]
 
         if page_node_metadata_field_annotation == PageNodeMetadata:
             return BaseMetadata
