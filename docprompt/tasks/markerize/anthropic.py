@@ -3,6 +3,7 @@ from typing import Iterable, List, Optional
 from bs4 import BeautifulSoup
 from pydantic import Field
 
+from docprompt.tasks import utils as task_utils
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
 
@@ -41,8 +42,9 @@ def _prepare_messages(
     stop: Optional[int] = None,
 ):
     messages = []
+    document_image_uris = [task_utils.bytes_to_base64_uris(x) for x in document_images]
 
-    for image_bytes in document_images:
+    for image_bytes in document_image_uris:
         messages.append(
             [
                 OpenAIMessage(

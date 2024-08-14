@@ -6,6 +6,7 @@ from typing import Iterable, List
 from jinja2 import Template
 from pydantic import Field
 
+from docprompt.tasks import utils as task_utils
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
 from docprompt.utils import inference
 
@@ -97,7 +98,9 @@ def _prepare_messages(
 ):
     messages = []
 
-    for image_bytes in document_images:
+    document_image_uris = [task_utils.bytes_to_base64_uris(x) for x in document_images]
+
+    for image_bytes in document_image_uris:
         messages.append(
             [
                 OpenAIMessage(
