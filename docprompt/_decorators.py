@@ -54,6 +54,15 @@ def validate_method(cls, name: str, method: Callable, expected_async: bool):
     return None
 
 
+def get_or_create_event_loop():
+    try:
+        return asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+
+
 def apply_dual_methods_to_cls(cls: Type, method_group: Tuple[str, str]):
     errors = []
 
@@ -90,13 +99,13 @@ def apply_dual_methods_to_cls(cls: Type, method_group: Tuple[str, str]):
     if async_cls is cls and async_method:
 
         def sync_wrapper(*args, **kwargs):
-            return asyncio.run(async_method(*args, **kwargs))
+            loop = get_or_create_event_loop()
+            return loop.run_until_complete(async_method(*args, **kwargs))
 
         update_wrapper(sync_wrapper, async_method)
-
         sync_wrapper._original = async_method
-
         setattr(cls, sync_name, sync_wrapper)
+
     elif sync_cls is cls and sync_method:
 
         async def async_wrapper(*args, **kwargs):
