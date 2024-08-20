@@ -138,7 +138,8 @@ class BasePageClassificationOutputParser(
             return val
 
         elif self.type == ClassificationTypes.MULTI_LABEL:
-            labels = val.split(", ")
+            # Split the matched string into individual labels
+            labels = [label.strip().strip('"') for label in re.split(r",\s*", val)]
             for label in labels:
                 if label not in self.labels:
                     raise ValueError(f"Invalid label: {label}")

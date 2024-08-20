@@ -70,7 +70,9 @@ class AnthropicPageClassificationOutputParser(BasePageClassificationOutputParser
 
     def parse(self, text: str) -> ClassificationOutput:
         """Parse the results of the classification task."""
-        pattern = re.compile(r"Answer:\s*(?:['\"`]?)(.+?)(?:['\"`]?)\s*$", re.MULTILINE)
+        pattern = re.compile(
+            r'Answer:\s*(?:\{|\[)?\s*"?(.+?)"?\s*(?:\}|\])?\s*$', re.MULTILINE
+        )
         match = pattern.search(text)
 
         result = self.resolve_match(match)
