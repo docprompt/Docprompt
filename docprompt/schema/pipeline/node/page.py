@@ -56,10 +56,12 @@ class PageNode(BaseNode, Generic[PageNodeMetadata]):
 
     @property
     def ocr_results(self):
-        if not hasattr(self.metadata, "ocr_results"):
-            return None
+        if self.metadata.task_results and "ocr_results" in self.metadata.task_results:
+            return self.metadata.task_results["ocr_results"]
+        elif hasattr(self.metadata, "ocr_results") and self.metadata.ocr_results:
+            return self.metadata.ocr_results.result
 
-        return self.metadata.ocr_results
+        return None
 
     @ocr_results.setter
     def ocr_results(self, value):

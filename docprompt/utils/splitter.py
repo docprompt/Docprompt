@@ -1,11 +1,9 @@
 import io
 import logging
-import tempfile
 from typing import Iterator, Optional
 
 import pypdfium2 as pdfium
 
-from docprompt._exec.ghostscript import compress_pdf_to_bytes
 from docprompt._pdfium import get_pdfium_document, writable_temp_pdf
 from docprompt.utils import get_page_count
 
@@ -84,22 +82,38 @@ def pdf_split_iter_with_max_bytes(
     """
     Splits a PDF into batches of pages up to `max_page_count` pages and `max_bytes` bytes.
     """
-    for batch_bytes in pdf_split_iter_fast(file_bytes, max_page_count):
-        if len(batch_bytes) <= max_bytes:
-            yield batch_bytes
-        else:
-            # If batch size is greater than max_bytes, reduce the number of pages
-            pages_in_batch = max_page_count
-            while len(batch_bytes) > max_bytes and pages_in_batch > 1:
-                pages_in_batch -= 1
-                batch_bytes = next(pdf_split_iter_fast(file_bytes, pages_in_batch))
+    current_pages = 0
+    current_byte_size = 0
+    current_batch = io.BytesIO()
 
-            if len(batch_bytes) > max_bytes and pages_in_batch == 1:
-                # If a single page is still too large, compress it
-                with tempfile.NamedTemporaryFile(suffix=".pdf") as f:
-                    f.write(batch_bytes)
-                    f.flush()
-                    compressed_bytes = compress_pdf_to_bytes(f.name)
-                yield compressed_bytes
+    single_page_splits = pdf_split_iter_fast(file_bytes, 1)
+
+    for page in single_page_splits:
+        if current_pages == 0 or (
+            current_pages < max_page_count
+            and current_byte_size + len(page) <= max_bytes
+        ):
+            # Add page to the current batch
+            if current_pages == 0:
+                current_batch = io.BytesIO(page)
             else:
-                yield batch_bytes
+                with writable_temp_pdf() as merged_pdf:
+                    merged_pdf.import_pages(
+                        pdfium.PdfDocument(io.BytesIO(current_batch.getvalue()))
+                    )
+                    merged_pdf.import_pages(pdfium.PdfDocument(io.BytesIO(page)))
+                    current_batch = io.BytesIO()
+                    merged_pdf.save(current_batch)
+
+            current_pages += 1
+            current_byte_size = len(current_batch.getvalue())
+        else:
+            # Yield the current batch and start a new one
+            yield current_batch.getvalue()
+            current_batch = io.BytesIO(page)
+            current_pages = 1
+            current_byte_size = len(page)
+
+    # Don't forget to yield the last batch
+    if current_pages > 0:
+        yield current_batch.getvalue()
