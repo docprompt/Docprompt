@@ -56,8 +56,11 @@ class OcrPageResult(BasePageResult):
         return self.block_level_blocks
 
     def contribute_to_document_node(
-        self, document_node: DocumentNode, page_number: int | None = None, **kwargs
+        self, document_node: DocumentNode, page_number: Optional[int] = None, **kwargs
     ) -> None:
+        if not page_number:
+            raise ValueError("Page number must be provided for page level results")
+
         page_node = document_node.page_nodes[page_number - 1]
         if hasattr(page_node.metadata, "ocr_results"):
             page_node.metadata.ocr_results = self
