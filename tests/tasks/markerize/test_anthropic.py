@@ -32,34 +32,34 @@ class TestAnthropicMarkerizeProvider:
     async def test_ainvoke(self, provider, mock_image_bytes):
         mock_completions = ["<md># Test Markdown</md>", "<md>## Another Test</md>"]
 
-        with (
-            patch(
-                "docprompt.tasks.markerize.anthropic._prepare_messages"
-            ) as mock_prepare,
-            patch(
+        with patch(
+            "docprompt.tasks.markerize.anthropic._prepare_messages"
+        ) as mock_prepare:
+            with patch(
                 "docprompt.utils.inference.run_batch_inference_anthropic"
-            ) as mock_inference,
-        ):
-            mock_prepare.return_value = "mock_messages"
-            mock_inference.return_value = mock_completions
+            ) as mock_inference:
+                mock_prepare.return_value = "mock_messages"
+                mock_inference.return_value = mock_completions
 
-            test_kwargs = {
-                "test": "test"
-            }  # Test that kwargs are passed through to inference
-            result = await provider._ainvoke(
-                [mock_image_bytes, mock_image_bytes], **test_kwargs
-            )
+                test_kwargs = {
+                    "test": "test"
+                }  # Test that kwargs are passed through to inference
+                result = await provider._ainvoke(
+                    [mock_image_bytes, mock_image_bytes], **test_kwargs
+                )
 
-            assert len(result) == 2
-            assert all(isinstance(r, MarkerizeResult) for r in result)
-            assert result[0].raw_markdown == "# Test Markdown"
-            assert result[1].raw_markdown == "## Another Test"
-            assert all(r.provider_name == "anthropic" for r in result)
+                assert len(result) == 2
+                assert all(isinstance(r, MarkerizeResult) for r in result)
+                assert result[0].raw_markdown == "# Test Markdown"
+                assert result[1].raw_markdown == "## Another Test"
+                assert all(r.provider_name == "anthropic" for r in result)
 
-            mock_prepare.assert_called_once_with([mock_image_bytes, mock_image_bytes])
-            mock_inference.assert_called_once_with(
-                "claude-3-haiku-20240307", "mock_messages", **test_kwargs
-            )
+                mock_prepare.assert_called_once_with(
+                    [mock_image_bytes, mock_image_bytes]
+                )
+                mock_inference.assert_called_once_with(
+                    "claude-3-haiku-20240307", "mock_messages", **test_kwargs
+                )
 
 
 def test_prepare_messages(mock_image_bytes):

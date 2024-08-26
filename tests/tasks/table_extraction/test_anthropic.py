@@ -44,29 +44,29 @@ class TestAnthropicTableExtractionProvider:
             "<table><headers><header>Col2</header></headers><rows><row><column>Data2</column></row></table>",
         ]
 
-        with (
-            patch(
-                "docprompt.tasks.table_extraction.anthropic._prepare_messages"
-            ) as mock_prepare,
-            patch(
+        with patch(
+            "docprompt.tasks.table_extraction.anthropic._prepare_messages"
+        ) as mock_prepare:
+            with patch(
                 "docprompt.utils.inference.run_batch_inference_anthropic"
-            ) as mock_inference,
-        ):
-            mock_prepare.return_value = "mock_messages"
-            mock_inference.return_value = mock_completions
+            ) as mock_inference:
+                mock_prepare.return_value = "mock_messages"
+                mock_inference.return_value = mock_completions
 
-            result = await provider._ainvoke([mock_image_bytes, mock_image_bytes])
+                result = await provider._ainvoke([mock_image_bytes, mock_image_bytes])
 
-            assert len(result) == 2
-            assert all(isinstance(r, TableExtractionPageResult) for r in result)
-            assert result[0].tables[0].title == "Test Table"
-            assert result[1].tables[0].title is None
-            assert all(r.provider_name == "anthropic" for r in result)
+                assert len(result) == 2
+                assert all(isinstance(r, TableExtractionPageResult) for r in result)
+                assert result[0].tables[0].title == "Test Table"
+                assert result[1].tables[0].title is None
+                assert all(r.provider_name == "anthropic" for r in result)
 
-            mock_prepare.assert_called_once_with([mock_image_bytes, mock_image_bytes])
-            mock_inference.assert_called_once_with(
-                "claude-3-haiku-20240307", "mock_messages"
-            )
+                mock_prepare.assert_called_once_with(
+                    [mock_image_bytes, mock_image_bytes]
+                )
+                mock_inference.assert_called_once_with(
+                    "claude-3-haiku-20240307", "mock_messages"
+                )
 
 
 def test_prepare_messages(mock_image_bytes):
