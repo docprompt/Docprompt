@@ -6,7 +6,6 @@ from pydantic import Field
 from docprompt.schema.layout import TextBlock
 from docprompt.schema.pipeline.node.document import DocumentNode
 from docprompt.tasks.base import BasePageResult
-from docprompt.tasks.result import ResultContainer
 
 
 class OcrPageResult(BasePageResult):
@@ -59,18 +58,8 @@ class OcrPageResult(BasePageResult):
     def contribute_to_document_node(
         self, document_node: DocumentNode, page_number: int | None = None, **kwargs
     ) -> None:
-        assert (
-            page_number is not None
-        ), "Page number must be provided for page level results"
-        assert (
-            0 < page_number <= len(document_node)
-        ), "Page number must be less than or equal to the number of pages in the document"
-
         page_node = document_node.page_nodes[page_number - 1]
-        page_node.metadata.task_results["ocr_results"] = self
-
-        # Legacy
         if hasattr(page_node.metadata, "ocr_results"):
-            page_node.metadata.ocr_results = ResultContainer(
-                results={"ocr_results": self}
-            )
+            page_node.metadata.ocr_results = self
+        else:
+            super().contribute_to_document_node(document_node, page_number=page_number)

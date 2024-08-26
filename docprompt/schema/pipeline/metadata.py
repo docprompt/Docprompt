@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import MutableMapping
-from typing import TYPE_CHECKING, Any, Dict, Generic, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, Generic, Type, TypeVar, Union
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
@@ -95,6 +95,8 @@ class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
 
     _owner: TMetadataOwner = PrivateAttr()
 
+    _by_type_lookup_cache: Dict[Type, Any] = PrivateAttr(default_factory=dict)
+
     @property
     def task_results(self) -> TaskResultsDescriptor:
         """Return the task results descriptor."""
@@ -118,6 +120,36 @@ class BaseMetadata(BaseModel, MutableMapping, Generic[TMetadataOwner]):
     def owner(self, owner: TMetadataOwner) -> None:
         """Return the owner of the metadata."""
         self._owner = owner
+
+    def find_by_type(self, result_type: Type):
+        lookup_key = self._by_type_lookup_cache.get(result_type)
+
+        if self._is_field_typed():
+            if lookup_key:
+                value = getattr(self, self._by_type_lookup_cache[result_type])
+
+                if isinstance(value, result_type):
+                    return value
+
+            for field_name in self.model_fields_set:
+                value = getattr(self, field_name)
+
+                if isinstance(value, result_type):
+                    self._by_type_lookup_cache[result_type] = field_name
+                    return value
+        else:
+            if lookup_key:
+                value = self.task_results.get(self._by_type_lookup_cache[result_type])
+
+                if isinstance(value, result_type):
+                    return value
+
+            for key, value in self.task_results.items():
+                if isinstance(value, result_type):
+                    self._by_type_lookup_cache[result_type] = key
+                    return value
+
+        return None
 
     @classmethod
     def from_owner(cls, owner: TMetadataOwner, **data) -> BaseMetadata:

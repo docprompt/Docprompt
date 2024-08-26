@@ -1,10 +1,9 @@
-from typing import TYPE_CHECKING, Any, Dict, Generic, Union
+from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Union
 
 from pydantic import Field, PositiveInt, PrivateAttr
 
 from docprompt.schema.pipeline.metadata import BaseMetadata
 from docprompt.schema.pipeline.rasterizer import PageRasterizer
-from docprompt.tasks.result import ResultContainer
 
 from .base import BaseNode
 from .typing import PageNodeMetadata
@@ -20,8 +19,8 @@ class SimplePageNodeMetadata(BaseMetadata):
     A simple metadata class for a page node
     """
 
-    ocr_results: ResultContainer["OcrPageResult"] = Field(
-        description="The OCR results for the page", default_factory=ResultContainer
+    ocr_results: Optional["OcrPageResult"] = Field(
+        None, description="The OCR results for the page"
     )
 
 
@@ -55,13 +54,10 @@ class PageNode(BaseNode, Generic[PageNodeMetadata]):
         return PageRasterizer(self._raster_cache, self)
 
     @property
-    def ocr_results(self):
-        if self.metadata.task_results and "ocr_results" in self.metadata.task_results:
-            return self.metadata.task_results["ocr_results"]
-        elif hasattr(self.metadata, "ocr_results") and self.metadata.ocr_results:
-            return self.metadata.ocr_results.result
+    def ocr_results(self) -> Optional["OcrPageResult"]:
+        from docprompt.tasks.ocr.result import OcrPageResult
 
-        return None
+        return self.metadata.find_by_type(OcrPageResult)
 
     @ocr_results.setter
     def ocr_results(self, value):
@@ -83,14 +79,14 @@ class PageNode(BaseNode, Generic[PageNodeMetadata]):
         )
 
     def get_layout_aware_text(self, **kwargs) -> str:
-        if not self.ocr_results.result:
+        if not self.ocr_results:
             raise ValueError("Calculate OCR results before calling layout_aware_text")
 
         from docprompt.utils.layout import build_layout_aware_page_representation
 
-        word_blocks = self.ocr_results.result.word_level_blocks
+        word_blocks = self.ocr_results.word_level_blocks
 
-        line_blocks = self.ocr_results.result.line_level_blocks
+        line_blocks = self.ocr_results.line_level_blocks
 
         if not len(line_blocks):
             line_blocks = None

@@ -4,7 +4,6 @@ from typing import Dict, Optional
 from pydantic import BaseModel, Field, PositiveInt, TypeAdapter
 
 from docprompt.tasks.ocr.result import OcrPageResult
-from docprompt.tasks.result import ResultContainer
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures"
 
@@ -44,6 +43,6 @@ class PdfFixture(BaseModel):
         if ocr_results:
             for page_number, ocr_result in self.get_ocr_results().items():
                 page = document.page_nodes[page_number - 1]
-                page.ocr_results = ResultContainer(results={"fixture": ocr_result})
+                page.metadata.ocr_results = ocr_result
 
         return document

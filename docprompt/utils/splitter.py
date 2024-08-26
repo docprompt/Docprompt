@@ -6,6 +6,7 @@ import pypdfium2 as pdfium
 
 from docprompt._pdfium import get_pdfium_document, writable_temp_pdf
 from docprompt.utils import get_page_count
+from docprompt.utils.compressor import compress_pdf_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,8 @@ def pdf_split_iter_with_max_bytes(
 ) -> Iterator[bytes]:
     """
     Splits a PDF into batches of pages up to `max_page_count` pages and `max_bytes` bytes.
+    Compresses individual pages if they exceed max_bytes.
+    Raises an error if compression fails to bring a page under the byte limit.
     """
     current_pages = 0
     current_byte_size = 0
@@ -89,9 +92,24 @@ def pdf_split_iter_with_max_bytes(
     single_page_splits = pdf_split_iter_fast(file_bytes, 1)
 
     for page in single_page_splits:
+        page_size = len(page)
+
+        # Check if a single page exceeds the byte limit
+        if page_size > max_bytes:
+            try:
+                compressed_page = compress_pdf_bytes(page)
+                if len(compressed_page) > max_bytes:
+                    raise ValueError(
+                        f"Page size ({len(compressed_page)} bytes) exceeds max_bytes ({max_bytes}) even after compression."
+                    )
+                page = compressed_page
+                page_size = len(page)
+            except Exception as e:
+                raise RuntimeError(f"Failed to compress page: {str(e)}")
+
         if current_pages == 0 or (
             current_pages < max_page_count
-            and current_byte_size + len(page) <= max_bytes
+            and current_byte_size + page_size <= max_bytes
         ):
             # Add page to the current batch
             if current_pages == 0:
@@ -112,7 +130,7 @@ def pdf_split_iter_with_max_bytes(
             yield current_batch.getvalue()
             current_batch = io.BytesIO(page)
             current_pages = 1
-            current_byte_size = len(page)
+            current_byte_size = page_size
 
     # Don't forget to yield the last batch
     if current_pages > 0:

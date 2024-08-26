@@ -76,14 +76,9 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         """
         from docprompt.provenance.search import DocumentProvenanceLocator
 
-        ocr_keys = [
-            key
-            for page in self
-            for key in page.metadata.task_results.keys()
-            if key.endswith("_ocr")
-        ]
+        has_all_ocr_results = all(x.ocr_results for x in self.page_nodes)
 
-        if not ocr_keys:
+        if not has_all_ocr_results:
             raise ValueError(
                 "Cannot create a locator for a document without any OCR results."
             )
