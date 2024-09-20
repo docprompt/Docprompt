@@ -82,56 +82,51 @@ def pdf_split_iter_with_max_bytes(
 ) -> Iterator[bytes]:
     """
     Splits a PDF into batches of pages up to `max_page_count` pages and `max_bytes` bytes.
-    Compresses individual pages if they exceed max_bytes.
-    Raises an error if compression fails to bring a page under the byte limit.
+    Uses page deletion to efficiently reduce batch size if needed.
+    Compresses batches if they exceed max_bytes.
     """
-    current_pages = 0
-    current_byte_size = 0
-    current_batch = io.BytesIO()
+    with get_pdfium_document(file_bytes) as src_pdf:
+        total_pages = len(src_pdf)
+        current_page = 0
 
-    single_page_splits = pdf_split_iter_fast(file_bytes, 1)
+        while current_page < total_pages:
+            # Start with the maximum allowed pages or remaining pages
+            pages_in_batch = min(max_page_count, total_pages - current_page)
 
-    for page in single_page_splits:
-        page_size = len(page)
+            with writable_temp_pdf() as batch_pdf:
+                # Create a batch with the current number of pages
+                batch_pdf.import_pages(
+                    src_pdf, list(range(current_page, current_page + pages_in_batch))
+                )
 
-        # Check if a single page exceeds the byte limit
-        if page_size > max_bytes:
-            try:
-                compressed_page = compress_pdf_bytes(page)
-                if len(compressed_page) > max_bytes:
-                    raise ValueError(
-                        f"Page size ({len(compressed_page)} bytes) exceeds max_bytes ({max_bytes}) even after compression."
-                    )
-                page = compressed_page
-                page_size = len(page)
-            except Exception as e:
-                raise RuntimeError(f"Failed to compress page: {str(e)}")
+                while pages_in_batch > 0:
+                    # Save the batch to bytes
+                    pdf_bytes_buffer = io.BytesIO()
+                    batch_pdf.save(pdf_bytes_buffer)
+                    batch_bytes = pdf_bytes_buffer.getvalue()
 
-        if current_pages == 0 or (
-            current_pages < max_page_count
-            and current_byte_size + page_size <= max_bytes
-        ):
-            # Add page to the current batch
-            if current_pages == 0:
-                current_batch = io.BytesIO(page)
-            else:
-                with writable_temp_pdf() as merged_pdf:
-                    merged_pdf.import_pages(
-                        pdfium.PdfDocument(io.BytesIO(current_batch.getvalue()))
-                    )
-                    merged_pdf.import_pages(pdfium.PdfDocument(io.BytesIO(page)))
-                    current_batch = io.BytesIO()
-                    merged_pdf.save(current_batch)
+                    if len(batch_bytes) <= max_bytes:
+                        # If the batch is within the byte limit, yield it
+                        yield batch_bytes
+                        current_page += pages_in_batch
+                        break
+                    else:
+                        # If the batch exceeds the byte limit, try compressing
+                        try:
+                            compressed_batch = compress_pdf_bytes(batch_bytes)
+                            if len(compressed_batch) <= max_bytes:
+                                yield compressed_batch
+                                current_page += pages_in_batch
+                                break
+                        except Exception as e:
+                            logger.warning(f"Compression failed: {str(e)}")
 
-            current_pages += 1
-            current_byte_size = len(current_batch.getvalue())
-        else:
-            # Yield the current batch and start a new one
-            yield current_batch.getvalue()
-            current_batch = io.BytesIO(page)
-            current_pages = 1
-            current_byte_size = page_size
+                        # If compression fails or is still too large, remove the last page
+                        batch_pdf.del_page(pages_in_batch - 1)
+                        pages_in_batch -= 1
 
-    # Don't forget to yield the last batch
-    if current_pages > 0:
-        yield current_batch.getvalue()
+            # If we can't fit even one page, raise an error
+            if pages_in_batch == 0:
+                raise ValueError(
+                    f"Unable to fit even a single page within max_bytes ({max_bytes})"
+                )
