@@ -5,7 +5,7 @@
 groups = ["default", "anthropic", "aws", "azure", "dev", "docs", "google", "openai", "search", "test"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:1782ab611691ce93929a078a82d1cfcb2e5d2d29764cedbfde7e99d92561715c"
+content_hash = "sha256:8a6e5089c38a1da49e05fc2ce97ae87939d9c108786d59b20661583985e9aff2"
 
 [[metadata.targets]]
 requires_python = ">=3.8.6,<3.13"
@@ -2773,6 +2773,21 @@ dependencies = [
 files = [
     {file = "pymdown_extensions-10.9-py3-none-any.whl", hash = "sha256:d323f7e90d83c86113ee78f3fe62fc9dee5f56b54d912660703ea1816fed5626"},
     {file = "pymdown_extensions-10.9.tar.gz", hash = "sha256:6ff740bcd99ec4172a938970d42b96128bdc9d4b9bcad72494f29921dc69b753"},
+]
+
+[[package]]
+name = "pypdf"
+version = "5.0.0"
+requires_python = ">=3.6"
+summary = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
+groups = ["default"]
+dependencies = [
+    "dataclasses; python_version < \"3.7\"",
+    "typing-extensions>=4.0; python_version < \"3.11\"",
+]
+files = [
+    {file = "pypdf-5.0.0-py3-none-any.whl", hash = "sha256:67603e2e96cdf70e676564520933c017d450f16075b9966be5fee128812ace8c"},
+    {file = "pypdf-5.0.0.tar.gz", hash = "sha256:5c536ec0f7af8e2f80eb32806964652a562b9abc5477b3c195e2b842725ce55b"},
 ]
 
 [[package]]

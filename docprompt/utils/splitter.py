@@ -130,3 +130,79 @@ def pdf_split_iter_with_max_bytes(
                 raise ValueError(
                     f"Unable to fit even a single page within max_bytes ({max_bytes})"
                 )
+
+
+def pdf_split_iter_with_max_bytes_pypdf(
+    file_bytes: bytes, max_page_count: int, max_bytes: int
+) -> Iterator[bytes]:
+    """
+    Splits a PDF into batches of pages up to `max_page_count` pages and `max_bytes` bytes.
+    Uses page deletion to efficiently reduce batch size if needed.
+    Compresses batches if they exceed max_bytes.
+
+    Args:
+        file_bytes (bytes): The original PDF file as bytes.
+        max_page_count (int): Maximum number of pages per batch.
+        max_bytes (int): Maximum size in bytes per batch.
+
+    Yields:
+        Iterator[bytes]: An iterator that yields each batch as bytes.
+
+    Raises:
+        ValueError: If a single page exceeds the `max_bytes` limit.
+    """
+    try:
+        from pypdf import PdfReader, PdfWriter
+    except ImportError:
+        raise UnsupportedDocumentType("pypdf is required for this function")
+
+    reader = PdfReader(io.BytesIO(file_bytes))
+    total_pages = len(reader.pages)
+    current_page = 0
+
+    while current_page < total_pages:
+        # Determine the number of pages in the current batch
+        pages_in_batch = min(max_page_count, total_pages - current_page)
+        writer = PdfWriter()
+
+        # Add pages to the writer
+        for page_num in range(current_page, current_page + pages_in_batch):
+            writer.add_page(reader.pages[page_num])
+
+        while pages_in_batch > 0:
+            # Save the current batch to a bytes buffer
+            pdf_bytes_buffer = io.BytesIO()
+            writer.write(pdf_bytes_buffer)
+            batch_bytes = pdf_bytes_buffer.getvalue()
+
+            if len(batch_bytes) <= max_bytes:
+                # If within byte limit, yield the batch
+                yield batch_bytes
+                current_page += pages_in_batch
+                break
+            else:
+                # Attempt to compress the batch
+                try:
+                    compressed_batch = compress_pdf_bytes(batch_bytes)
+                    if len(compressed_batch) <= max_bytes:
+                        yield compressed_batch
+                        current_page += pages_in_batch
+                        break
+                except Exception as e:
+                    logger.warning(f"Compression failed: {str(e)}")
+
+                # If compression doesn't help, remove the last page and retry
+                writer.remove_page(pages_in_batch - 1)
+                pages_in_batch -= 1
+
+                if pages_in_batch > 0:
+                    # Reinitialize the writer with the reduced set of pages
+                    writer = PdfWriter()
+                    for page_num in range(current_page, current_page + pages_in_batch):
+                        writer.add_page(reader.pages[page_num])
+
+        if pages_in_batch == 0:
+            # If no pages can fit within the byte limit, raise an error
+            raise ValueError(
+                f"Unable to fit even a single page within max_bytes ({max_bytes})"
+            )

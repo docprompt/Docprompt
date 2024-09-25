@@ -6,7 +6,11 @@ from PIL import Image
 from docprompt import load_document, load_documents
 from docprompt.rasterize import ProviderResizeRatios
 from docprompt.utils import hash_from_bytes, is_pdf
-from docprompt.utils.splitter import pdf_split_iter_fast, pdf_split_iter_with_max_bytes
+from docprompt.utils.splitter import (
+    pdf_split_iter_fast,
+    pdf_split_iter_with_max_bytes,
+    pdf_split_iter_with_max_bytes_pypdf,
+)
 from tests.fixtures import PDF_FIXTURES
 
 
@@ -197,6 +201,26 @@ def test_pdf_split_iter_max_bytes():
     )
 
     assert len(splits) == len(doc)
+
+
+def test_pdf_split_iter_max_bytes_pypdf():
+    doc = load_document(PDF_FIXTURES[0].get_full_path())
+
+    splits = list(
+        pdf_split_iter_with_max_bytes_pypdf(
+            doc.file_bytes, max_page_count=1, max_bytes=1024 * 1024
+        )
+    )
+
+    assert len(splits) == len(doc)
+
+    dual_splits = list(
+        pdf_split_iter_with_max_bytes_pypdf(
+            doc.file_bytes, max_page_count=2, max_bytes=1024 * 1024
+        )
+    )
+
+    assert len(dual_splits) == len(doc) // 2
 
 
 def test_compression():
