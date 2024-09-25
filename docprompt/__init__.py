@@ -2,7 +2,7 @@
 
 __author__ = """Frankie Colson"""
 __email__ = "frank@pageleaf.io"
-__version__ = "0.8.2"
+__version__ = "0.8.3"
 
 from docprompt.rasterize import ProviderResizeRatios
 from docprompt.schema.document import Document, PdfDocument  # noqa
