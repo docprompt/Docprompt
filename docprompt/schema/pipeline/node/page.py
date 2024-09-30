@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Union
 
-from pydantic import Field, PositiveInt, PrivateAttr
+from pydantic import Field, PositiveInt
 
 from docprompt.schema.pipeline.metadata import BaseMetadata
 from docprompt.schema.pipeline.rasterizer import PageRasterizer
@@ -40,18 +40,9 @@ class PageNode(BaseNode, Generic[PageNodeMetadata]):
         default_factory=dict,
     )
 
-    _raster_cache: Dict[str, bytes] = PrivateAttr(default_factory=dict)
-
-    def __getstate__(self):
-        state = super().__getstate__()
-
-        state["__pydantic_private__"]["_raster_cache"] = {}
-
-        return state
-
     @property
     def rasterizer(self):
-        return PageRasterizer(self._raster_cache, self)
+        return PageRasterizer(self)
 
     @property
     def ocr_results(self) -> Optional["OcrPageResult"]:

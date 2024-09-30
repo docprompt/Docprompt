@@ -42,6 +42,12 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     _locator: Optional["DocumentProvenanceLocator"] = PrivateAttr(default=None)
 
     _persistance_path: Optional[str] = PrivateAttr(default=None)
+    _rasterizer: DocumentRasterizer = PrivateAttr(default=None)
+
+    def create_rasterizer(self, cache_url: Optional[str] = None) -> DocumentRasterizer:
+        rasterizer = DocumentRasterizer(owner=self, cache_url=cache_url)
+
+        return rasterizer
 
     def __getstate__(self):
         state = super().__getstate__()
@@ -61,7 +67,22 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
 
     @property
     def rasterizer(self):
-        return DocumentRasterizer(self)
+        if self._rasterizer is None:
+            self._rasterizer = self.create_rasterizer()
+
+        return self._rasterizer
+
+    @rasterizer.setter
+    def rasterizer(self, rasterizer: DocumentRasterizer):
+        if not isinstance(rasterizer, DocumentRasterizer):
+            raise ValueError(
+                "The rasterizer must be an instance of DocumentRasterizer."
+            )
+
+        if rasterizer.owner != self:
+            raise ValueError("The rasterizer must be owned by the document node.")
+
+        self._rasterizer = rasterizer
 
     @property
     def locator(self):
