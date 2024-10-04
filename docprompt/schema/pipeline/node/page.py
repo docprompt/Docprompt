@@ -1,10 +1,9 @@
-from typing import TYPE_CHECKING, Any, Dict, Generic, Union
+from typing import TYPE_CHECKING, Any, Dict, Generic, Optional, Union
 
-from pydantic import Field, PositiveInt, PrivateAttr
+from pydantic import Field, PositiveInt
 
 from docprompt.schema.pipeline.metadata import BaseMetadata
 from docprompt.schema.pipeline.rasterizer import PageRasterizer
-from docprompt.tasks.result import ResultContainer
 
 from .base import BaseNode
 from .typing import PageNodeMetadata
@@ -20,8 +19,8 @@ class SimplePageNodeMetadata(BaseMetadata):
     A simple metadata class for a page node
     """
 
-    ocr_results: ResultContainer["OcrPageResult"] = Field(
-        description="The OCR results for the page", default_factory=ResultContainer
+    ocr_results: Optional["OcrPageResult"] = Field(
+        None, description="The OCR results for the page"
     )
 
 
@@ -41,25 +40,15 @@ class PageNode(BaseNode, Generic[PageNodeMetadata]):
         default_factory=dict,
     )
 
-    _raster_cache: Dict[str, bytes] = PrivateAttr(default_factory=dict)
-
-    def __getstate__(self):
-        state = super().__getstate__()
-
-        state["__pydantic_private__"]["_raster_cache"] = {}
-
-        return state
-
     @property
     def rasterizer(self):
-        return PageRasterizer(self._raster_cache, self)
+        return PageRasterizer(self)
 
     @property
-    def ocr_results(self):
-        if not hasattr(self.metadata, "ocr_results"):
-            return None
+    def ocr_results(self) -> Optional["OcrPageResult"]:
+        from docprompt.tasks.ocr.result import OcrPageResult
 
-        return self.metadata.ocr_results
+        return self.metadata.find_by_type(OcrPageResult)
 
     @ocr_results.setter
     def ocr_results(self, value):
@@ -81,14 +70,14 @@ class PageNode(BaseNode, Generic[PageNodeMetadata]):
         )
 
     def get_layout_aware_text(self, **kwargs) -> str:
-        if not self.ocr_results.result:
+        if not self.ocr_results:
             raise ValueError("Calculate OCR results before calling layout_aware_text")
 
         from docprompt.utils.layout import build_layout_aware_page_representation
 
-        word_blocks = self.ocr_results.result.word_level_blocks
+        word_blocks = self.ocr_results.word_level_blocks
 
-        line_blocks = self.ocr_results.result.line_level_blocks
+        line_blocks = self.ocr_results.line_level_blocks
 
         if not len(line_blocks):
             line_blocks = None

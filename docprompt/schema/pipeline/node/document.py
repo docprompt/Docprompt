@@ -42,11 +42,20 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     _locator: Optional["DocumentProvenanceLocator"] = PrivateAttr(default=None)
 
     _persistance_path: Optional[str] = PrivateAttr(default=None)
+    _rasterizer: DocumentRasterizer = PrivateAttr(default=None)
+
+    def create_rasterizer(
+        self, cache_url: Optional[str] = None, **fs_kwargs
+    ) -> DocumentRasterizer:
+        rasterizer = DocumentRasterizer(owner=self, cache_url=cache_url, **fs_kwargs)
+
+        return rasterizer
 
     def __getstate__(self):
         state = super().__getstate__()
 
         state["__pydantic_private__"]["_locator"] = None
+        state["__pydantic_private__"]["_rasterizer"] = None
 
         return state
 
@@ -61,7 +70,22 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
 
     @property
     def rasterizer(self):
-        return DocumentRasterizer(self)
+        if self._rasterizer is None:
+            self._rasterizer = self.create_rasterizer()
+
+        return self._rasterizer
+
+    @rasterizer.setter
+    def rasterizer(self, rasterizer: DocumentRasterizer):
+        if not isinstance(rasterizer, DocumentRasterizer):
+            raise ValueError(
+                "The rasterizer must be an instance of DocumentRasterizer."
+            )
+
+        if rasterizer.owner != self:
+            raise ValueError("The rasterizer must be owned by the document node.")
+
+        self._rasterizer = rasterizer
 
     @property
     def locator(self):
@@ -76,14 +100,9 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         """
         from docprompt.provenance.search import DocumentProvenanceLocator
 
-        ocr_keys = [
-            key
-            for page in self
-            for key in page.metadata.task_results.keys()
-            if key.endswith("_ocr")
-        ]
+        has_all_ocr_results = all(x.ocr_results for x in self.page_nodes)
 
-        if not ocr_keys:
+        if not has_all_ocr_results:
             raise ValueError(
                 "Cannot create a locator for a document without any OCR results."
             )

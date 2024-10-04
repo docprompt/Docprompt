@@ -9,7 +9,7 @@ def test_direct__page_node_layout_aware_text():
 
     page = document.page_nodes[0]
 
-    assert page.ocr_results.result, "The OCR results should be populated"
+    assert page.ocr_results, "The OCR results should be populated"
 
     layout_text__property = page.layout_aware_text
 

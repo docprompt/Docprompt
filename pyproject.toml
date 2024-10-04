@@ -4,7 +4,7 @@ build-backend = "pdm.backend"
 
 [project]
 name = "docprompt"
-version = "0.8.0"
+version = "0.8.5"
 description = "Documents and large language models."
 authors = [
   {name = "Frank Colson", email = "frank@pageleaf.io"}
@@ -17,8 +17,8 @@ dependencies = [
   "tenacity>=7.0.0",
   "pypdfium2<5.0.0,>=4.28.0",
   "filetype>=1.2.0",
-  "jinja2>=3.1.4",
-  "beautifulsoup4>=4.12.3"
+  "beautifulsoup4>=4.12.3",
+  "pypdf>=5.0.0"
 ]
 requires-python = "<3.13,>=3.8.6"
 readme = "README.md"

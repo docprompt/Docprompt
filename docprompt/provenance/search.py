@@ -47,16 +47,12 @@ class DocumentProvenanceLocator:
         writer = index.writer()
 
         for page_node in document_node.page_nodes:
-            task_keys = page_node.metadata.task_results.keys()
-            ocr_keys = [key for key in task_keys if key.endswith("_ocr")]
+            ocr_result = page_node.ocr_results
 
-            if not ocr_keys:
-                continue
-
-            results = [page_node.metadata.task_results[key] for key in ocr_keys]
-
-            # Get the result with the most recent `when` attribute
-            ocr_result = sorted(results, key=lambda x: x.when)[0]
+            if ocr_result is None:
+                raise ValueError(
+                    "Page {} does not have OCR results".format(page_node.page_number)
+                )
 
             for idx, text_block in enumerate(ocr_result.block_level_blocks):
                 writer.add_document(

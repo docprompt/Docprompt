@@ -22,7 +22,7 @@ from docprompt.schema.layout import (
 )
 from docprompt.tasks.capabilities import PageLevelCapabilities
 from docprompt.tasks.ocr.base import BaseOCRProvider
-from docprompt.utils.splitter import pdf_split_iter_with_max_bytes
+from docprompt.utils.splitter import pdf_split_iter_with_max_bytes_pypdf
 
 from .result import OcrPageResult
 
@@ -454,15 +454,17 @@ class GoogleOcrProvider(BaseOCRProvider):
         self,
         project_id: str,
         processor_id: str,
+        service_account_info: Optional[Dict[str, str]] = None,
+        service_account_file: Optional[str] = None,
         **kwargs,
     ):
         super().__init__(project_id=project_id, processor_id=processor_id, **kwargs)
 
         self.service_account_info = self._default_invoke_kwargs.get(
-            "service_account_info", None
+            "service_account_info", service_account_info
         )
         self.service_account_file = self._default_invoke_kwargs.get(
-            "service_account_file", None
+            "service_account_file", service_account_file
         )
 
         try:
@@ -575,7 +577,7 @@ class GoogleOcrProvider(BaseOCRProvider):
 
         logger.info("Splitting document into chunks...")
         document_byte_splits = list(
-            pdf_split_iter_with_max_bytes(
+            pdf_split_iter_with_max_bytes_pypdf(
                 file_bytes,
                 max_page_count=self.max_page_count,
                 max_bytes=self.max_bytes_per_request,

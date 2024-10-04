@@ -1,9 +1,8 @@
-"""The antrhopic implementation of page level calssification."""
+"""The anthropic implementation of page level classification."""
 
 import re
 from typing import Iterable, List
 
-from jinja2 import Template
 from pydantic import Field
 
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
@@ -16,52 +15,62 @@ from .base import (
     ClassificationOutput,
 )
 
-PAGE_CLASSIFICATION_SYSTEM_PROMPT = Template(
-    """
-You are a classification expert. You are given a single page to perform a classification task on.
 
-{% if input.instructions %}\
-Task Instructions:
-{{ input.instructions }}
+def get_classification_system_prompt(input: ClassificationConfig) -> str:
+    prompt_parts = [
+        "You are a classification expert. You are given a single page to perform a classification task on.\n"
+    ]
 
-{% endif %}\
-{% if input.type == "binary" %}\
-You must classify the page with a binary label:
-"YES"/"NO"
-{% else %}\
-Classify the page as {% if input.type == 'multi_label' %}all labels that apply{% else %}one of the following{% endif %}:
-{% for label in input.formatted_labels %}
-- {{ label }}
-{% endfor %}\
+    if input.instructions:
+        prompt_parts.append(f"Task Instructions:\n{input.instructions}\n\n")
 
-These are the only label values you may use when providing your classifications!
-{% endif %}\
+    if input.type == "binary":
+        prompt_parts.append(
+            'You must classify the page with a binary label:\n"YES"/"NO"\n'
+        )
+    else:
+        classification_task = (
+            "all labels that apply"
+            if input.type == "multi_label"
+            else "one of the following"
+        )
+        prompt_parts.append(f"Classify the page as {classification_task}:\n")
+        for label in input.formatted_labels:
+            prompt_parts.append(f"- {label}\n")
+        prompt_parts.append(
+            "\nThese are the only label values you may use when providing your classifications!\n"
+        )
 
-It is crucial that your response is accurate and provides a valid answer using \
-{% if input.type == 'multi_label' %}\
-the labels \
-{% else %}\
-one of the labels \
-{% endif %}\
-above. There are consequences for providing INVALID or INACCURATE labels.
+    prompt_parts.append(
+        "\nIt is crucial that your response is accurate and provides a valid answer using "
+    )
+    if input.type == "multi_label":
+        prompt_parts.append("the labels ")
+    else:
+        prompt_parts.append("one of the labels ")
+    prompt_parts.append(
+        "above. There are consequences for providing INVALID or INACCURATE labels.\n\n"
+    )
 
-Answer in the following format:
+    prompt_parts.append(
+        "Answer in the following format:\n\nReasoning: { your reasoning and analysis }\n"
+    )
 
-Reasoning: { your reasoning and analysis }
-{% if input.type == "binary" %}\
-Answer: { "YES" or "NO" }
-{% elif input.type == "single_label" %}\
-Answer: { "label-value" }
-{% else %}\
-Answer: { "label-value", "label-value", ... }
-{% endif %}\
-{% if input.confidence %}\
-Confidence: { low, medium, high }
-{% endif %}\
+    if input.type == "binary":
+        prompt_parts.append('Answer: { "YES" or "NO" }\n')
+    elif input.type == "single_label":
+        prompt_parts.append('Answer: { "label-value" }\n')
+    else:
+        prompt_parts.append('Answer: { "label-value", "label-value", ... }\n')
 
-You MUST ONLY use the labels provided and described above. Do not use ANY additional labels.
-""".strip()
-)
+    if input.confidence:
+        prompt_parts.append("Confidence: { low, medium, high }\n")
+
+    prompt_parts.append(
+        "\nYou MUST ONLY use the labels provided and described above. Do not use ANY additional labels.\n"
+    )
+
+    return "".join(prompt_parts).strip()
 
 
 class ImagePageClassificationOutputParser(BasePageClassificationOutputParser):
@@ -109,7 +118,7 @@ def _prepare_messages(
                         ),
                         OpenAIComplexContent(
                             type="text",
-                            text=PAGE_CLASSIFICATION_SYSTEM_PROMPT.render(input=config),
+                            text=get_classification_system_prompt(config),
                         ),
                     ],
                 ),

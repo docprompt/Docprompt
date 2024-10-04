@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import Field
 
 from docprompt.schema.layout import TextBlock
+from docprompt.schema.pipeline.node.document import DocumentNode
 from docprompt.tasks.base import BasePageResult
 
 
@@ -53,3 +54,15 @@ class OcrPageResult(BasePageResult):
     @property
     def blocks(self):
         return self.block_level_blocks
+
+    def contribute_to_document_node(
+        self, document_node: DocumentNode, page_number: Optional[int] = None, **kwargs
+    ) -> None:
+        if not page_number:
+            raise ValueError("Page number must be provided for page level results")
+
+        page_node = document_node.page_nodes[page_number - 1]
+        if hasattr(page_node.metadata, "ocr_results"):
+            page_node.metadata.ocr_results = self
+        else:
+            super().contribute_to_document_node(document_node, page_number=page_number)

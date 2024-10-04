@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from functools import update_wrapper, wraps
+from functools import partial, update_wrapper, wraps
 from typing import Callable, Optional, Set, Tuple, Type
 
 if sys.version_info >= (3, 9):
@@ -16,7 +16,8 @@ else:
                 # If there's no running event loop, create a new one
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-            return await loop.run_in_executor(None, func, *args, **kwargs)
+            pfunc = partial(func, *args, **kwargs)
+            return await loop.run_in_executor(None, pfunc)
 
         return wrapper()
 
