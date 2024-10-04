@@ -39,7 +39,7 @@ def in_memory_cache():
 
 @pytest.fixture
 def filesystem_cache():
-    return FilesystemCache()
+    return FilesystemCache(cache_url="temp://test_cache")
 
 
 @pytest.fixture
@@ -234,7 +234,7 @@ def test_cache_integration(cache_type, tmp_path):
     if cache_type == "InMemoryCache":
         cache = InMemoryCache()
     else:
-        cache = FilesystemCache()
+        cache = FilesystemCache("temp://test_cache")
 
     # Test set and get
     cache.set("key1", b"value1")

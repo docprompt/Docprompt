@@ -5,14 +5,17 @@ import tempfile
 import threading
 import weakref
 from abc import ABC, abstractmethod
-from contextlib import nullcontext
 from typing import TYPE_CHECKING, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 import fsspec
+from fsspec.implementations.dirfs import DirFileSystem
+from fsspec.implementations.local import LocalFileSystem
 from PIL import Image
 
 from docprompt.rasterize import AspectRatioRule, ResizeModes, process_raster_image
 from docprompt.schema.document import PdfDocument
+
+TEMP_DIR_PREFIX = "raster_cache_"
 
 if TYPE_CHECKING:
     from docprompt.schema.pipeline.node import PageNode
@@ -57,9 +60,7 @@ class Cache(ABC):
 
 
 class FilesystemCache(Cache):
-    def __init__(
-        self, cache_url: Optional[str] = None, cache_dir: Optional[str] = None
-    ):
+    def __init__(self, cache_url: str, **fs_kwargs):
         """
         Initialize the filesystem cache.
 
@@ -67,66 +68,60 @@ class FilesystemCache(Cache):
             cache_url (Optional[str]): The fsspec URL for the cache. Defaults to a temporary directory.
             cache_dir (Optional[str]): The directory path within the filesystem to store cache files.
         """
-        self._temp_dir = cache_url is None  # Track if the directory is temporary
+        self.cache_url = cache_url
+        self._initalized = False
 
-        if cache_url is None:
-            # Default to a temporary local filesystem
-            self.fs = fsspec.filesystem("file")
+        protocol, _, path = cache_url.partition("://")
 
-            cache_dir_prefix = "raster_cache_/"
-            if cache_dir:
-                cache_dir_prefix = os.path.join(cache_dir_prefix, cache_dir)
+        if not path.endswith("/"):
+            path += "/"
 
-            tempdir = tempfile.gettempdir()
-            self.cache_dir = os.path.join(tempdir, cache_dir_prefix)
+        if not protocol or not path:
+            raise ValueError("Invalid cache URL provided.")
 
-            os.makedirs(self.cache_dir, exist_ok=True)
-        else:
-            # Parse cache_url to extract filesystem protocol and path
-            protocol, _, path = cache_url.partition("://")
-            if not protocol or not path:
-                raise ValueError(
-                    "Invalid cache_url format. Expected 'protocol://path'."
-                )
-            self.fs = fsspec.filesystem(protocol)
-            self.cache_dir = os.path.join(path, cache_dir) if cache_dir else path
-            self.fs.makedirs(self.cache_dir, exist_ok=True)
+        if protocol == "temp":
+            fs_tempdir = tempfile.gettempdir()
 
-        # Ensure the cache directory exists
-        if not self.fs.exists(self.cache_dir):
-            self.fs.makedirs(self.cache_dir, exist_ok=True)
+            base_fs = LocalFileSystem(auto_mkdir=True, **fs_kwargs)
 
-        self.lock = nullcontext()
-
-        # Register cleanup using weakref.finalize if using a temporary directory
-        if self._temp_dir:
+            self.cache_dir = os.path.join(fs_tempdir, TEMP_DIR_PREFIX, path)
+            self.fs = DirFileSystem(
+                path=self.cache_dir, fs=LocalFileSystem(auto_mkdir=True)
+            )
             self._finalizer = weakref.finalize(self, self._cleanup)
+        else:
+            base_fs = fsspec.filesystem(protocol, **fs_kwargs)
+
+            self.cache_dir = path
+            self.fs = DirFileSystem(path=self.cache_dir, fs=base_fs)
+
+        self.lock = threading.RLock()
+        self._initalize()
+
+    def _initalize(self):
+        with self.lock:
+            if not self._initalized:
+                self.fs.makedirs("", exist_ok=True)
+                self._initalized = True
 
     def _cleanup(self):
-        """Cleanup method to delete the cache directory."""
+        """Cleanup method to delete the temporary cache directory."""
         try:
-            if self.fs.exists(self.cache_dir):
-                self.fs.rm(self.cache_dir, recursive=True)
+            self.fs.rm("", recursive=True)
         except Exception:
             # Optionally log the exception
             pass  # Suppress exceptions to avoid issues during garbage collection
 
-    def __del__(self):
-        """
-        Destructor to ensure the cache directory is deleted if it's temporary.
-        """
-        if self._temp_dir:
-            self._cleanup()
-
     def _get_path(self, key: str) -> str:
         """Generate a filesystem path for a given cache key."""
-        return os.path.join(self.cache_dir, key)
+        return os.path.normpath(self.fs.sep.join([self.cache_dir, key]))
 
     def _create_dir(self, path: str) -> None:
         """Create a directory if it doesn't exist."""
         dir_path = os.path.dirname(path)
-        if not self.fs.exists(dir_path):
-            self.fs.makedirs(dir_path, exist_ok=True)
+        relative_dir = os.path.relpath(dir_path, self.cache_dir)
+        if relative_dir and not self.fs.exists(relative_dir):
+            self.fs.makedirs(relative_dir, exist_ok=True)
 
     def has_key(self, key: str) -> bool:
         """Check if a key exists in the cache."""
@@ -136,20 +131,19 @@ class FilesystemCache(Cache):
     def list_prefix(self, prefix: str) -> List[str]:
         """List all keys that start with the given prefix."""
         with self.lock:
-            search_path = os.path.join(self.cache_dir, prefix)
-
-            if not search_path.endswith("/"):
-                search_path += "/"
-
+            search_path = self._get_path(prefix)
+            if not search_path.endswith(self.fs.sep):
+                search_path += self.fs.sep
             return self.fs.glob(f"{search_path}*")
 
     def get(self, key: str) -> Optional[bytes]:
         """Retrieve a cached item by key."""
         path = self._get_path(key)
-        with self.lock:
-            if self.fs.exists(path):
+        if self.fs.exists(path):
+            with self.lock:
                 with self.fs.open(path, "rb") as f:
                     return f.read()
+
         return None
 
     def set(self, key: str, data: bytes) -> None:
@@ -164,9 +158,9 @@ class FilesystemCache(Cache):
     def clear(self) -> None:
         """Clear all cached items."""
         with self.lock:
-            if self.fs.exists(self.cache_dir):
-                self.fs.rm(self.cache_dir, recursive=True)
-                self.fs.makedirs(self.cache_dir, exist_ok=True)
+            if self.fs.exists(""):
+                self.fs.rm("", recursive=True)
+                self.fs.makedirs("", exist_ok=True)
 
     def pop(self, key: str, default: Optional[bytes] = None) -> Optional[bytes]:
         """Remove and return a cached item by key."""
@@ -183,7 +177,7 @@ class InMemoryCache(Cache):
     def __init__(self):
         """Initialize the in-memory cache."""
         self.store: Dict[str, bytes] = {}
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
 
     def get(self, key: str) -> Optional[bytes]:
         """Retrieve a cached item by key."""
@@ -266,6 +260,7 @@ class DocumentRasterCache:
         self,
         document: PdfDocument,
         cache_url: Optional[str] = None,
+        **fs_kwargs,
     ):
         """
         Initialize the raster cache.
@@ -279,7 +274,8 @@ class DocumentRasterCache:
             self.cache = InMemoryCache()
         else:
             self.cache = FilesystemCache(
-                cache_url=cache_url, cache_dir=document.document_hash
+                cache_url=cache_url or f"temp://{self.document.document_hash}",
+                **fs_kwargs,
             )
 
     def cached_pages(self, name: str) -> List[int]:
@@ -566,6 +562,7 @@ class DocumentRasterizer:
         self,
         owner: "DocumentNode" = None,
         cache_url: Optional[str] = None,
+        **fs_kwargs,
     ):
         """
         Initialize the DocumentRasterizer with a cache.
@@ -575,7 +572,9 @@ class DocumentRasterizer:
             owner (DocumentNode): The owning DocumentNode instance.
             cache_prefix (str): Prefix for cache keys to avoid collisions.
         """
-        self.cache = DocumentRasterCache(document=owner.document, cache_url=cache_url)
+        self.cache = DocumentRasterCache(
+            document=owner.document, cache_url=cache_url, **fs_kwargs
+        )
         self.owner = owner
 
     def rasterize(

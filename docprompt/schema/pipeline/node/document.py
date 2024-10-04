@@ -44,8 +44,10 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
     _persistance_path: Optional[str] = PrivateAttr(default=None)
     _rasterizer: DocumentRasterizer = PrivateAttr(default=None)
 
-    def create_rasterizer(self, cache_url: Optional[str] = None) -> DocumentRasterizer:
-        rasterizer = DocumentRasterizer(owner=self, cache_url=cache_url)
+    def create_rasterizer(
+        self, cache_url: Optional[str] = None, **fs_kwargs
+    ) -> DocumentRasterizer:
+        rasterizer = DocumentRasterizer(owner=self, cache_url=cache_url, **fs_kwargs)
 
         return rasterizer
 
@@ -53,6 +55,7 @@ class DocumentNode(BaseNode, Generic[DocumentNodeMetadata, PageNodeMetadata]):
         state = super().__getstate__()
 
         state["__pydantic_private__"]["_locator"] = None
+        state["__pydantic_private__"]["_rasterizer"] = None
 
         return state
 
