@@ -1,12 +1,12 @@
-from typing import Iterable, List, Optional
+import asyncio
+import base64
+from typing import ClassVar, Iterable, List, Optional
 
 from bs4 import BeautifulSoup
-from pydantic import Field
 
 from docprompt.tasks.message import OpenAIComplexContent, OpenAIImageURL, OpenAIMessage
-from docprompt.utils import inference
 
-from .base import BaseMarkerizeProvider, MarkerizeResult
+from .base import BaseLLMMarkerizeProvider, MarkerizeConfig, MarkerizeResult
 
 _HUMAN_MESSAGE_PROMPT = """
 Convert the image into markdown, preserving the overall layout and style of the page. \
@@ -35,12 +35,18 @@ def _parse_result(raw_markdown: str) -> Optional[str]:
     return md.text.strip() if md else ""  # TODO Fix bad extractions
 
 
+def _image_bytes_to_url(image_bytes: bytes) -> str:
+    encoded = base64.b64encode(image_bytes).decode("utf-8")
+    return f"data:image/jpeg;base64,{encoded}"
+
+
 def _prepare_messages(
     document_images: Iterable[bytes],
-    start: Optional[int] = None,
-    stop: Optional[int] = None,
+    config: MarkerizeConfig,
 ):
     messages = []
+
+    human_message = config.human_prompt or _HUMAN_MESSAGE_PROMPT
 
     for image_bytes in document_images:
         messages.append(
@@ -50,33 +56,79 @@ def _prepare_messages(
                     content=[
                         OpenAIComplexContent(
                             type="image_url",
-                            image_url=OpenAIImageURL(url=image_bytes),
+                            image_url=OpenAIImageURL(
+                                url=_image_bytes_to_url(image_bytes)
+                            ),
                         ),
-                        OpenAIComplexContent(type="text", text=_HUMAN_MESSAGE_PROMPT),
+                        OpenAIComplexContent(type="text", text=human_message),
                     ],
-                ),
+                ).model_dump()
             ]
         )
 
     return messages
 
 
-class AnthropicMarkerizeProvider(BaseMarkerizeProvider):
-    name = "anthropic"
+class GenericMarkerizeProvider(BaseLLMMarkerizeProvider):
+    name: ClassVar[str] = "markerize"
 
-    anthropic_model_name: str = Field("claude-3-haiku-20240307")
+    def model_post_init(self, __context):
+        self.task_config = self.task_config or self._get_default_markerize_config()
 
-    async def _ainvoke(
-        self, input: Iterable[bytes], config: Optional[None] = None, **kwargs
-    ) -> List[MarkerizeResult]:
-        messages = _prepare_messages(input)
+        if not self.async_callable:
 
-        model_name = kwargs.pop("model_name", self.anthropic_model_name)
-        completions = await inference.run_batch_inference_anthropic(
-            model_name, messages, **kwargs
+            async def async_callable(messages):
+                result = await asyncio.to_thread(self.sync_callable, messages)
+
+                return result
+
+            self.async_callable = async_callable
+
+    def _get_default_markerize_config(self):
+        return MarkerizeConfig(
+            human_prompt=_HUMAN_MESSAGE_PROMPT,
         )
 
-        return [
-            MarkerizeResult(raw_markdown=_parse_result(x), provider_name=self.name)
-            for x in completions
-        ]
+    async def ainvoke(
+        self, input: Iterable[bytes], config: Optional[MarkerizeConfig] = None, **kwargs
+    ) -> List[MarkerizeResult]:
+        config = config or self._get_default_markerize_config()
+
+        messages = self.get_openai_messages(input, config=config)
+
+        coroutines = [self.async_callable(x) for x in messages]
+
+        result = await asyncio.gather(*coroutines)
+
+        final = []
+
+        for x in result:
+            text = x["choices"][0]["message"]["content"]
+            parsed = self.parse(text)
+            final.append(parsed)
+
+        return final
+
+    def invoke(
+        self, input: Iterable[bytes], config: Optional[MarkerizeConfig] = None, **kwargs
+    ) -> List[MarkerizeResult]:
+        config = config or self._get_default_markerize_config()
+
+        result = asyncio.run(self.ainvoke(input, config, **kwargs))
+
+        return result
+
+    def get_openai_messages(
+        self, input: Iterable[bytes], config: Optional[MarkerizeConfig] = None, **kwargs
+    ):
+        return _prepare_messages(
+            input, config or self.task_config or self._get_default_markerize_config()
+        )
+
+    def parse(self, response: str):
+        return MarkerizeResult(
+            raw_markdown=_parse_result(response), provider_name=self.name
+        )
+
+    async def aparse(self, response: str, **kwargs) -> MarkerizeResult:
+        return self.parse(response)
