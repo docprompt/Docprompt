@@ -4,7 +4,7 @@ build-backend = "pdm.backend"
 
 [project]
 name = "docprompt"
-version = "0.8.6"
+version = "0.8.7"
 description = "Documents and large language models."
 authors = [
   {name = "Frank Colson", email = "frank@pageleaf.io"}
