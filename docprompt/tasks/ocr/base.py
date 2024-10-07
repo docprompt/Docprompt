@@ -17,10 +17,19 @@ class BaseOCRProvider(
     AbstractPageTaskProvider[Union[PdfDocument, ImageBytes], None, OcrPageResult]
 ):
     def _populate_ocr_results(
-        self, document_node: "DocumentNode", results: Dict[int, OcrPageResult]
+        self,
+        document_node: "DocumentNode",
+        results: Dict[int, OcrPageResult],
+        add_images_to_raster_cache: bool = False,
+        raster_cache_key: str = "default",
     ) -> None:
         for page_number, result in results.items():
-            result.contribute_to_document_node(document_node, page_number=page_number)
+            result.contribute_to_document_node(
+                document_node,
+                page_number=page_number,
+                add_images_to_raster_cache=add_images_to_raster_cache,
+                raster_cache_key=raster_cache_key,
+            )
 
     @abstractmethod
     def process_document_node(

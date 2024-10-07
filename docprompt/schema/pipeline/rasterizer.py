@@ -300,7 +300,7 @@ class DocumentRasterCache:
         """Calculate the proportion of the document that is cached."""
         lookup_key = f"{name}/" if not name.endswith("/") else name
 
-        return len(self.cache.list_prefix(lookup_key)) / len(self.document)
+        return min(len(self.cache.list_prefix(lookup_key)) / len(self.document), 1.0)
 
     def fully_cached(self, name: str) -> bool:
         """Check if the entire document is cached."""

@@ -39,6 +39,8 @@ class OcrPageResult(BasePageResult):
 
     @property
     def pil_image(self):
+        if not self.raster_image:
+            return None
         from PIL import Image
 
         return Image.open(BytesIO(self.raster_image))
@@ -56,7 +58,12 @@ class OcrPageResult(BasePageResult):
         return self.block_level_blocks
 
     def contribute_to_document_node(
-        self, document_node: DocumentNode, page_number: Optional[int] = None, **kwargs
+        self,
+        document_node: DocumentNode,
+        page_number: Optional[int] = None,
+        add_images_to_raster_cache: bool = False,
+        raster_cache_key: str = "default",
+        **kwargs,
     ) -> None:
         if not page_number:
             raise ValueError("Page number must be provided for page level results")
@@ -66,3 +73,12 @@ class OcrPageResult(BasePageResult):
             page_node.metadata.ocr_results = self
         else:
             super().contribute_to_document_node(document_node, page_number=page_number)
+
+        if self.raster_image is not None and add_images_to_raster_cache:
+            document_node.rasterizer.cache.set_image_for_page(
+                key=raster_cache_key,
+                page_number=page_number,
+                image_bytes=self.raster_image,
+            )
+
+        self.raster_image = None  # We need to clear this for memory reasons

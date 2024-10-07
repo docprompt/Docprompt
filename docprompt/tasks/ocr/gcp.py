@@ -446,6 +446,8 @@ class GoogleOcrProvider(BaseOCRProvider):
     max_workers: int = Field(multiprocessing.cpu_count() * 2)
     exclude_bounding_poly: bool = Field(False)
     return_images: bool = Field(False)
+    add_images_to_raster_cache: bool = Field(False)
+    image_raster_cache_key: str = "default"
     return_image_quality_scores: bool = Field(False)
 
     _documentai: "documentai.DocumentProcessorServiceClient" = PrivateAttr()
@@ -456,6 +458,9 @@ class GoogleOcrProvider(BaseOCRProvider):
         processor_id: str,
         service_account_info: Optional[Dict[str, str]] = None,
         service_account_file: Optional[str] = None,
+        return_images: bool = False,
+        add_images_to_raster_cache: bool = False,
+        image_raster_cache_key: str = "default",
         **kwargs,
     ):
         super().__init__(project_id=project_id, processor_id=processor_id, **kwargs)
@@ -466,6 +471,10 @@ class GoogleOcrProvider(BaseOCRProvider):
         self.service_account_file = self._default_invoke_kwargs.get(
             "service_account_file", service_account_file
         )
+
+        self.return_images = return_images
+        self.add_images_to_raster_cache = add_images_to_raster_cache
+        self.image_raster_cache_key = image_raster_cache_key
 
         try:
             from google.cloud import documentai
@@ -649,6 +658,11 @@ class GoogleOcrProvider(BaseOCRProvider):
         result = self.invoke([document_node.document], start=start, stop=stop, **kwargs)
 
         # For OCR, we also need to populate the ocr_results for powered search
-        self._populate_ocr_results(document_node, result)
+        self._populate_ocr_results(
+            document_node,
+            result,
+            add_images_to_raster_cache=self.add_images_to_raster_cache,
+            raster_cache_key=self.image_raster_cache_key,
+        )
 
         return result
