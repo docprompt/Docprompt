@@ -54,7 +54,7 @@ class BasePageResult(BaseResult):
         ), "Page number must be less than or equal to the number of pages in the document"
 
         page_node = document_node.page_nodes[page_number - 1]
-        page_node.metadata.task_results[self.task_key] = self
+        page_node.metadata.task_results[self.task_key] = self.model_copy()
 
 
 TTaskInput = TypeVar("TTaskInput")  # What invoke requires

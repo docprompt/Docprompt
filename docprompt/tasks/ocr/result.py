@@ -70,7 +70,9 @@ class OcrPageResult(BasePageResult):
 
         page_node = document_node.page_nodes[page_number - 1]
         if hasattr(page_node.metadata, "ocr_results"):
-            page_node.metadata.ocr_results = self
+            page_node.metadata.ocr_results = self.model_copy(
+                update={"raster_image": None}
+            )
         else:
             super().contribute_to_document_node(document_node, page_number=page_number)
 
@@ -80,5 +82,3 @@ class OcrPageResult(BasePageResult):
                 page_number=page_number,
                 image_bytes=self.raster_image,
             )
-
-        self.raster_image = None  # We need to clear this for memory reasons
