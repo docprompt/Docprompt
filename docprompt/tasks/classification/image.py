@@ -73,7 +73,7 @@ def get_classification_system_prompt(input: ClassificationConfig) -> str:
     return "".join(prompt_parts).strip()
 
 
-class AnthropicPageClassificationOutputParser(BasePageClassificationOutputParser):
+class ImagePageClassificationOutputParser(BasePageClassificationOutputParser):
     """The output parser for the page classification system."""
 
     def parse(self, text: str) -> ClassificationOutput:
@@ -131,20 +131,18 @@ def _prepare_messages(
 class AnthropicClassificationProvider(BaseClassificationProvider):
     """The Anthropic implementation of unscored page classification."""
 
-    name = "anthropic"
-
-    anthropic_model_name: str = Field("claude-3-haiku-20240307")
+    name = "image"
 
     async def _ainvoke(
         self, input: Iterable[bytes], config: ClassificationConfig = None, **kwargs
     ) -> List[ClassificationOutput]:
         messages = _prepare_messages(input, config)
 
-        parser = AnthropicPageClassificationOutputParser.from_task_input(
+        parser = ImagePageClassificationOutputParser.from_task_input(
             config, provider_name=self.name
         )
 
-        model_name = kwargs.pop("model_name", self.anthropic_model_name)
+        model_name = kwargs.pop("model_name")
         completions = await inference.run_batch_inference_anthropic(
             model_name, messages, **kwargs
         )

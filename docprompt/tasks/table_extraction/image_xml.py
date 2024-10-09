@@ -125,10 +125,8 @@ def _prepare_messages(
     return messages
 
 
-class AnthropicTableExtractionProvider(BaseTableExtractionProvider):
-    name = "anthropic"
-
-    anthropic_model_name: str = Field("claude-3-haiku-20240307")
+class ImageXmlTableExtractionProvider(BaseTableExtractionProvider):
+    name = "image_xml"
 
     async def _ainvoke(
         self, input: Iterable[bytes], config: Optional[None] = None, **kwargs

@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from collections.abc import MutableMapping
 from datetime import datetime
 from typing import TYPE_CHECKING, ClassVar, Dict, Generic, Optional, TypeVar
@@ -23,7 +22,6 @@ class BaseResult(BaseModel):
     def task_key(self):
         return f"{self.provider_name}_{self.task_name}"
 
-    @abstractmethod
     def contribute_to_document_node(
         self, document_node: "DocumentNode", **kwargs
     ) -> None:

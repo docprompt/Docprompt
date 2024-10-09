@@ -1,14 +1,17 @@
 from typing import Optional
 
 from docprompt import DocumentNode
-from docprompt.tasks.base import AbstractPageTaskProvider
+from docprompt.tasks.base import AbstractPageTaskProvider, BaseLLMTask, SupportsDocumentNode, SupportsImage, SupportsPageNode
 from docprompt.tasks.capabilities import PageLevelCapabilities
 
 from .schema import TableExtractionPageResult
 
 
 class BaseTableExtractionProvider(
-    AbstractPageTaskProvider[bytes, None, TableExtractionPageResult]
+    SupportsDocumentNode,
+    SupportsPageNode,
+    SupportsImage,
+    BaseLLMTask[bytes, None, TableExtractionPageResult],
 ):
     capabilities = [
         PageLevelCapabilities.PAGE_TABLE_EXTRACTION,
@@ -17,6 +20,7 @@ class BaseTableExtractionProvider(
 
     class Meta:
         abstract = True
+        
 
     def process_document_node(
         self,
@@ -35,7 +39,7 @@ class BaseTableExtractionProvider(
             raster_bytes.append(image_bytes)
 
         # This will be a list of extracted tables??
-        results = self._invoke(raster_bytes, config=task_config, **kwargs)
+        results = self.invoke(raster_bytes, config=task_config, **kwargs)
 
         return {
             i: res
