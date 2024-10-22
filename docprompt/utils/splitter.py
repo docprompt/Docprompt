@@ -1,6 +1,6 @@
 import io
 import logging
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Tuple
 
 import pypdfium2 as pdfium
 
@@ -134,7 +134,7 @@ def pdf_split_iter_with_max_bytes(
 
 def pdf_split_iter_with_max_bytes_pypdf(
     file_bytes: bytes, max_page_count: int, max_bytes: int
-) -> Iterator[bytes]:
+) -> Iterator[Tuple[bytes, int]]:
     """
     Splits a PDF into batches of pages up to `max_page_count` pages and `max_bytes` bytes.
     Uses page deletion to efficiently reduce batch size if needed.
@@ -146,7 +146,7 @@ def pdf_split_iter_with_max_bytes_pypdf(
         max_bytes (int): Maximum size in bytes per batch.
 
     Yields:
-        Iterator[bytes]: An iterator that yields each batch as bytes.
+        Iterator[bytes]: An iterator that yields each batch as bytes and the number of pages in that batch.
 
     Raises:
         ValueError: If a single page exceeds the `max_bytes` limit.
@@ -177,7 +177,7 @@ def pdf_split_iter_with_max_bytes_pypdf(
 
             if len(batch_bytes) <= max_bytes:
                 # If within byte limit, yield the batch
-                yield batch_bytes
+                yield batch_bytes, pages_in_batch
                 current_page += pages_in_batch
                 break
             else:
@@ -185,7 +185,7 @@ def pdf_split_iter_with_max_bytes_pypdf(
                 try:
                     compressed_batch = compress_pdf_bytes(batch_bytes)
                     if len(compressed_batch) <= max_bytes:
-                        yield compressed_batch
+                        yield compressed_batch, pages_in_batch
                         current_page += pages_in_batch
                         break
                 except Exception as e:

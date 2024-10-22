@@ -14,10 +14,9 @@ from pydantic import (
     BaseModel,
     Field,
     PositiveInt,
+    PrivateAttr,
     SecretStr,
     computed_field,
-    field_serializer,
-    field_validator,
 )
 
 from docprompt._exec.ghostscript import compress_pdf_to_bytes
@@ -60,10 +59,26 @@ class PdfDocument(BaseModel):
     """
 
     name: str = Field(description="The name of the document")
-    file_bytes: bytes = Field(description="The bytes of the document", repr=False)
     file_path: Optional[str] = None
 
     password: Optional[SecretStr] = None
+
+    _file_bytes: bytes = PrivateAttr(default=None)
+
+    def __init__(
+        self, *, name: str, file_path: Optional[str] = None, file_bytes: bytes, **kwargs
+    ):
+        super().__init__(name=name, file_path=file_path, **kwargs)
+
+        self.file_bytes = self.validate_file_bytes(file_bytes)
+
+    @property
+    def file_bytes(self):
+        return self._file_bytes
+
+    @file_bytes.setter
+    def file_bytes(self, value: bytes):
+        self._file_bytes = value
 
     def __len__(self):
         return self.num_pages
@@ -93,13 +108,6 @@ class PdfDocument(BaseModel):
 
         return hash_from_bytes(self.file_bytes)
 
-    @field_serializer("file_bytes")
-    def serialize_file_bytes(self, v: bytes, _info):
-        compressed = gzip.compress(v)
-
-        return base64.b64encode(compressed).decode("utf-8")
-
-    @field_validator("file_bytes")
     def validate_file_bytes(cls, v: bytes):
         if not isinstance(v, bytes):
             raise ValueError("File bytes must be bytes")

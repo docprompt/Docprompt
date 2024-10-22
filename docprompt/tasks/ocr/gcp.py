@@ -1,7 +1,8 @@
-import concurrent.futures
+import asyncio
 import logging
 import multiprocessing
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+import multiprocessing.spawn
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from enum import Enum
 from threading import Lock
 from typing import TYPE_CHECKING, Any, ClassVar, Dict, List, Literal, Optional, Union
@@ -119,10 +120,10 @@ def bounding_box_from_layout(
     right = max(vertex.x for vertex in layout.bounding_poly.normalized_vertices)
 
     return NormBBox(
-        x0=round(left, 5),
-        top=round(top, 5),
-        x1=round(right, 5),
-        bottom=round(bottom, 5),
+        x0=left,
+        top=top,
+        x1=right,
+        bottom=bottom,
     )
 
 
@@ -198,9 +199,12 @@ def text_blocks_from_page(
     for item in getattr(page, f"{type}s"):
         layout = item.layout
         block_text = text_from_layout(layout, document_text)
-        geometry_kwargs = geometry_from_layout(
-            layout, exclude_bounding_poly=exclude_bounding_poly
+
+        bounding_box = bounding_box_from_layout(layout)
+        bounding_poly = (
+            bounding_poly_from_layout(layout) if not exclude_bounding_poly else None
         )
+
         confidence = layout.confidence
         orientation = orientation_mapping.get(layout.orientation, "UP")
 
@@ -211,8 +215,8 @@ def text_blocks_from_page(
             TextBlock(
                 text=block_text,
                 type=block_type,
-                bounding_box=geometry_kwargs["bounding_box"],
-                bounding_poly=geometry_kwargs["bounding_poly"],
+                bounding_box=bounding_box,
+                bounding_poly=bounding_poly,
                 metadata=TextBlockMetadata(
                     direction=orientation,
                     confidence=round(confidence, 5),
@@ -291,137 +295,55 @@ def process_page(
     )
 
 
-def gcp_documents_to_result_single(
-    documents: List["documentai.Document"],
+def postprocess_gcp_document(
+    document: "documentai.Document",
     provider_name: str,
     document_name: str,
     file_hash: str,
-    *,
-    exclude_bounding_poly: bool = False,
-    return_images: bool = False,
-):
-    page_offset = 1  # We want pages to be 1-indexed
-
-    results: Dict[int, OcrPageResult] = {}
-
-    for document in tqdm.tqdm(documents):
-        for doc_page_num, page in enumerate(document.pages):
-            page_result = process_page(
-                document.text,
-                page,
-                page_offset + doc_page_num,
-                provider_name,
-                document_name,
-                file_hash,
-                exclude_bounding_poly=exclude_bounding_poly,
-                return_image=return_images,
-            )
-
-            results[page_offset + doc_page_num] = page_result
-
-        page_offset += doc_page_num + 1
-
-    return results
-
-
-def multi_process_page(args):
-    idx, document, provider_name, page_offset, exclude_bounding_poly = args
-
-    results: Dict[int, OcrPageResult] = {}
-
-    for doc_page_num, page in enumerate(document.pages):
-        page_result = process_page(
-            document.text,
-            page,
-            page_offset + doc_page_num,
-            provider_name,
-            exclude_bounding_poly=exclude_bounding_poly,
-        )
-
-        results[page_offset + doc_page_num] = page_result
-
-    return idx, results
-
-
-def gcp_documents_to_result_multi(
-    documents: List["documentai.Document"],
-    provider_name: str,
-    *,
-    exclude_bounding_poly: bool = False,
-    return_images: bool = False,
-):
-    tasks = []
-    page_offset = 1  # Pages are 1-indexed
-
-    # Prepare tasks for processing, each with a document index
-    for idx, document in enumerate(documents):
-        args = (
-            idx,
-            document,
-            provider_name,
-            page_offset,
-            exclude_bounding_poly,
-        )
-        tasks.append(args)
-        page_offset += len(document.pages)
-
-    document_results = [None] * len(documents)
-
-    worker_count = min(len(documents), min(4, max(multiprocessing.cpu_count(), 1)))
-
-    futures = []
-
-    ctx = multiprocessing.get_context("spawn")
-
-    with tqdm.tqdm(total=len(documents), desc="Processing documents") as pbar:
-        with ProcessPoolExecutor(max_workers=worker_count, mp_context=ctx) as executor:
-            for task in tasks:
-                future = executor.submit(multi_process_page, task)
-                future.add_done_callback(lambda x: pbar.update(1))
-                futures.append(future)
-
-            for future in as_completed(futures):
-                idx, page_results = future.result()
-                document_results[idx] = page_results
-
-    results: Dict[int, OcrPageResult] = {}
-
-    for document_result in document_results:
-        results.update(document_result)  # type: ignore
-
-    return results
-
-
-def gcp_documents_to_result(
-    documents: List["documentai.Document"],
-    provider_name: str,
-    document_name: str,
-    file_hash: str,
-    *,
-    mode: Literal["single", "multi"] = "single",
     exclude_bounding_poly: bool = False,
     return_images: bool = False,
 ) -> Dict[int, OcrPageResult]:
-    if mode == "single" or len(documents) == 1 or multiprocessing.cpu_count() == 1:
-        logger.info("Using single process")
-        return gcp_documents_to_result_single(
-            documents,
+    results: Dict[int, OcrPageResult] = {}
+
+    for doc_page_num, page in enumerate(
+        document.pages, start=1
+    ):  # Start from 1 for 1-indexing
+        page_result = process_page(
+            document.text,
+            page,
+            doc_page_num + 1,
             provider_name,
             document_name,
             file_hash,
             exclude_bounding_poly=exclude_bounding_poly,
-            return_images=return_images,
+            return_image=return_images,
         )
-    elif mode == "multi":
-        logger.info("Using multiprocessing")
-        return gcp_documents_to_result_multi(
-            documents,
-            provider_name,
-            exclude_bounding_poly=exclude_bounding_poly,
-            return_images=return_images,
-        )
-    else:
-        raise ValueError("Invalid mode for GCP document processing")
+
+        results[doc_page_num] = page_result
+
+    return results
+
+
+def postprocess_gcp_document_in_executor(
+    pages_in_split: int,
+    idx: int,
+    document: "documentai.Document",
+    provider_name: str,
+    document_name: str,
+    file_hash: str,
+    exclude_bounding_poly: bool = False,
+    return_images: bool = False,
+):
+    result = postprocess_gcp_document(
+        document,
+        provider_name,
+        document_name,
+        file_hash,
+        exclude_bounding_poly=exclude_bounding_poly,
+        return_images=return_images,
+    )
+
+    return result, pages_in_split, idx
 
 
 class GoogleOcrProvider(BaseOCRProvider):
@@ -451,7 +373,7 @@ class GoogleOcrProvider(BaseOCRProvider):
     image_raster_cache_key: str = "default"
     return_image_quality_scores: bool = Field(False)
 
-    _documentai: "documentai.DocumentProcessorServiceClient" = PrivateAttr()
+    _documentai: "documentai" = PrivateAttr()
 
     def __init__(
         self,
@@ -486,7 +408,7 @@ class GoogleOcrProvider(BaseOCRProvider):
                 "Please install 'google-cloud-documentai' to use the GoogleCloudVisionTextExtractionProvider"
             )
 
-    def get_documentai_client(self, client_option_kwargs: dict = {}, **kwargs):
+    async def get_documentai_client(self, client_option_kwargs: dict = {}, **kwargs):
         from google.api_core.client_options import ClientOptions
 
         opts = ClientOptions(
@@ -502,13 +424,13 @@ class GoogleOcrProvider(BaseOCRProvider):
         }
 
         if self.service_account_info is not None:
-            return self._documentai.DocumentProcessorServiceClient.from_service_account_info(
+            return self._documentai.DocumentProcessorServiceAsyncClient.from_service_account_info(
                 info=self.service_account_info,
                 **base_service_client_kwargs,
             )
         elif self.service_account_file is not None:
             with service_account_file_read_lock:
-                return self._documentai.DocumentProcessorServiceClient.from_service_account_file(
+                return self._documentai.DocumentProcessorServiceAsyncClient.from_service_account_file(
                     filename=self.service_account_file,
                     **base_service_client_kwargs,
                 )
@@ -526,7 +448,7 @@ class GoogleOcrProvider(BaseOCRProvider):
         )
 
     @default_retry_decorator
-    def process_byte_chunk(
+    async def process_byte_chunk(
         self, split_bytes: bytes, client: Any
     ):  # TODO: Fix `client` typing
         try:
@@ -557,7 +479,7 @@ class GoogleOcrProvider(BaseOCRProvider):
                 process_options=self._get_process_options(),
             )
 
-            result = client.process_document(request=request)
+            result = await client.process_document(request=request)
 
             document = result.document
 
@@ -566,7 +488,7 @@ class GoogleOcrProvider(BaseOCRProvider):
             logger.error("Error processing byte chunk %s", exp, exc_info=True)
             raise exp
 
-    def _process_document_concurrent(
+    async def _process_document(
         self,
         document: Document,
         include_raster: bool = False,
@@ -575,7 +497,7 @@ class GoogleOcrProvider(BaseOCRProvider):
         **kwargs,
     ):
         # Process page chunks concurrently
-        client = self.get_documentai_client()
+        client = await self.get_documentai_client()
 
         file_bytes = document.file_bytes
 
@@ -584,63 +506,85 @@ class GoogleOcrProvider(BaseOCRProvider):
             file_bytes = document.to_compressed_bytes()
 
         logger.info("Processing document chunks as they are generated...")
-        documents = []
-        active_futures = {}
+        to_merge = []
+        tasks = []
+        futures = []
 
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            with tqdm.tqdm(desc="Processing document") as pbar:
-                # Generator for document splits
-                splits = pdf_split_iter_with_max_bytes_pypdf(
-                    file_bytes,
-                    max_page_count=self.max_page_count,
-                    max_bytes=self.max_bytes_per_request,
-                )
+        async def process_single_document_chunk(
+            split_bytes, client, pages_in_split, idx
+        ):
+            result = await self.process_byte_chunk(split_bytes, client)
+            return result, pages_in_split, idx
 
-                next_index = 0
+        with tqdm.tqdm(
+            desc="API Processing", total=len(document)
+        ) as api_pbar, tqdm.tqdm(
+            desc="Postprocessing", total=len(document)
+        ) as post_pbar:
+            with ProcessPoolExecutor(
+                max_workers=self.max_workers,
+                mp_context=multiprocessing.get_context("spawn"),
+            ) as executor:
+                # Start tasks as chunks are generated
+                for idx, (split_bytes, pages_in_split) in enumerate(
+                    pdf_split_iter_with_max_bytes_pypdf(
+                        file_bytes,
+                        max_page_count=self.max_page_count,
+                        max_bytes=self.max_bytes_per_request,
+                    )
+                ):
+                    task = asyncio.create_task(
+                        process_single_document_chunk(
+                            split_bytes, client, pages_in_split, idx
+                        )
+                    )
+                    tasks.append(task)
 
-                while True:
-                    # Submit new jobs up to max_workers if splits are available
-                    while len(active_futures) < self.max_workers:
-                        try:
-                            split = next(splits)
-                            future = executor.submit(
-                                self.process_byte_chunk, split, client
-                            )
-                            active_futures[future] = next_index
-                            next_index += 1
-                        except StopIteration:
-                            break
+                # Process completed tasks in order
+                for task in asyncio.as_completed(tasks):
+                    result, pages_in_split, order_idx = await task
+                    api_pbar.update(pages_in_split)
 
-                    if not active_futures:
-                        break
+                    def postprocess_done_cb(future, pages_in_split=pages_in_split):
+                        post_pbar.update(pages_in_split)
 
-                    # Process completed futures
-                    done, _ = concurrent.futures.wait(
-                        active_futures.keys(),
-                        timeout=0.1,
-                        return_when=concurrent.futures.FIRST_COMPLETED,
+                    future = executor.submit(
+                        postprocess_gcp_document_in_executor,
+                        pages_in_split,
+                        order_idx,
+                        result,
+                        self.name,
+                        document.name,
+                        document.document_hash,
+                        self.exclude_bounding_poly,
+                        self.return_images,
                     )
 
-                    for future in done:
-                        index = active_futures[future]
-                        # Extend documents list if needed
-                        while len(documents) <= index:
-                            documents.append(None)
-                        documents[index] = future.result()
-                        del active_futures[future]
-                        pbar.update(1)
+                    future.add_done_callback(postprocess_done_cb)
+                    futures.append(future)
+
+                for future in as_completed(futures):
+                    result, pages_in_split, order_idx = future.result()
+                    to_merge.append((result, pages_in_split, order_idx))
 
         logger.info("Recombining OCR results...")
-        return gcp_documents_to_result(
-            documents,
-            self.name,
-            document_name=document.name,
-            file_hash=document.document_hash,
-            exclude_bounding_poly=self.exclude_bounding_poly,
-            return_images=self.return_images,
-        )
+        results: Dict[int, OcrPageResult] = {}
 
-    def _invoke(
+        # Sort by original chunk order
+        to_merge.sort(key=lambda x: x[2])  # Sort by order_idx
+
+        current_page = 1  # Start with page 1 (1-indexed)
+
+        # Merge results maintaining correct page numbers
+        for chunk_results, pages_in_split, _ in to_merge:
+            # Add results for this chunk with correct page numbers
+            for page_num, result in chunk_results.items():
+                results[current_page] = result  # +1 because chunk_results is 1-indexed
+                current_page += 1
+
+        return results
+
+    async def _ainvoke(
         self,
         input: List[PdfDocument],
         config: None = None,
@@ -653,9 +597,24 @@ class GoogleOcrProvider(BaseOCRProvider):
                 "GoogleOcrProvider only supports processing a single document at a time."
             )
 
-        return self._process_document_concurrent(
-            input[0], start=start, stop=stop, **kwargs
-        )
+        return await self._process_document(input[0], start=start, stop=stop, **kwargs)
+
+    def _invoke(
+        self,
+        input: List[PdfDocument],
+        config: None = None,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+        **kwargs,
+    ):
+        try:
+            return asyncio.run(self._ainvoke(input, config, start, stop, **kwargs))
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return loop.run_until_complete(
+                self._ainvoke(input, config, start, stop, **kwargs)
+            )
 
     def process_document_node(
         self,
