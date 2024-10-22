@@ -1,3 +1,4 @@
+import concurrent.futures
 import logging
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
@@ -576,43 +577,58 @@ class GoogleOcrProvider(BaseOCRProvider):
         # Process page chunks concurrently
         client = self.get_documentai_client()
 
-        # NEED TO USE START AND STOP
-
         file_bytes = document.file_bytes
 
         if document.bytes_per_page > 1024 * 1024 * 2:
             logger.info("Document has few pages but is large, compressing first")
             file_bytes = document.to_compressed_bytes()
 
-        logger.info("Splitting document into chunks...")
-        document_byte_splits = list(
-            pdf_split_iter_with_max_bytes_pypdf(
-                file_bytes,
-                max_page_count=self.max_page_count,
-                max_bytes=self.max_bytes_per_request,
-            )
-        )
+        logger.info("Processing document chunks as they are generated...")
+        documents = []
+        active_futures = {}
 
-        max_workers = min(len(document_byte_splits), self.max_workers)
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            with tqdm.tqdm(desc="Processing document") as pbar:
+                # Generator for document splits
+                splits = pdf_split_iter_with_max_bytes_pypdf(
+                    file_bytes,
+                    max_page_count=self.max_page_count,
+                    max_bytes=self.max_bytes_per_request,
+                )
 
-        logger.info(f"Processing {len(document_byte_splits)} chunks...")
-        with tqdm.tqdm(
-            total=len(document_byte_splits), desc="Processing document"
-        ) as pbar:
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                future_to_index = {
-                    executor.submit(self.process_byte_chunk, split, client): index
-                    for index, split in enumerate(document_byte_splits)
-                }
+                next_index = 0
 
-                documents: List["documentai.Document"] = [None] * len(
-                    document_byte_splits
-                )  # type: ignore
+                while True:
+                    # Submit new jobs up to max_workers if splits are available
+                    while len(active_futures) < self.max_workers:
+                        try:
+                            split = next(splits)
+                            future = executor.submit(
+                                self.process_byte_chunk, split, client
+                            )
+                            active_futures[future] = next_index
+                            next_index += 1
+                        except StopIteration:
+                            break
 
-                for future in as_completed(future_to_index):
-                    index = future_to_index[future]
-                    documents[index] = future.result()
-                    pbar.update(1)
+                    if not active_futures:
+                        break
+
+                    # Process completed futures
+                    done, _ = concurrent.futures.wait(
+                        active_futures.keys(),
+                        timeout=0.1,
+                        return_when=concurrent.futures.FIRST_COMPLETED,
+                    )
+
+                    for future in done:
+                        index = active_futures[future]
+                        # Extend documents list if needed
+                        while len(documents) <= index:
+                            documents.append(None)
+                        documents[index] = future.result()
+                        del active_futures[future]
+                        pbar.update(1)
 
         logger.info("Recombining OCR results...")
         return gcp_documents_to_result(
